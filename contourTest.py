@@ -2,7 +2,7 @@
 """
 Created on Wed Jun 11 14:34:59 2014
 
-@author: koenigin
+@author: koenigin and greenteawarrior
 """
 
 import numpy as np
@@ -21,12 +21,13 @@ while(True):
     ret,thresh = cv2.threshold(imgray,127,255,0)
     #based on the threshold value, find contours and puts them in an hierarchy from starkest 
     #difference to more similar things
-    contours, hierarchy = cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+    #can either use CHAIN_APPROX_SIMPLE or CHAIN_APPROX_NONE
+    contours, hierarchy = cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
     #draw the contours on image
     cv2.drawContours(im, contours, -1, (0,255,0), 3)
     #show the image + drawn contours
     cv2.imshow("window title", im)
-    if cv2.waitKey(1) & 0xFF == ord('q'): #hit escape or the q key to end the loop
+    if cv2.waitKey(1) & 0xFF == ord('q'): #hit the q key to end the loop
         break
 
 #when everything's done, release the capture
