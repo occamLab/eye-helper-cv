@@ -1,4 +1,5 @@
 tesseract-ocr 3.03 and leptonica 1.70 setup 
+I did this on Ubuntu 12.04 but it should work for other Linux OS's? Let me know what happens. :)
 
 1. Installed tesseract_3.03.02.orig.tar.gz from https://launchpad.net/ubuntu/+source/tesseract/3.03.02-3
 
@@ -7,7 +8,7 @@ tesseract-ocr 3.03 and leptonica 1.70 setup
     tar -xvzf tesseract_3.03.02.orig.tar.gz
     ```
 
-3. As said on the Compiling section
+3. As said on the [Compiling section](https://code.google.com/p/tesseract-ocr/wiki/Compiling) of the tesseract-ocr's google code wiki page
 ```
     sudo apt-get install autoconf automake libtool
     sudo apt-get install libpng12-dev
