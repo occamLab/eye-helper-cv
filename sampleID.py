@@ -78,5 +78,6 @@ def labelData(basename, startframe, endframe):
             keypointwriter.writerow([frame, c1[0], c1[1], c2[0], c2[1]])
 
 if __name__ == '__main__':
-    labelData('catfood', 266, 762)
+    #labelData('catfood', 266, 762)
+    labelData('cereal', 512, 695)
 
