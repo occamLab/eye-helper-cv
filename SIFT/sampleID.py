@@ -2,7 +2,7 @@ import cv2
 import numpy as np 
 import csv
 
-def labelData(basename, startframe, endframe, savepath):
+def labelData(basename, startframe, endframe):
     """Takes in the video and the section where the object is visible
     allows the user to create a box around the ojbect being tracked. The 
     corners of this box are saved as the position of the object
@@ -15,7 +15,8 @@ def labelData(basename, startframe, endframe, savepath):
     c1 = (0,0)
     c2 = (20,20)
     #creates a new csv file to store data
-    with open(savepath + '/' + basename+".csv", "w") as csvfile:
+    path = './gstore-snippets/%s_snippet/' %basename
+    with open(path + basename +".csv", "w") as csvfile:
         keypointwriter = csv.writer(csvfile, delimiter= ',',
                                quotechar='|', quoting=csv.QUOTE_MINIMAL)           
         for i in range(startframe, endframe + 1, -1):
@@ -23,7 +24,7 @@ def labelData(basename, startframe, endframe, savepath):
             frame = (4 -len(str(i))) * '0' + str(i)         
             while(1):
                 #draws rectangle over image resizing/ translating from user imnput
-                temp = cv2.imread(basename + frame +'.jpg')
+                temp = cv2.imread(path + basename + frame +'.jpg')
                 k = cv2.waitKey(5)
                 cv2.rectangle(temp,c1, c2, (0, 0, 255),2) 
                 cv2.imshow('rec', temp)
@@ -54,5 +55,5 @@ def labelData(basename, startframe, endframe, savepath):
             keypointwriter.writerow([frame, c1[0], c1[1], c2[0], c2[1]])
 
 if __name__ == '__main__':
-    labelData()
+    labelData('catfood', 266, 762)
 
