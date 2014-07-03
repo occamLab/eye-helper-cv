@@ -44,6 +44,7 @@ def labelData(basename, startframe, endframe):
         for i in range(startframe, endframe + 1)[::-1]:
             #names start w/ 4 '0's below makes correct number to add to basename
             frame = (5 -len(str(i))) * '0' + str(i) 
+            print (str(endframe-i) +'/' + str(endframe-startframe))
             while(1):
                 #draws rectangle over image resizing/ translating from user imnput
                 temp = cv2.imread(path + basename +'_'+ frame +'.jpg')
@@ -51,25 +52,25 @@ def labelData(basename, startframe, endframe):
                 cv2.imshow('rec', temp)
                 k = cv2.waitKey(5)
                 if k == ord('s'):
-                    c1 = (c1[0], c1[1]+5)
+                    c1 = (c1[0], c1[1]+2)
                 elif k == ord('d'):
-                    c1 = (c1[0]+5, c1[1])
+                    c1 = (c1[0]+2, c1[1])
                 elif k == ord('a'):
-                    c1= (c1[0]-5, c1[1])
+                    c1= (c1[0]-2, c1[1])
                 elif k == ord('w'):
-                    c1= (c1[0], c1[1]-5)
+                    c1= (c1[0], c1[1]-2)
                 elif k == right:        #expand box width
-                    c1 = (c1[0]+5, c1[1])
-                    c2 = (c2[0]+5, c2[1])
+                    c1 = (c1[0]+2, c1[1])
+                    c2 = (c2[0]+2, c2[1])
                 elif k == left:        #decrease box width
-                    c1 = (c1[0]-5, c1[1])
-                    c2 = (c2[0]-5, c2[1])
+                    c1 = (c1[0]-2, c1[1])
+                    c2 = (c2[0]-2, c2[1])
                 elif k == down:        #expand box height
-                    c1 = (c1[0], c1[1]+5)
-                    c2 = (c2[0], c2[1]+5)
+                    c1 = (c1[0], c1[1]+2)
+                    c2 = (c2[0], c2[1]+2)
                 elif k == up:        #decrease box height
-                    c1 = (c1[0], c1[1]-5)
-                    c2 = (c2[0], c2[1]-5)
+                    c1 = (c1[0], c1[1]-2)
+                    c2 = (c2[0], c2[1]-2)
 
                 elif k == 32:
                     break
