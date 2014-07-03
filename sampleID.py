@@ -1,6 +1,7 @@
 import cv2 
 import numpy as np 
 import csv
+import time
 
 def labelData(basename, startframe, endframe):
     """Takes in the video and the section where the object is visible
@@ -19,6 +20,25 @@ def labelData(basename, startframe, endframe):
     c2 = (20,20)
     #creates a new csv file to store data
     path = './gstore-snippets/%s_snippet/' %basename
+    print('Begining calibration, please press the up key')
+    temp = cv2.namedWindow('calibrate')
+    k = cv2.waitKey(0)
+    if k != -1:
+        up = k
+    print('Please press the down key')
+    k = cv2.waitKey(0)
+    if k != -1:
+        down = k
+    print('Please press the left key')
+    k = cv2.waitKey(0)
+    if k != -1:
+        left = k 
+    print('Please press the right key')
+    k = cv2.waitKey(0)
+    if k != -1:
+        right = k
+    cv2.destroyAllWindows()
+    print('Thank you. Done Calibrating')
     with open(path + basename +".csv", "w") as csvfile:
         keypointwriter = csv.writer(csvfile, delimiter= ',',
                                quotechar='|', quoting=csv.QUOTE_MINIMAL)  
@@ -28,10 +48,9 @@ def labelData(basename, startframe, endframe):
             while(1):
                 #draws rectangle over image resizing/ translating from user imnput
                 temp = cv2.imread(path + basename +'_'+ frame +'.jpg')
-                print path + basename +'_'+ frame +'.jpg'
-                k = cv2.waitKey(5)
                 cv2.rectangle(temp,c1, c2, (0, 0, 255),2) 
                 cv2.imshow('rec', temp)
+                k = cv2.waitKey(5)
                 if k == ord('s'):
                     c1 = (c1[0], c1[1]+5)
                 elif k == ord('d'):
@@ -40,16 +59,16 @@ def labelData(basename, startframe, endframe):
                     c1= (c1[0]-5, c1[1])
                 elif k == ord('w'):
                     c1= (c1[0], c1[1]-5)
-                elif k == 65363:        #Right
+                elif k == right:        #expand box width
                     c1 = (c1[0]+5, c1[1])
                     c2 = (c2[0]+5, c2[1])
-                elif k == 65361:        #Left
+                elif k == left:        #decrease box width
                     c1 = (c1[0]-5, c1[1])
                     c2 = (c2[0]-5, c2[1])
-                elif k == 65364:        #up
+                elif k == down:        #expand box height
                     c1 = (c1[0], c1[1]+5)
                     c2 = (c2[0], c2[1]+5)
-                elif k == 65362:        #down
+                elif k == up:        #decrease box height
                     c1 = (c1[0], c1[1]-5)
                     c2 = (c2[0], c2[1]-5)
 
