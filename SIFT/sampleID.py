@@ -18,7 +18,7 @@ def labelData(basename, startframe, endframe, savepath):
     with open(savepath + '/' + basename+".csv", "w") as csvfile:
         keypointwriter = csv.writer(csvfile, delimiter= ',',
                                quotechar='|', quoting=csv.QUOTE_MINIMAL)           
-        for i in range(startframe, endframe + 1):
+        for i in range(startframe, endframe + 1, -1):
             #names start w/ 4 '0's below makes correct number to add to basename
             frame = (4 -len(str(i))) * '0' + str(i)         
             while(1):
