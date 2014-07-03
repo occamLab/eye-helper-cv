@@ -9,8 +9,7 @@ def labelData(basename, startframe, endframe):
     corners of this box are saved as the position of the object
 
     ***Assumes that the input will be a jpg file
-    ***endframe is inclusive (eg. if you choose 2 you will end on frame 2
-        not on frame 1)
+    ***Callibration occurs in order: up, down, left, right'
     ***Assumes use of linux in way filepaths are defined
     ***Creates a csv file where the first entry is the frame, the second and 
     third represent the x,y coordinates of the top left corner and the fourth
