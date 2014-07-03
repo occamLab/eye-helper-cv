@@ -2,7 +2,7 @@ import cv2
 import numpy as np 
 import csv
 
-def labelData(basename, startframe, endframe):
+def labelData(basename, startframe, endframe, savepath):
     """Takes in the video and the section where the object is visible
     allows the user to create a box around the ojbect being tracked. The 
     corners of this box are saved as the position of the object
@@ -10,11 +10,12 @@ def labelData(basename, startframe, endframe):
     ***Assumes that the input will be a jpg file
     ***endframe is inclusive (eg. if you choose 2 you will end on frame 2
         not on frame 1)
+    ***Assumes use of linux in way filepaths are defined
     """
     c1 = (0,0)
     c2 = (20,20)
     #creates a new csv file to store data
-    with open(basename+".csv", "w") as csvfile:
+    with open(savepath + '/' + basename+".csv", "w") as csvfile:
         keypointwriter = csv.writer(csvfile, delimiter= ',',
                                quotechar='|', quoting=csv.QUOTE_MINIMAL)           
         for i in range(startframe, endframe + 1):
@@ -53,5 +54,5 @@ def labelData(basename, startframe, endframe):
             keypointwriter.writerow([frame, c1[0], c1[1], c2[0], c2[1]])
 
 if __name__ == '__main__':
-    labelData('mTapepic', 55, 56)
+    labelData()
 
