@@ -5,13 +5,15 @@ Prototyping computer vision/crowdsourcing features for an assistive technology p
 
 ### Object Tracking (current priority)
 
-#### Tried different things in OpenCV 
+#### /Preliminary Object Tracking
+##### Tried different things in OpenCV 
 - HSV object tracking (At first glance, it's not the best for multi-color objects)
 - Contour detection (Seems promising, need to demystify the math a bit and test on grocery store items)
 
 #### Feature matching/tracking with SIFT
 
-### OCR (To-do after object tracking is up and running)
+### /OCR 
+####(Recontinue after object tracking is up and running)
 
 #### Investigated some tesseract python wrappers
 - [Google's PyTesser module](https://code.google.com/p/pytesser/w/list)
