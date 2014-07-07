@@ -5,12 +5,19 @@ Prototyping computer vision/crowdsourcing features for an assistive technology p
 
 ### Object Tracking (current priority)
 
-#### /Preliminary Object Tracking
+#### /preliminary-object-tracking
 ##### Tried different things in OpenCV 
 - HSV object tracking (At first glance, it's not the best for multi-color objects)
 - Contour detection (Seems promising, need to demystify the math a bit and test on grocery store items)
 
 #### Feature matching/tracking with SIFT
+##### Scripts of interest in top-level of this repo:
+- label-data.py (allows human to identify object of interest in frames and create image set)
+- find-truth.py (finds all keypoints in image set)
+- keypoint-matching.py (matches keypoints between frames of interest) 
+
+##### See results in /object-tracking-results
+- cookie (with a blurry-ish training image taken from before the query frame in the video progression, and also using a nice, focused training image to compare results)
 
 ### /OCR 
 ####(Recontinue after object tracking is up and running)

@@ -24,7 +24,6 @@ for m,n in matches:
         good.append(m)
 
 
-
 h1, w1 = img1.shape[:2]
 h2, w2 = img2.shape[:2]
 view = sp.zeros((max(h1, h2), w1 + w2, 3), sp.uint8)
@@ -43,17 +42,3 @@ for m in good:
 cv2.imshow("view", view)
 cv2.waitKey(0)
 cv2.imwrite('cookie_00270_res.jpg',view)
-
-# cv2.drawMatchesKnn expects list of lists as matches.
-
-
-# img = cv2.imread('cookie_00270.jpg')
-# gray= cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-
-# sift = cv2.SIFT()
-# kp, des = sift.detectAndCompute(gray,None)
-# print des
-
-# img=cv2.drawKeypoints(gray,kp)
-
-# cv2.imwrite('sift_keypoints.jpg',img)

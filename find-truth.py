@@ -2,6 +2,14 @@ import cv2
 import numpy as np 
 import csv
 
+"""
+Takes in an image set and csv. For each frame in the image,
+it'll find all of the keypoints within the object of interest
+(i.e. whatever was selected when labeling the data with label-data.py).
+Returns a dictionary in which the key is the frame number and the
+value is all of the keypoints and descriptors for that frame.
+"""
+
 def cropImageSet(image_set):
     csvfile = open('./gstore-csv/%s.csv' %image_set, 'rb')
     reader = csv.reader(csvfile, delimiter = ',', quotechar = '|')
