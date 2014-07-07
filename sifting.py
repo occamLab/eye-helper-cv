@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 import scipy as sp
 
 img1 = cv2.imread('cookie-query.jpg',0) # queryImage
-img2 = cv2.imread('cookie-train.bmp',0) # trainImage
+img2 = cv2.imread('cookie_00270_train.jpg',0) # trainImage
 
 # Initiate SIFT detector
 sift = cv2.SIFT()
@@ -42,6 +42,8 @@ for m in good:
 
 cv2.imshow("view", view)
 cv2.waitKey(0)
+cv2.imwrite('cookie_00270_res.jpg',view)
+
 # cv2.drawMatchesKnn expects list of lists as matches.
 
 
