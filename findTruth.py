@@ -1,0 +1,24 @@
+import cv2
+import numpy as np 
+import csv
+
+def cropImageSet(image_set):
+    csvfile = open('./gstore-csv/%s.csv' %image_set, 'rb')
+    reader = csv.reader(csvfile, delimiter = ',', quotechar = '|')
+    Truth = {}
+    for row in reader:
+        path = './gstore-snippets/%s_snippet/' %image_set
+        frame = (5 -len(str(row[0]))) * '0' + str(row[0])
+        img = cv2.imread(path + image_set +'_' +frame +'.jpg', 0) #opens correct image in greyscale
+        x = int(row[3])
+        y = int(row[4])
+        x2 = int(row[1])
+        y2 = int(row[2])
+
+        crop_img = img[y:y2, x:x2] # NOTE: its img[y: y + h, x: x + w] and *not* img[x: x + w, y: y + h]
+        sift = cv2.SIFT() 
+        siftinfo = sift.detectAndCompute(img,None)
+        Truth[frame] = siftinfo  
+
+if __name__ == '__main__':
+    cropImageSet('cookie')
