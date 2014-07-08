@@ -9,7 +9,7 @@ img2 = cv2.imread('./object-tracking-results/cookie-and-cookie-focused/cookie-fo
 print("please type a file name: ")
 filename = str(raw_input())
 # Initiate SIFT detector
-detector = cv2.BRISK()
+detector = cv2.ORB()
 
 # find the keypoints and descriptors with SIFT
 
@@ -44,4 +44,4 @@ for m in good:
 
 cv2.imshow("view", view)
 cv2.waitKey(0)
-cv2.imwrite(filename,view)
+cv2.imwrite('./object-tracking-results/cookie-and-cookie-focused/' + filename,view)
