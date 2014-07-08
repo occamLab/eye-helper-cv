@@ -1,18 +1,24 @@
+"""
+A script for quick testing of feature detectors with a train image and query image (yay cookies).
+"""
+
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 import scipy as sp
 
+# Input images
 img1 = cv2.imread('./object-tracking-results/cookie-and-cookie-focused/cookie-query.jpg',0) # queryImage
 img2 = cv2.imread('./object-tracking-results/cookie-and-cookie-focused/cookie-focused-train.jpg',0) # trainImage
 
+# Specify filename for result img
 print("please type a file name: ")
 filename = str(raw_input())
-# Initiate SIFT detector
+
+# Initiate detector
 detector = cv2.ORB()
 
-# find the keypoints and descriptors with SIFT
-
+# find the keypoints and descriptors with detector of interest
 k1, d1 = detector.detectAndCompute(img1, None)
 k2, d2 = detector.detectAndCompute(img2, None)
 
@@ -26,7 +32,7 @@ for m,n in matches:
     if m.distance < 0.75*n.distance:
         good.append(m)
 
-
+# For displaying the matching lines
 h1, w1 = img1.shape[:2]
 h2, w2 = img2.shape[:2]
 view = sp.zeros((max(h1, h2), w1 + w2, 3), sp.uint8)
@@ -41,7 +47,7 @@ for m in good:
     color = tuple([sp.random.randint(0, 255) for _ in xrange(3)])
     cv2.line(view, (int(k1[m.queryIdx].pt[0]), int(k1[m.queryIdx].pt[1])) , (int(k2[m.trainIdx].pt[0] + w1), int(k2[m.trainIdx].pt[1])), color)
 
-
+# Showing the matches
 cv2.imshow("view", view)
 cv2.waitKey(0)
 cv2.imwrite('./object-tracking-results/cookie-and-cookie-focused/' + filename,view)
