@@ -14,7 +14,9 @@ def compare_dm(videoname, trainimg):
     The videoname is used to obtain the frames of interest and get the 
     appropriate ground truth csv from the gstore-csv folder.
 
-    Function returns a... 
+    Function returns a dictionary of the form...
+    key: keypoint detection method 
+    value: success rate (as a percentage)
 
     """    
 
