@@ -3,15 +3,18 @@ import numpy as np
 from matplotlib import pyplot as plt
 import scipy as sp
 
-img1 = cv2.imread('cookie-query.jpg',0) # queryImage
-img2 = cv2.imread('cookie_00270_train.jpg',0) # trainImage
+img1 = cv2.imread('./object-tracking-results/cookie-and-cookie-focused/cookie-query.jpg',0) # queryImage
+img2 = cv2.imread('./object-tracking-results/cookie-and-cookie-focused/cookie-focused-train.jpg',0) # trainImage
 
+print("please type a file name: ")
+filename = str(raw_input())
 # Initiate SIFT detector
-sift = cv2.SIFT()
+detector = cv2.BRISK()
 
 # find the keypoints and descriptors with SIFT
-k1, d1 = sift.detectAndCompute(img1,None)
-k2, d2 = sift.detectAndCompute(img2,None)
+
+k1, d1 = detector.detectAndCompute(img1, None)
+k2, d2 = detector.detectAndCompute(img2, None)
 
 # BFMatcher with default params
 bf = cv2.BFMatcher()
@@ -41,4 +44,4 @@ for m in good:
 
 cv2.imshow("view", view)
 cv2.waitKey(0)
-cv2.imwrite('cookie_00270_res.jpg',view)
+cv2.imwrite(filename,view)
