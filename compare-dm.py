@@ -18,18 +18,27 @@ def compare_dm(videoname, trainimg):
 
     """    
 
-    # Opening the ground truth csv
-    csvfile = open('./gstore-csv/%s.csv' %videoname, 'rb')
-    reader = csv.reader(csvfile, delimiter = ',', quotechar = '|')
-
     # Video snippet path
     path = './gstore-snippets/%s_snippet/' %videoname
 
     # Methods of interest to loop through
     d_methods = ['SIFT', 'ORB', 'BRISK', 'SURF']
 
+    # For calculating the success ratio...
+    correctmatches = 0
+    totalmatches = 0
+
+    # Dictionary in which the key is the method and value is the success percentage
+    # "success" means the match agrees with the ground truth
+    successes = {}
+
     # Loop through the methods, store in a dictionary somehow
     for method in d_methods:
+        # Opening the ground truth csv
+        csvfile = open('./gstore-csv/%s.csv' %videoname, 'rb')
+        reader = csv.reader(csvfile, delimiter = ',', quotechar = '|')
+        print method
+
         # Initiate the detector and descriptor
         # detector and descriptor have the same method name
         detector = cv2.FeatureDetector_create(method)
@@ -44,9 +53,18 @@ def compare_dm(videoname, trainimg):
 
         # Loop through rows in the csv (i.e. the video frames)
         for row in reader:
+            print row 
             # Current frame of interest
             frame = (5 -len(str(row[0]))) * '0' + str(row[0]) #i.e. frame number
             imname = "%s%s_%s.jpg"%(path, videoname, frame)
+            
+            # top left corner (x, y) of ground truth box
+            x = int(row[3]) 
+            y = int(row[4])
+
+            # bottom right corner (x2, y2) of ground truth box
+            x2 = int(row[1]) 
+            y2 = int(row[2])
 
             # Open the current frame
             im = cv2.imread(imname,0)
@@ -60,14 +78,24 @@ def compare_dm(videoname, trainimg):
             matches = bf.knnMatch(t_d, im_d, k=2)
 
             # Apply ratio test
-            good = []
             for m,n in matches:
                 if m.distance < 0.75*n.distance:
-                    good.append(m)
+                    # Get coordinate of the match
+                    m_x = int(im_k[m.queryIdx].pt[0])
+                    m_y = int(im_k[m.queryIdx].pt[1])
+                    
+                    # Increment totalmatches
+                    totalmatches += 1
 
-    # Compute success ratios??
+                    # Increment correctmatches if this match agrees with the ground truth
+                    if x <= m_x <= x2 and y <= m_y <= y2:
+                        correctmatches += 1
 
-    # Return dictionary of things
+        # Compute success ratios for all the rows for this particular method
+        successes[method] = correctmatches/totalmatches * 100
+
+    # Return dictionary of method: success ratio
+    return successes
 
 
 if __name__ == '__main__':
