@@ -94,12 +94,12 @@ def compare_dm(videoname, trainimg):
                         correctmatches += 1
 
         # Compute success ratios for all the rows for this particular method
-        successes[method] = correctmatches/totalmatches * 100
+        successes[method] = float(correctmatches)/float(totalmatches) * 100
 
     # Return dictionary of method: success ratio
     return successes
 
 
 if __name__ == '__main__':
-    compare_dm('cookie', './OT-res/KP-detect/cookies/cookie-train.bmp')
+    print compare_dm('cookie', './OT-res/KP-detect/cookies/cookie-train.bmp')
 
