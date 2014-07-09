@@ -3,7 +3,7 @@ import numpy as np
 import csv
 import kpmatch
 
-def compare_dm(videoname, trainimg, visualize = False):
+def compare_dm(videoname, trainimg, csv, visualize = False):
     """
     July 8, 2014 (happy birthday Lindsey!)
     Emily and Lindsey's function for for comparing OpenCV methods for feature 
@@ -37,9 +37,10 @@ def compare_dm(videoname, trainimg, visualize = False):
     for method in d_methods:
         correctmatches = 0
         totalmatches = 0
+        good_matches = []
 
         # Opening the ground truth csv
-        csvfile = open('./gstore-csv/%s-angled-2.csv' %videoname, 'rb')
+        csvfile = open('./gstore-csv/%s.csv' %csv, 'rb')
         reader = csv.reader(csvfile, delimiter = ',', quotechar = '|')
         print method
 
@@ -60,7 +61,6 @@ def compare_dm(videoname, trainimg, visualize = False):
             # Current frame of interest
             frame = (5 -len(str(row[0]))) * '0' + str(row[0]) #i.e. frame number
             imname = "%s%s_%s.jpg"%(path, videoname, frame)
-            print imname
             
             # top left corner (x, y) of ground truth box
             x = int(row[3]) 
@@ -69,7 +69,6 @@ def compare_dm(videoname, trainimg, visualize = False):
             # bottom right corner (x2, y2) of ground truth box
             x2 = int(row[1]) 
             y2 = int(row[2])
-            print x,y,x2,y2
 
             # Open the current frame
             im = cv2.imread(imname,0)
@@ -80,7 +79,7 @@ def compare_dm(videoname, trainimg, visualize = False):
 
             # BFMatcher with default params
             bf = cv2.BFMatcher()
-            matches = bf.knnMatch(t_d, im_d, k=2)
+            matches = bf.knnMatch(im_d, t_d, k=2)
 
             # Apply ratio test
             for m,n in matches:
@@ -88,15 +87,18 @@ def compare_dm(videoname, trainimg, visualize = False):
                     # Get coordinate of the match
                     m_x = int(im_k[m.queryIdx].pt[0])
                     m_y = int(im_k[m.queryIdx].pt[1])
-                    print m_x, m_y
-                    
+                    good_matches.append(m)
+
                     # Increment totalmatches
                     totalmatches += 1
 
                     # Increment correctmatches if this match agrees with the ground truth
                     if x-10 <= m_x <= x2+10 and y-10 <= m_y <= y2+10:
                         correctmatches += 1
-            kpmatch.visualize(trainimg, imname)
+
+            if visualize:
+                kpmatch.visualize(trainimg, imname, row[1:5], good_matches, t_k, im_k)
+
 
         # Compute success ratios for all the rows for this particular method
         #successes[method] = float(correctmatches)/float(totalmatches) * 100
@@ -107,5 +109,4 @@ def compare_dm(videoname, trainimg, visualize = False):
 
 
 if __name__ == '__main__':
-    print compare_dm('cookie', './OT-res/KP-detect/cookies/cookie-train.jpg', True)
-
+    print compare_dm('cookie', './OT-res/KP-detect/cookies/cookie-train.jpg', False)
