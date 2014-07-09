@@ -3,7 +3,7 @@ import numpy as np
 import csv
 import kpmatch
 
-def compare_dm(videoname, trainimg, csv, visualize = False):
+def compare_dm(videoname, trainimg, visualize = False):
     """
     July 8, 2014 (happy birthday Lindsey!)
     Emily and Lindsey's function for for comparing OpenCV methods for feature 
@@ -40,9 +40,8 @@ def compare_dm(videoname, trainimg, csv, visualize = False):
         good_matches = []
 
         # Opening the ground truth csv
-        csvfile = open('./gstore-csv/%s.csv' %csv, 'rb')
+        csvfile = open('./gstore-csv/%s-angled-2.csv' %videoname, 'rb')            
         reader = csv.reader(csvfile, delimiter = ',', quotechar = '|')
-        print method
 
         # Initiate the detector and descriptor
         # detector and descriptor have the same method name
@@ -58,6 +57,7 @@ def compare_dm(videoname, trainimg, csv, visualize = False):
 
         # Loop through rows in the csv (i.e. the video frames)
         for row in reader:
+            print 'meep'
             # Current frame of interest
             frame = (5 -len(str(row[0]))) * '0' + str(row[0]) #i.e. frame number
             imname = "%s%s_%s.jpg"%(path, videoname, frame)
