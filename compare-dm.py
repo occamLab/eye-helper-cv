@@ -96,12 +96,10 @@ def compare_dm(videoname, trainimg, csv, visualize = False):
                     if x-10 <= m_x <= x2+10 and y-10 <= m_y <= y2+10:
                         correctmatches += 1
 
-            if visualize:
+            if visualize: #make sure that these inputs are passed in correctly!! otherwise nonsensical visualizations will happen.
                 kpmatch.visualize(trainimg, imname, row[1:5], good_matches, t_k, im_k)
 
-
         # Compute success ratios for all the rows for this particular method
-        #successes[method] = float(correctmatches)/float(totalmatches) * 100
         successes[method] = [correctmatches, totalmatches, float(correctmatches)/float(totalmatches)*100]
 
     # Return dictionary of method: success ratio
