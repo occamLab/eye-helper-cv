@@ -90,7 +90,7 @@ def compare_dm(videoname, trainimg):
                     totalmatches += 1
 
                     # Increment correctmatches if this match agrees with the ground truth
-                    if x <= m_x <= x2 and y <= m_y <= y2:
+                    if x-10 <= m_x <= x2+10 and y-10 <= m_y <= y2+10:
                         correctmatches += 1
 
         # Compute success ratios for all the rows for this particular method
