@@ -27,8 +27,6 @@ def compare_dm(videoname, trainimg):
     d_methods = ['SIFT', 'ORB', 'BRISK', 'SURF']
 
     # For calculating the success ratio...
-    correctmatches = 0
-    totalmatches = 0
 
     # Dictionary in which the key is the method and value is the success percentage
     # "success" means the match agrees with the ground truth
@@ -36,8 +34,11 @@ def compare_dm(videoname, trainimg):
 
     # Loop through the methods, store in a dictionary somehow
     for method in d_methods:
+        correctmatches = 0
+        totalmatches = 0
+
         # Opening the ground truth csv
-        csvfile = open('./gstore-csv/%s.csv' %videoname, 'rb')
+        csvfile = open('./gstore-csv/%s-query.csv' %videoname, 'rb')
         reader = csv.reader(csvfile, delimiter = ',', quotechar = '|')
         print method
 
@@ -55,7 +56,6 @@ def compare_dm(videoname, trainimg):
 
         # Loop through rows in the csv (i.e. the video frames)
         for row in reader:
-            print row 
             # Current frame of interest
             frame = (5 -len(str(row[0]))) * '0' + str(row[0]) #i.e. frame number
             imname = "%s%s_%s.jpg"%(path, videoname, frame)
@@ -94,7 +94,8 @@ def compare_dm(videoname, trainimg):
                         correctmatches += 1
 
         # Compute success ratios for all the rows for this particular method
-        successes[method] = float(correctmatches)/float(totalmatches) * 100
+        #successes[method] = float(correctmatches)/float(totalmatches) * 100
+        successes[method] = [correctmatches, totalmatches, float(correctmatches)/float(totalmatches)*100]
 
     # Return dictionary of method: success ratio
     return successes
