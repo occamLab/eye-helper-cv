@@ -79,5 +79,5 @@ def labelData(basename, startframe, endframe):
 
 if __name__ == '__main__':
     #labelData('catfood', 266, 762)
-    labelData('cereal', 512, 695)
+    labelData('pasta', 50, 872)
 
