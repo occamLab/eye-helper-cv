@@ -3,7 +3,7 @@ import numpy as np
 import csv
 import kpmatch
 
-def compare_dm(videoname, trainimg, visualize = False):
+def compare_dm(videoname, trainimg, gt_csv, visualize = False):
     """
     July 8, 2014 (happy birthday Lindsey!)
     Emily and Lindsey's function for for comparing OpenCV methods for feature 
@@ -40,7 +40,7 @@ def compare_dm(videoname, trainimg, visualize = False):
         good_matches = []
 
         # Opening the ground truth csv
-        csvfile = open('./gstore-csv/%s-angled-2.csv' %videoname, 'rb')            
+        csvfile = open('./gstore-csv/%s' % gt_csv, 'rb')            
         reader = csv.reader(csvfile, delimiter = ',', quotechar = '|')
 
         # Initiate the detector and descriptor
@@ -57,7 +57,6 @@ def compare_dm(videoname, trainimg, visualize = False):
 
         # Loop through rows in the csv (i.e. the video frames)
         for row in reader:
-            print 'meep'
             # Current frame of interest
             frame = (5 -len(str(row[0]))) * '0' + str(row[0]) #i.e. frame number
             imname = "%s%s_%s.jpg"%(path, videoname, frame)
@@ -97,8 +96,13 @@ def compare_dm(videoname, trainimg, visualize = False):
                         correctmatches += 1
 
             if visualize: #make sure that these inputs are passed in correctly!! otherwise nonsensical visualizations will happen.
-                kpmatch.visualize(trainimg, imname, row[1:5], good_matches, t_k, im_k)
-
+                kpmatch.visualize(img_t = trainimg, 
+                                  img_q = imname, 
+                                  b0x = row[1:5], 
+                                  good_matches = good_matches, 
+                                  t_k = t_k, 
+                                  q_k = im_k)
+                
         # Compute success ratios for all the rows for this particular method
         successes[method] = [correctmatches, totalmatches, float(correctmatches)/float(totalmatches)*100]
 
@@ -107,4 +111,7 @@ def compare_dm(videoname, trainimg, visualize = False):
 
 
 if __name__ == '__main__':
-    print compare_dm('cookie', './OT-res/KP-detect/cookies/cookie-train.jpg', False)
+    print compare_dm(videoname = 'cookie', 
+                     trainimg = './OT-res/KP-detect/cookies/cookie-train.jpg', 
+                     gt_csv = 'cookie-angled-2.csv', 
+                     visualize = False)
