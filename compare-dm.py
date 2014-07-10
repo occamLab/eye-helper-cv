@@ -68,7 +68,7 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
     path = './gstore-snippets/%s_snippet/' %videoname
 
     # Methods of interest to loop through
-    d_methods = ['ORB', 'ORB']# ['SIFT', 'ORB', 'BRISK', 'SURF']
+    d_methods = ['SIFT', 'ORB', 'BRISK', 'SURF']
 
     # For calculating the success ratio...
 
@@ -199,7 +199,7 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
 
 
 if __name__ == '__main__':
-    print compare_dm(videoname = 'cookie', 
-                     trainimg = './OT-res/KP-detect/cookies/cookie-train.jpg', 
-                     gt_csv = 'cookie-angled-2.csv', 
+    print compare_dm(videoname = 'cereal', 
+                     trainimg = './OT-res/KP-detect/cereal/cereal-train.jpg', 
+                     gt_csv = 'cereal.csv', 
                      visualize = False)
