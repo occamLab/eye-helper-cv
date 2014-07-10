@@ -79,9 +79,7 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
 
     # Loop through the methods, store in a dictionary somehow
     for method in d_methods:
-
-        print '%s with the %s snippet' % (method, videoname)
-
+        print "starting %s" % method
         #Initializing things for running the loop on this method
         method_start_time = time.time()
         frametimes = {'open_time':[], 
@@ -111,6 +109,7 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
 
         # Loop through rows in the csv (i.e. the video frames)
         for row in reader:
+            # print row
             # Time: Starting this frame
             frame_start_time = time.time()
 
@@ -198,10 +197,10 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
     # Return dictionary of method: success ratio
     return successes
 
-def print_dm_res(d):
+def print_dm_res(d, csv_str):
     "For rapid prototyping purposes: Printing out the metrics in an easy-to-read fashion."
     for key in d:
-        # print key
+        print "%s with the %s snippet" % (key, csv_str)
         current = d[key]
         print "\tcorrectmatches: %d" % current[0]
         print "\ttotalmatches: %d" % current[1]
@@ -216,8 +215,20 @@ def print_dm_res(d):
         print '\n'
 
 if __name__ == '__main__':
-    d = compare_dm(videoname = 'cereal', 
-                     trainimg = './OT-res/KP-detect/cereal/cereal-train.jpg', 
-                     gt_csv = 'cereal.csv', 
-                     visualize = False)
-    print_dm_res(d)
+
+    catfoodcsv = ['catfood.csv', 'catfood-a-long.csv', 'catfood-a-short.csv', 'catfood-r-long.csv', 'catfood-r-short.csv']
+    cerealcsv = ['cereal.csv', 'cereal-a-long.csv', 'cereal-a-short.csv']
+    cookiecsv = ['cookie.csv', 'cookie-a-long.csv', 'cookie-angled.csv', 'cookie-angled-2.csv', 'cookie-a-short.csv']
+    
+    inputs = {'cookie':['./OT-res/KP-detect/cookies/cookie-train.jpg', cookiecsv],
+              'cereal':['./OT-res/KP-detect/cereal/cereal-train.jpg', cerealcsv], 
+              'catfood':['./OT-res/KP-detect/catfood/catfood-train.jpg', catfoodcsv]} 
+
+    for v in inputs:       
+        print v
+        for x in range(len(inputs[v][1])):
+            d = compare_dm(videoname = v, 
+                           trainimg = inputs[v][0], 
+                           gt_csv = inputs[v][1][x], 
+                           visualize = False)
+            print_dm_res(d, inputs[v][1][x])
