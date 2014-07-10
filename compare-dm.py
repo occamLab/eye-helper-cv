@@ -68,7 +68,8 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
     path = './gstore-snippets/%s_snippet/' %videoname
 
     # Methods of interest to loop through
-    d_methods = ['SIFT', 'ORB', 'BRISK', 'SURF']
+    d_methods = ['SIFT', 'ORB', 'BRISK']# 'SURF']
+
 
     # For calculating the success ratio...
 
@@ -79,7 +80,7 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
     # Loop through the methods, store in a dictionary somehow
     for method in d_methods:
 
-        print method
+        print '%s with the %s snippet' % (method, videoname)
 
         #Initializing things for running the loop on this method
         method_start_time = time.time()
@@ -197,9 +198,26 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
     # Return dictionary of method: success ratio
     return successes
 
+def print_dm_res(d):
+    "For rapid prototyping purposes: Printing out the metrics in an easy-to-read fashion."
+    for key in d:
+        # print key
+        current = d[key]
+        print "\tcorrectmatches: %d" % current[0]
+        print "\ttotalmatches: %d" % current[1]
+        print "\t%d%% accuracy" % current[2] 
+        print "\tmethod total runtime: %f seconds" % current[3]
+        frametimes = current[4]
+        print "\t\taverage start to end time per frame: %f seconds" % frametimes['start_to_end_time']
+        print "\t\taverage image opening time per frame: %f seconds" % frametimes['open_time']
+        print "\t\taverage keypoint detection time per frame: %f seconds" % frametimes['kp_detect_time']
+        print "\t\taverage feature matching time per frame: %f seconds" % frametimes['match_time']
+        print "\t\taverage visualization time per frame: %f seconds" % frametimes['vis_time']
+        print '\n'
 
 if __name__ == '__main__':
-    print compare_dm(videoname = 'cereal', 
+    d = compare_dm(videoname = 'cereal', 
                      trainimg = './OT-res/KP-detect/cereal/cereal-train.jpg', 
                      gt_csv = 'cereal.csv', 
                      visualize = False)
+    print_dm_res(d)
