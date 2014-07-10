@@ -4,6 +4,7 @@ import csv
 from matplotlib import pyplot as plt
 import scipy as sp
 import time
+import pickle
 
 def visualize(img_t, img_q, box, good_matches, t_k, q_k):
     """ 
@@ -193,7 +194,9 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
 
         # Compute success ratios for all the rows for this particular method
         successes[method] = [correctmatches, totalmatches, float(correctmatches)/float(totalmatches)*100, method_total_time, frametimes]
-
+        data = np.array([correctmatches, totalmatches, float(correctmatches)/float(totalmatches)*100, method_total_time])
+        #saves the data as an np array we can unpickle to acess
+        pickle.dump(data, open("data.p", "wb"))
     # Return dictionary of method: success ratio
     return successes
 
@@ -227,8 +230,8 @@ if __name__ == '__main__':
     for v in inputs:       
         print v
         for x in range(len(inputs[v][1])):
-            d = compare_dm(videoname = v, 
+            res = compare_dm(videoname = v, 
                            trainimg = inputs[v][0], 
                            gt_csv = inputs[v][1][x], 
                            visualize = False)
-            print_dm_res(d, inputs[v][1][x])
+            print_dm_res(res, inputs[v][1][x])
