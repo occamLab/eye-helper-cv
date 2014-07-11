@@ -6,7 +6,7 @@ import scipy as sp
 import time
 import pickle
 
-def visualize(img_t, img_q, box, good_matches, t_k, q_k):
+def kpvisualize(img_t, img_q, box, good_matches, t_k, q_k):
     """ 
     Displays the ground truth box and matches on the query image
 
@@ -145,18 +145,10 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
             # BFMatcher with norm type parameter dependant on the keypoint method
             if method == 'ORB' or method == 'BRISK':
                 bf = cv2.BFMatcher(normType = cv2.NORM_HAMMING)
-                index_params= dict(algorithm = ,
-                                   table_number = 6, 
-                                   key_size = 12,     
-                                   multi_probe_level = 1) 
             else:
                 bf = cv2.BFMatcher()
-                FLANN_INDEX_KDTREE = 0
-                index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
 
-            search_params = dict(checks=50)   # or pass empty dictionary
-            flann = cv2.FlannBasedMatcher(index_params,search_params)
-            matches = flann.knnMatch(im_d, t_d, k=2)
+            matches = bf.knnMatch(im_d, t_d, k=2)
 
             # Time: How long it took to do the keypoint matching on this frame
             frame_match_time = time.time()            
@@ -175,15 +167,15 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
 
                     # Increment correctmatches if this match agrees with the ground truth
                     if x-10 <= m_x <= x2+10 and y-10 <= m_y <= y2+10:
-                        correctmatches += 1
+                        correctmatches += 1g
 
             if visualize: #make sure that these inputs are passed in correctly!! otherwise nonsensical visualizations will happen.
-                visualize(img_t = trainimg, 
-                                  img_q = imname, 
-                                  b0x = row[1:5], 
-                                  good_matches = good_matches, 
-                                  t_k = t_k, 
-                                  q_k = im_k)
+                kpvisualize(img_t = trainimg, 
+                            img_q = imname, 
+                            box = row[1:5], 
+                            good_matches = good_matches, 
+                            t_k = t_k, 
+                            q_k = im_k)
 
                 # Time: How long it took to do the ratio test and visualize the matches on this frame 
                 # i.e. if the visualize option is True.
@@ -243,6 +235,6 @@ if __name__ == '__main__':
             res = compare_dm(videoname = v, 
                            trainimg = inputs[v][0], 
                            gt_csv = inputs[v][1][x],
-                           visualize = True)
-            pickle.dump(res, open("./OT-res/pickles/p2/%s.p" % (inputs[v][1][x][:-4]), "wb"))
+                           visualize = False)
+            pickle.dump(res, open("./OT-res/pickles/p3/%s.p" % (inputs[v][1][x][:-4]), "wb"))
             print_dm_res(res, inputs[v][1][x])
