@@ -69,7 +69,7 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
     path = './gstore-snippets/%s_snippet/' %videoname
 
     # Methods of interest to loop through
-    d_methods = ['SIFT', 'ORB', 'BRISK']# 'SURF']
+    d_methods = ['ORB']# ['SIFT', 'ORB', 'BRISK']# 'SURF']
 
 
     # For calculating the success ratio...
@@ -194,9 +194,6 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
 
         # Compute success ratios for all the rows for this particular method
         successes[method] = [correctmatches, totalmatches, float(correctmatches)/float(totalmatches)*100, method_total_time, frametimes]
-        data = np.array([correctmatches, totalmatches, float(correctmatches)/float(totalmatches)*100, method_total_time])
-        #saves the data as an np array we can unpickle to acess
-        pickle.dump(data, open("data.p", "wb"))
     # Return dictionary of method: success ratio
     return successes
 
@@ -234,4 +231,6 @@ if __name__ == '__main__':
                            trainimg = inputs[v][0], 
                            gt_csv = inputs[v][1][x], 
                            visualize = False)
+            pickle.dump(res, open("./OT-res/pickles/p1/%s.p" % (inputs[v][1][x][:-4]), "wb"))
+
             print_dm_res(res, inputs[v][1][x])
