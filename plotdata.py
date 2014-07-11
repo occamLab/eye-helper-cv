@@ -1,4 +1,11 @@
 import matplotlib.pyplot as plt  
+import numpy as np 
+import pickle
+
+#graphs we're interested in:
+# speed v. accuracy
+#   rotation, affine, overall
+
 
 def plot(data, plot_type, plot_xlabel, plot_ylabel, plot_title):
     """Inputs:
@@ -16,3 +23,9 @@ def plot(data, plot_type, plot_xlabel, plot_ylabel, plot_title):
     plt.xlabel(plot_xlabel)
     plt.title(plot_title)
     plt.show()    
+
+if __name__ == '__main__':
+    temp = open('./OT-res/pickles/p0/catfood.p', 'r')
+    data = pickle.load(temp)
+    print data
+    #plot(data = , plot_type = , plot_xlabel = , plot_ylabel = , plot_title = )
