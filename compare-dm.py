@@ -167,7 +167,7 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
 
                     # Increment correctmatches if this match agrees with the ground truth
                     if x-10 <= m_x <= x2+10 and y-10 <= m_y <= y2+10:
-                        correctmatches += 1g
+                        correctmatches += 1
 
             if visualize: #make sure that these inputs are passed in correctly!! otherwise nonsensical visualizations will happen.
                 kpvisualize(img_t = trainimg, 
@@ -223,9 +223,9 @@ if __name__ == '__main__':
 
     catfoodcsv = ['catfood.csv', 'catfood-a-long.csv', 'catfood-a-short.csv', 'catfood-r-long.csv', 'catfood-r-short.csv']
     cerealcsv = ['cereal.csv', 'cereal-a-long.csv', 'cereal-a-short.csv']
-    cookiecsv = ['cookie.csv', 'cookie-a-long.csv', 'cookie-angled.csv', 'cookie-angled-2.csv', 'cookie-a-short.csv']
+    cookiecsv = ['cookie.csv', 'cookie-a-long.csv', 'cookie-a-short.csv']
     
-    inputs = {'cookie':['./OT-res/KP-detect/cookies/cookie-train.jpg', cookiecsv],
+    inputs = {'cookie':['./OT-res/KP-detect/cookie/cookie-train.jpg', cookiecsv],
               'cereal':['./OT-res/KP-detect/cereal/cereal-train.jpg', cerealcsv], 
               'catfood':['./OT-res/KP-detect/catfood/catfood-train.jpg', catfoodcsv]} 
 
@@ -233,7 +233,7 @@ if __name__ == '__main__':
         print v
         for x in range(len(inputs[v][1])):
             res = compare_dm(videoname = v, 
-                           trainimg = inputs[v][0], 
+                           trainimg = './OT-res/KP-detect/%s/%s-train.jpg' % (v, inputs[v][1][x][:-4]),
                            gt_csv = inputs[v][1][x],
                            visualize = False)
             pickle.dump(res, open("./OT-res/pickles/p3/%s.p" % (inputs[v][1][x][:-4]), "wb"))
