@@ -71,7 +71,7 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
     path = './gstore-snippets/%s_snippet/' %videoname
 
     # Methods of interest to loop through
-    d_methods = ['SIFT', 'ORB', 'BRISK']# 'SURF']
+    d_methods = ['ORB']#['SIFT', 'ORB', 'BRISK']# 'SURF']
 
 
     # For calculating the success ratio...
@@ -145,11 +145,17 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
 
             # BFMatcher with norm type parameter dependant on the keypoint method
             if method == 'ORB' or method == 'BRISK':
-                bf = cv2.BFMatcher(normType = cv2.NORM_HAMMING)
+                index_params= dict(algorithm = FLANN_INDEX_LSH,
+                                   table_number = 6, 
+                                   key_size = 12,     
+                                   multi_probe_level = 1) 
             else:
-                bf = cv2.BFMatcher()
+                FLANN_INDEX_KDTREE = 0
+                index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
 
-            matches = bf.knnMatch(im_d, t_d, k=2)
+            search_params = dict(checks=50)   # or pass empty dictionary
+            flann = cv2.FlannBasedMatcher(index_params,search_params)
+            matches = f.knnMatch(im_d, t_d, k=2)
 
             # Time: How long it took to do the keypoint matching on this frame
             frame_match_time = time.time()            
@@ -236,8 +242,8 @@ if __name__ == '__main__':
             res = compare_dm(videoname = v, 
                            trainimg = inputs[v][0], 
                            gt_csv = inputs[v][1][x],
-                           visualize = False)
+                           visualize = True)
             #saves the dictionary with the same base as the csv, we can later unpickle to acess for later manipulation
             save_name = inputs[v][1][x][:-4]
-            pickle.dump(res, open("%s.p" %save_name, "wb"))
+            #pickle.dump(res, open("./OT-res/pickles/p2%s.p" %save_name, "wb"))
             print_dm_res(res, inputs[v][1][x])
