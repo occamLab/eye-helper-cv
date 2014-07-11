@@ -46,12 +46,14 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
     Emily and Lindsey's function for for comparing OpenCV methods for feature 
     detection and matching. 
 
-    Function takes in the videoname of interest (should already be in the 
-    gstore-snippets folder) and trainimg (for now, this is the explicit
-    path to the training image in the repo).
-    The videoname is used to obtain the frames of interest and get the 
-    appropriate ground truth csv from the gstore-csv folder.
-
+    Inputs:
+    videoname -> of interest (should already be in the gstore-snippets folder) 
+        The videoname is used to obtain the frames of interest and get the 
+        appropriate ground truth csv from the gstore-csv folder.
+    trainimg -> (for now, this is the explicit path to the training image in the repo)
+    gt_csv -> csv with coordinates of ground truth box
+    visualize -> if true plots matched keypoints and ground truth box
+    
     Function returns a dictionary of the form...
     key: keypoint detection method 
     value: success rate (as a percentage)
@@ -141,8 +143,12 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
             frame_kp_detect_time = time.time()
             frametimes['kp_detect_time'].append(frame_kp_detect_time - frame_open_time)
 
-            # BFMatcher with default params
-            bf = cv2.BFMatcher()
+            # BFMatcher with norm type parameter dependant on the keypoint method
+            if method == 'ORB' or method == 'BRISK':
+                bf = cv2.BFMatcher(normType = cv2.NORM_HAMMING)
+            else:
+                bf = cv2.BFMatcher()
+
             matches = bf.knnMatch(im_d, t_d, k=2)
 
             # Time: How long it took to do the keypoint matching on this frame
@@ -229,8 +235,7 @@ if __name__ == '__main__':
         for x in range(len(inputs[v][1])):
             res = compare_dm(videoname = v, 
                            trainimg = inputs[v][0], 
-                           gt_csv = inputs[v][1][x], 
+                           gt_csv = inputs[v][1][x],
                            visualize = False)
             pickle.dump(res, open("./OT-res/pickles/p1/%s.p" % (inputs[v][1][x][:-4]), "wb"))
-
             print_dm_res(res, inputs[v][1][x])
