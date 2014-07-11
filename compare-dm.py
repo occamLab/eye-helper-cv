@@ -71,12 +71,7 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
     path = './gstore-snippets/%s_snippet/' %videoname
 
     # Methods of interest to loop through
-<<<<<<< HEAD
     d_methods = ['ORB']#['SIFT', 'ORB', 'BRISK']# 'SURF']
-=======
-    d_methods = ['ORB']# ['SIFT', 'ORB', 'BRISK']# 'SURF']
->>>>>>> 34144654e809fe0c77cace5ee45f8a946618ca1e
-
 
     # For calculating the success ratio...
 
@@ -149,11 +144,13 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
 
             # BFMatcher with norm type parameter dependant on the keypoint method
             if method == 'ORB' or method == 'BRISK':
+                bf = BFMatcher(normType = cv2.NORM_HAMMING)
                 index_params= dict(algorithm = FLANN_INDEX_LSH,
                                    table_number = 6, 
                                    key_size = 12,     
                                    multi_probe_level = 1) 
             else:
+                bf = BFMatcher()
                 FLANN_INDEX_KDTREE = 0
                 index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
 
