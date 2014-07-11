@@ -46,12 +46,14 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
     Emily and Lindsey's function for for comparing OpenCV methods for feature 
     detection and matching. 
 
-    Function takes in the videoname of interest (should already be in the 
-    gstore-snippets folder) and trainimg (for now, this is the explicit
-    path to the training image in the repo).
-    The videoname is used to obtain the frames of interest and get the 
-    appropriate ground truth csv from the gstore-csv folder.
-
+    Inputs:
+    videoname -> of interest (should already be in the gstore-snippets folder) 
+        The videoname is used to obtain the frames of interest and get the 
+        appropriate ground truth csv from the gstore-csv folder.
+    trainimg -> (for now, this is the explicit path to the training image in the repo)
+    gt_csv -> csv with coordinates of ground truth box
+    visualize -> if true plots matched keypoints and ground truth box
+    
     Function returns a dictionary of the form...
     key: keypoint detection method 
     value: success rate (as a percentage)
@@ -141,8 +143,12 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
             frame_kp_detect_time = time.time()
             frametimes['kp_detect_time'].append(frame_kp_detect_time - frame_open_time)
 
-            # BFMatcher with default params
-            bf = cv2.BFMatcher()
+            # BFMatcher with norm type parameter dependant on the keypoint method
+            if method == 'ORB' or method == 'BRISK':
+                bf = cv2.BFMatcher(normType = cv2.NORM_HAMMING)
+            else:
+                bf = cv2.BFMatcher()
+
             matches = bf.knnMatch(im_d, t_d, k=2)
 
             # Time: How long it took to do the keypoint matching on this frame
@@ -194,9 +200,6 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
 
         # Compute success ratios for all the rows for this particular method
         successes[method] = [correctmatches, totalmatches, float(correctmatches)/float(totalmatches)*100, method_total_time, frametimes]
-        data = np.array([correctmatches, totalmatches, float(correctmatches)/float(totalmatches)*100, method_total_time])
-        #saves the data as an np array we can unpickle to acess
-        pickle.dump(data, open("data.p", "wb"))
     # Return dictionary of method: success ratio
     return successes
 
@@ -232,6 +235,9 @@ if __name__ == '__main__':
         for x in range(len(inputs[v][1])):
             res = compare_dm(videoname = v, 
                            trainimg = inputs[v][0], 
-                           gt_csv = inputs[v][1][x], 
+                           gt_csv = inputs[v][1][x],
                            visualize = False)
+            #saves the dictionary with the same base as the csv, we can later unpickle to acess for later manipulation
+            save_name = inputs[v][1][x][:-4]
+            pickle.dump(res, open("%s.p" %save_name, "wb"))
             print_dm_res(res, inputs[v][1][x])
