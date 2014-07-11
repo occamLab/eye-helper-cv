@@ -71,7 +71,11 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
     path = './gstore-snippets/%s_snippet/' %videoname
 
     # Methods of interest to loop through
+<<<<<<< HEAD
     d_methods = ['ORB']#['SIFT', 'ORB', 'BRISK']# 'SURF']
+=======
+    d_methods = ['ORB']# ['SIFT', 'ORB', 'BRISK']# 'SURF']
+>>>>>>> 34144654e809fe0c77cace5ee45f8a946618ca1e
 
 
     # For calculating the success ratio...
@@ -243,7 +247,5 @@ if __name__ == '__main__':
                            trainimg = inputs[v][0], 
                            gt_csv = inputs[v][1][x],
                            visualize = True)
-            #saves the dictionary with the same base as the csv, we can later unpickle to acess for later manipulation
-            save_name = inputs[v][1][x][:-4]
-            #pickle.dump(res, open("./OT-res/pickles/p2%s.p" %save_name, "wb"))
+            pickle.dump(res, open("./OT-res/pickles/p2/%s.p" % (inputs[v][1][x][:-4]), "wb"))
             print_dm_res(res, inputs[v][1][x])
