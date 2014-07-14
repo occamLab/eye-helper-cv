@@ -219,8 +219,14 @@ def compare_dm(videoname, trainimg, gt_csv, d_methods = ['ORB'] ,visualize = Fal
             frametimes[key] = sum(value) / float(len(value))
 
         # Compute success ratios for all the rows for this particular method
-        # successes[method] = [correctmatches, totalmatches, float(correctmatches)/float(totalmatches)*100, method_total_time, frametimes]
-        successes[method] = f_successes
+        successes[method] = [correctmatches, 
+                             totalmatches, 
+                             float(correctmatches)/float(totalmatches)*100, # 
+                             method_total_time, 
+                             frametimes, #frametimes['start_to_end_time']
+                             f_successes]
+
+        # successes[method] = f_successes]
 
     # Return dictionary of method: success ratio
     return successes
@@ -247,12 +253,12 @@ def print_dm_res(d, csv_str):
 if __name__ == '__main__':
 
     catfoodcsv = ['catfood.csv', 'catfood-a-long.csv', 'catfood-a-short.csv', 'catfood-r-long.csv', 'catfood-r-short.csv']
-    cerealcsv = ['cereal-a-short.csv']#['cereal.csv', 'cereal-a-long.csv', 'cereal-a-short.csv']
+    cerealcsv = ['cereal.csv', 'cereal-a-long.csv', 'cereal-a-short.csv']
     cookiecsv = ['cookie.csv', 'cookie-a-long.csv', 'cookie-a-short.csv']
     
-    inputs = {'cookie':['./OT-res/KP-detect/cookie/cookie-train.jpg', cookiecsv]}
-    #inputs = {'cereal':['./OT-res/KP-detect/cereal/cereal-train.jpg', cerealcsv]} 
-    #'catfood':['./OT-res/KP-detect/catfood/catfood-train.jpg', catfoodcsv]}
+    inputs = {'cookie':['./OT-res/KP-detect/cookie/cookie-train.jpg', cookiecsv],
+              'cereal':['./OT-res/KP-detect/cereal/cereal-train.jpg', cerealcsv],
+              'catfood':['./OT-res/KP-detect/catfood/catfood-train.jpg', catfoodcsv]}
 
     for v in inputs:       
         print v
@@ -261,10 +267,10 @@ if __name__ == '__main__':
                 res = compare_dm(videoname = v, 
                                trainimg = './OT-res/KP-detect/%s/%s-train.jpg' % (v, inputs[v][1][x][:-4]),
                                gt_csv = inputs[v][1][x],
-                               d_methods = ['ORB'],
-                               visualize = True)
+                               d_methods = ['ORB', 'SIFT', 'BRISK'],
+                               visualize = False)
 
-                # pickle.dump(res, open("./OT-res/pickles/p5/%s.p" % (inputs[v][1][x][:-4]), "wb"))
+                pickle.dump(res, open("./OT-res/pickles/p3/%s.p" % (inputs[v][1][x][:-4]), "wb"))
                 print res
                 # print_dm_res(res, inputs[v][1][x])
             except:

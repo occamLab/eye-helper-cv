@@ -8,7 +8,6 @@ import pickle
 #   rotation, affine, overall
 #temporal distance from training image
 
-
 def plot(data, plot_xlabel, plot_ylabel, plot_title, label):
     """Inputs:
             data -> in a list [x, y]
@@ -21,7 +20,7 @@ def plot(data, plot_xlabel, plot_ylabel, plot_title, label):
         Outputs:
             Plots the data (no actual return)
     """
-    plt.plot(data, label = label)
+    plt.plot(data[0], data[1], 'o', label = label)
 
     plt.ylabel(plot_ylabel)
     plt.xlabel(plot_xlabel)
@@ -31,18 +30,19 @@ if __name__ == '__main__':
     pickle_list = ['catfood', 'catfood-a-long', 'catfood-a-short', 'catfood-r-long', 'catfood-r-short','cereal', 'cereal-a-long', 'cereal-a-short', 'cookie', 'cookie-a-long', 'cookie-a-short']
     for thing in pickle_list:
         try:
-            name = './OT-res/pickles/p2/%s.p' %(thing)
+            name = './OT-res/pickles/p3/%s.p' %(thing)
             print(name)
             temp = open(name, 'r')
             data = pickle.load(temp)
             for key in data:
                 plt.hold(True) 
-                print(data[key])
-                plot(data = data[key], plot_xlabel = 'frames since training image', 
-                     plot_ylabel = 'Percent accuracy', plot_title = thing,
+                x = data[key][2] # avg success rate for the current method  
+                y = data[key][4]['start_to_end_time'] # avg runtime per frame for the current method
+                plot(data = [x,y], plot_xlabel = 'average success rate (% success)', 
+                     plot_ylabel = 'average runtime per frame (seconds)', plot_title = thing,
                      label = str(key))
             plt.legend()
-            plt.savefig("%s.png" % thing)
+            plt.savefig("./OT-res/plots/p3/%s.png" % thing)
             plt.show()
         except:
             print('hello')
