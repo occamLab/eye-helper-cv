@@ -1,5 +1,6 @@
 import cv2
 import numpy as np 
+import scipy as sp 
 
 
 def match_object(previous, current, train_img):
@@ -39,8 +40,20 @@ def match_object(previous, current, train_img):
             m_x = int(q_k[m.queryIdx].pt[0])
             m_y = int(q_k[m.queryIdx].pt[1])
             good_matches.append(m)
-            cv2.circle(crop_img, (int(q_k[m.queryIdx].pt[0]), int(q_k[m.queryIdx].pt[1])), 2, [0, 200, 200], 2)
-    cv2.imshow('matches', crop_img)
+    
+    h1, w1 = crop_img.shape[:2]
+    h2, w2 = t_img.shape[:2]
+    view = sp.zeros((max(h1, h2), w1 + w2, 3), sp.uint8)
+    view[:h1, :w1, 0] = crop_img
+    view[:h2, w1:, 0] = t_img
+    view[:, :, 1] = view[:, :, 0]
+    view[:, :, 2] = view[:, :, 0]
+
+    for m in good_matches:
+        # draw the keypoints
+        cv2.circle(view, (int(q_k[m.queryIdx].pt[0]), int(q_k[m.queryIdx].pt[1])), 2, [0, 0, 255], 2)
+    # Showing the matches
+    cv2.imshow("view", view)
     cv2.waitKey(0)
 
 if __name__ == '__main__':
