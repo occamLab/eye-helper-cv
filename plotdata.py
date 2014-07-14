@@ -38,7 +38,7 @@ if __name__ == '__main__':
             for key in data:
                 plt.hold(True) 
                 print(data[key])
-                plot(data = data[key][::-1], plot_xlabel = 'frames since training image', 
+                plot(data = data[key], plot_xlabel = 'frames since training image', 
                      plot_ylabel = 'Percent accuracy', plot_title = thing,
                      label = str(key))
             plt.legend()
