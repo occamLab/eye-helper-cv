@@ -94,6 +94,7 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
         totalmatches = 0
         good_matches = []
         frame_total_times = []
+        f_successes = []
 
         # Opening the ground truth csv
         csvfile = open('./gstore-csv/%s' % gt_csv, 'rb')            
@@ -114,6 +115,10 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
 
         # Loop through rows in the csv (i.e. the video frames)
         for row in reader:
+            # So we can get %accuracy per frame
+            f_totalmatches = 0
+            f_correctmatches = 0            
+
             # print row
             # Time: Starting this frame
             frame_start_time = time.time()
@@ -152,7 +157,6 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
                 bf = cv2.BFMatcher()
 
             matches = bf.knnMatch(im_d, t_d, k=2)
-
             # Time: How long it took to do the keypoint matching on this frame
             frame_match_time = time.time()            
             frametimes['match_time'].append(frame_match_time - frame_kp_detect_time)
@@ -165,12 +169,17 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
                     m_y = int(im_k[m.queryIdx].pt[1])
                     good_matches.append(m)
 
-                    # Increment totalmatches
+                    # Increment totalmatches and f_totalmatches
                     totalmatches += 1
+                    f_totalmatches += 1
 
-                    # Increment correctmatches if this match agrees with the ground truth
+                    # Increment correctmatches and f_correctmatches if this match agrees with the ground truth
                     if x-10 <= m_x <= x2+10 and y-10 <= m_y <= y2+10:
                         correctmatches += 1
+                        f_correctmatches += 1
+
+            # append success rate for that frame to f_successes
+            f_successes.append(float(f_correctmatches)/float(f_totalmatches))
 
             if visualize: #make sure that these inputs are passed in correctly!! otherwise nonsensical visualizations will happen.
                 kpvisualize(img_t = trainimg, 
@@ -203,7 +212,7 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
 
         # Compute success ratios for all the rows for this particular method
         # successes[method] = [correctmatches, totalmatches, float(correctmatches)/float(totalmatches)*100, method_total_time, frametimes]
-        successes[method] = [float(correctmatches)/float(totalmatches)*100, frame_total_times]
+        successes[method] = f_successes
 
     # Return dictionary of method: success ratio
     return successes
@@ -213,11 +222,12 @@ def print_dm_res(d, csv_str):
     for key in d:
         print "%s with the %s snippet" % (key, csv_str)
         current = d[key]
+        print current
         # print "\tcorrectmatches: %d" % current[]
         # print "\ttotalmatches: %d" % current[]
-        print "\t%d%% accuracy" % current[0] 
+        # print "\t%d%% accuracy" % current[0] 
         # print "\tmethod total runtime: %f seconds" % current[]
-        print current[1]
+        # print current[1]
         # frametimes = current[]
         # print "\t\taverage start to end time per frame: %f seconds" % frametimes['start_to_end_time']
         # print "\t\taverage image opening time per frame: %f seconds" % frametimes['open_time']
@@ -244,7 +254,9 @@ if __name__ == '__main__':
                                trainimg = './OT-res/KP-detect/%s/%s-train.jpg' % (v, inputs[v][1][x][:-4]),
                                gt_csv = inputs[v][1][x],
                                visualize = False)
+
                 pickle.dump(res, open("./OT-res/pickles/p2/%s.p" % (inputs[v][1][x][:-4]), "wb"))
-                print_dm_res(res, inputs[v][1][x])
+                print res
+                # print_dm_res(res, inputs[v][1][x])
             except:
                 pass
