@@ -71,7 +71,7 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
     path = './gstore-snippets/%s_snippet/' %videoname
 
     # Methods of interest to loop through
-    d_methods = ['ORB']#['SIFT', 'ORB', 'BRISK']# 'SURF']
+    d_methods = ['SIFT', 'ORB', 'BRISK']# 'SURF']
 
     # For calculating the success ratio...
 
@@ -239,9 +239,12 @@ if __name__ == '__main__':
     for v in inputs:       
         print v
         for x in range(len(inputs[v][1])):
-            res = compare_dm(videoname = v, 
-                           trainimg = './OT-res/KP-detect/%s/%s-train.jpg' % (v, inputs[v][1][x][:-4]),
-                           gt_csv = inputs[v][1][x],
-                           visualize = False)
-            pickle.dump(res, open("./OT-res/pickles/p3/%s.p" % (inputs[v][1][x][:-4]), "wb"))
-            print_dm_res(res, inputs[v][1][x])
+            try:
+                res = compare_dm(videoname = v, 
+                               trainimg = './OT-res/KP-detect/%s/%s-train.jpg' % (v, inputs[v][1][x][:-4]),
+                               gt_csv = inputs[v][1][x],
+                               visualize = False)
+                pickle.dump(res, open("./OT-res/pickles/p2/%s.p" % (inputs[v][1][x][:-4]), "wb"))
+                print_dm_res(res, inputs[v][1][x])
+            except:
+                pass
