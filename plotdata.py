@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt  
+
 import numpy as np 
 import pickle
 
@@ -41,6 +42,7 @@ if __name__ == '__main__':
                      plot_ylabel = 'Percent accuracy', plot_title = thing,
                      label = str(key))
             plt.legend()
+            plt.savefig("%s.png" % thing)
             plt.show()
         except:
             print('hello')
