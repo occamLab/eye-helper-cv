@@ -20,10 +20,7 @@ def plot(data, plot_xlabel, plot_ylabel, plot_title, label):
         Outputs:
             Plots the data (no actual return)
     """
-    if len(data) > 1:
-        plt.plot(data[0], data[1], label = label)
-    else:
-        plt.plot(data, label = label)
+    plt.plot(data, label = label)
 
     plt.ylabel(plot_ylabel)
     plt.xlabel(plot_xlabel)
@@ -31,20 +28,21 @@ def plot(data, plot_xlabel, plot_ylabel, plot_title, label):
 
 if __name__ == '__main__':
     pickle_list = ['catfood', 'catfood-a-long', 'catfood-a-short', 'catfood-r-long', 'catfood-r-short','cereal', 'cereal-a-long', 'cereal-a-short', 'cookie', 'cookie-a-long', 'cookie-a-short']
-    for pickle in pickle_list:
+    for thing in pickle_list:
         try:
-            temp = open('./OT-res/pickles/p2/%s' %(pickle), 'r')
+            name = './OT-res/pickles/p2/%s.p' %(thing)
+            print(name)
+            temp = open(name, 'r')
             data = pickle.load(temp)
             print data
             for key in data:
-                x = data[key][3]
-                y = data[key][2]
                 plt.hold(True) 
-                plot(data = [x,y], plot_xlabel = 'time of run (s)', 
-                            plot_ylabel = 'Percent accuracy', 
-                            plot_title = 'frames from training image',
-                            label = pickle + ' '+ str(key))
+                print(data[key])
+                plot(data = data[key], plot_xlabel = 'frames since training image', 
+                     plot_ylabel = 'Percent accuracy', plot_title = thing,
+                     label = str(key))
             plt.legend()
+            plt.show()
         except:
+            print('hello')
             pass
-    plt.show()
