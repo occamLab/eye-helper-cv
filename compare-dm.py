@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 import scipy as sp
 import time
 import pickle
-
+   
 def kpvisualize(img_t, img_q, box, good_matches, t_k, q_k):
     """ 
     Displays the ground truth box and matches on the query image
@@ -39,8 +39,7 @@ def kpvisualize(img_t, img_q, box, good_matches, t_k, q_k):
     cv2.imshow("view", view)
     cv2.waitKey(0)
 
-
-def compare_dm(videoname, trainimg, gt_csv, visualize = False):
+def compare_dm(videoname, trainimg, gt_csv, d_methods = ['ORB'] ,visualize = False):
     """
     July 8, 2014 (happy birthday Lindsey!)
     Emily and Lindsey's function for for comparing OpenCV methods for feature 
@@ -70,9 +69,6 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
     # Video snippet path
     path = './gstore-snippets/%s_snippet/' %videoname
 
-    # Methods of interest to loop through
-    d_methods = ['SIFT', 'ORB', 'BRISK']# 'SURF']
-
     # For calculating the success ratio...
 
     # Dictionary in which the key is the method and value is the success percentage
@@ -80,9 +76,9 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
     successes = {}
 
     # Loop through the methods, store in a dictionary somehow
-    for method in d_methods:
-
+    for method in d_methods: 
         print "starting %s" % method
+
         #Initializing things for running the loop on this method
         method_start_time = time.time()
         frametimes = {'open_time':[], 
@@ -96,9 +92,6 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
         frame_total_times = []
         f_successes = []
 
-        # Opening the ground truth csv
-        csvfile = open('./gstore-csv/%s' % gt_csv, 'rb')            
-        reader = csv.reader(csvfile, delimiter = ',', quotechar = '|')
 
         # Initiate the detector and descriptor
         # detector and descriptor have the same method name
@@ -113,13 +106,22 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
         t_k = detector.detect(t)
         t_k, t_d = descriptor.compute(t, t_k) 
 
+        pos = 0
+
         # Loop through rows in the csv (i.e. the video frames)
-        for row in reader:
-            # So we can get %accuracy per frame
+        # Assumes the csv is in reverse order (b/c label-data built the csv in reversed order)
+        # For prototyping we will iterate through the frames in chronological order
+        # (because that makes more sense for updating the hypothesis and whatnot)
+        for line in reversed(open('./gstore-csv/%s' % gt_csv).readlines()):
+            row = line.rstrip().split(',')
+
+            # pos is a counter for which frame the program is at
+            pos += 1
+
+            # So we can get %accuracy per method and per frame
             f_totalmatches = 0
             f_correctmatches = 0            
 
-            # print row
             # Time: Starting this frame
             frame_start_time = time.time()
 
@@ -179,7 +181,7 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
                         f_correctmatches += 1
 
             # append success rate for that frame to f_successes
-            f_successes.append(float(f_correctmatches)/float(f_totalmatches))
+            f_successes.append(float(f_correctmatches)/float(f_totalmatches) * 100)
 
             if visualize: #make sure that these inputs are passed in correctly!! otherwise nonsensical visualizations will happen.
                 kpvisualize(img_t = trainimg, 
@@ -188,6 +190,12 @@ def compare_dm(videoname, trainimg, gt_csv, visualize = False):
                             good_matches = good_matches, 
                             t_k = t_k, 
                             q_k = im_k)
+                print pos
+
+                # Hitting 'q' will break out of the current video
+                k = cv2.waitKey(0)
+                if k == ord('q'):
+                    break
 
                 # Time: How long it took to do the ratio test and visualize the matches on this frame 
                 # i.e. if the visualize option is True.
@@ -239,12 +247,12 @@ def print_dm_res(d, csv_str):
 if __name__ == '__main__':
 
     catfoodcsv = ['catfood.csv', 'catfood-a-long.csv', 'catfood-a-short.csv', 'catfood-r-long.csv', 'catfood-r-short.csv']
-    cerealcsv = ['cereal.csv', 'cereal-a-long.csv', 'cereal-a-short.csv']
+    cerealcsv = ['cereal-a-short.csv']#['cereal.csv', 'cereal-a-long.csv', 'cereal-a-short.csv']
     cookiecsv = ['cookie.csv', 'cookie-a-long.csv', 'cookie-a-short.csv']
     
-    inputs = {'cookie':['./OT-res/KP-detect/cookie/cookie-train.jpg', cookiecsv],
-              'cereal':['./OT-res/KP-detect/cereal/cereal-train.jpg', cerealcsv], 
-              'catfood':['./OT-res/KP-detect/catfood/catfood-train.jpg', catfoodcsv]} 
+    inputs = {'cookie':['./OT-res/KP-detect/cookie/cookie-train.jpg', cookiecsv]}
+    #inputs = {'cereal':['./OT-res/KP-detect/cereal/cereal-train.jpg', cerealcsv]} 
+    #'catfood':['./OT-res/KP-detect/catfood/catfood-train.jpg', catfoodcsv]}
 
     for v in inputs:       
         print v
@@ -253,10 +261,11 @@ if __name__ == '__main__':
                 res = compare_dm(videoname = v, 
                                trainimg = './OT-res/KP-detect/%s/%s-train.jpg' % (v, inputs[v][1][x][:-4]),
                                gt_csv = inputs[v][1][x],
-                               visualize = False)
+                               d_methods = ['ORB'],
+                               visualize = True)
 
-                pickle.dump(res, open("./OT-res/pickles/p3/%s.p" % (inputs[v][1][x][:-4]), "wb"))
+                # pickle.dump(res, open("./OT-res/pickles/p5/%s.p" % (inputs[v][1][x][:-4]), "wb"))
                 print res
                 # print_dm_res(res, inputs[v][1][x])
             except:
-                pass9
+                pass
