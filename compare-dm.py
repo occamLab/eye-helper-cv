@@ -255,8 +255,8 @@ if __name__ == '__main__':
                                gt_csv = inputs[v][1][x],
                                visualize = False)
 
-                pickle.dump(res, open("./OT-res/pickles/p2/%s.p" % (inputs[v][1][x][:-4]), "wb"))
+                pickle.dump(res, open("./OT-res/pickles/p3/%s.p" % (inputs[v][1][x][:-4]), "wb"))
                 print res
                 # print_dm_res(res, inputs[v][1][x])
             except:
-                pass
+                pass9
