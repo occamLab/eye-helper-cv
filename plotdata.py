@@ -36,10 +36,12 @@ if __name__ == '__main__':
             data = pickle.load(temp)
             for key in data:
                 plt.hold(True) 
-                x = data[key][2] # avg success rate for the current method  
-                y = data[key][4]['start_to_end_time'] # avg runtime per frame for the current method
-                plot(data = [x,y], plot_xlabel = 'average success rate (% success)', 
-                     plot_ylabel = 'average runtime per frame (seconds)', plot_title = thing,
+                x = data[key][4]['start_to_end_time'] # avg runtime per frame for the current method
+                y = data[key][2] # avg success rate for the current method  
+                plot(data = [x,y],  
+                     plot_xlabel = 'average runtime per frame (seconds)',
+                     plot_ylabel = 'average success rate (% success)', 
+                     plot_title = thing,
                      label = str(key))
             plt.legend()
             plt.savefig("./OT-res/plots/p3/%s.png" % thing)
