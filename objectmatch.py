@@ -3,40 +3,73 @@ import numpy as np
 import scipy as sp 
 
 
-def match_object(previous, current, train_img):
+def match_object(previous, current, train_img, show = True):
     """
 
     Takes in:
-        center of the previous image
-        current image with path
-        training image for keypoint matching
+        previous -> center of the previous image
+        current ->  image being analyzed (with path)
+        train_img -> training image for keypoint matching
     Outputs:
         ??
 
     """
-    #opens training and query images
-
+    #Take in training image with coordinates of tracked object
     t_img = cv2.imread(train_img)
-    img = cv2.imread(current)
+    #query image
+    q_img = cv2.imread(current)
 
-    x = previous[0] -75
-    y = previous[1] -75
-    x2 = previous[2] +75
-    y2 = previous[3] +75
+    # x = previous[0] -75
+    # y = previous[1] -75
+    # x2 = previous[2] +75
+    # y2 = previous[3] +75
 
     #crops image to reduce the neccessary search area
-    q_img = img[y:y2, x:x2] # NOTE: its img[y: y + h, x: x + w] and *not* img[x: x + w, y: y + h]
-
+    # q_img = img[y:y2, x:x2] # NOTE: its img[y: y + h, x: x + w] and *not* img[x: x + w, y: y + h]
+    
     #I choose YOU! ORB-achu
     detector = cv2.ORB()
 
+    x1 = 604.0
+    y1 = 400.0
+    x2 = 755.0
+    y2 = 867.0
+    #create a list of keypoints for entire image, subtract out tracked object keypoints
     t_k, t_d = detector.detectAndCompute(t_img, None)         #training image
+    object_k =[]
+    object_d = []
+    background_k = []
+    background_d = []
+    for index in range(len(t_k)):
+        if x1<=t_k[index].pt[0]<=x2 and y1<=t_k[index].pt[1]<=y2:
+            object_k.append(t_k[index])
+            object_d.append(t_d[index])
+        else:
+            background_k.append(t_k[index])
+            background_d.append(t_d[index])
+
+    #finds all keypoints in the query image    
     q_k, q_d = detector.detectAndCompute(q_img, None)      #query image
 
+    #matches background to new image
     matcher = cv2.BFMatcher(normType = cv2.NORM_HAMMING)
-    matches = matcher.knnMatch(q_d, t_d, k =2)
+    matches = matcher.knnMatch(q_d, np.array(background_d), k =2)
 
     #Keeping only matches that pass a 2nd nearest neighbor test
+    for m,n in matches:
+        if m.distance < 0.75*n.distance:
+            # Get coordinate of the match
+            m_x = int(q_k[m.queryIdx].pt[0])
+            m_y = int(q_k[m.queryIdx].pt[1])
+            #create list of matched background keypoints with new image
+            #remove these matches
+            for index in range(len(q_k)):
+                if q_k[index].pt[0] == m_x and q_k[index].pt[1] == m_y:
+                    del q_k[index]
+                    del q_d[index]
+
+    #match list of object keypoints to list of remaining matches 
+    matches = matcher.knnMatch(q_d, np.array(object_d), k =2)
     good_matches = []
     for m,n in matches:
         if m.distance < 0.75*n.distance:
@@ -44,18 +77,31 @@ def match_object(previous, current, train_img):
             m_x = int(q_k[m.queryIdx].pt[0])
             m_y = int(q_k[m.queryIdx].pt[1])
             good_matches.append((m_x, m_y))
+    print good_matches
+
+
+    new_center, img_radius = mean_shift(hypothesis = (760, 470), 
+                                        keypoints = good_matches, 
+                                        threshold = 10, 
+                                        current = q_img,
+                                        show = show)
+
     return good_matches, q_img
 
 
 def mean_shift(hypothesis, keypoints, threshold, current = None, show = False):
     """
     Inputs:
-        Previous center point as a starting hypothesis
-        List of keypoint (x,y) coordinates
+        hypothesis -> Previous center point as a starting hypothesis
+        keypoints -> List of keypoint (x,y) coordinates
+        Threshold -> maximum acceptable difference in center between iterations (eg 10 pixels, 5 pixels)
+        current -> np array representing the image (for visualization)
+        show -> determines whether visualization is shown
 
     Returns:
         New center of keypoints
-        (At some point hopefully also a radius)
+        Radius
+        If show is true -> displays the center, keypoints and a circle around the object
     """
 
     #assigns a value to the weighting constant -> based on 
@@ -109,22 +155,17 @@ def mean_shift(hypothesis, keypoints, threshold, current = None, show = False):
 
     #visualizes moving center and displays keypoints
     if show:
-        img = current   #Remember to switch back to imread once done debugging
+        img = current   #Needs to be np array (alread opened by cv2)
         for k in keypoints:
             cv2.circle(img, k, 2, [255, 0, 0], 2)
         cv2.circle(img, hypothesis, 3, [0, 0, 255], 3)
-        cv2.circle(img, hypothesis, radius, [0,255,0], 2)
+        cv2.circle(img, hypothesis, radius, [100,255,0], 2)
         cv2.imshow('Current hypothesis', img)
         cv2.waitKey(0)
     
-    return hypothesis
+    return hypothesis, radius
 
 if __name__ == '__main__':
-    keypoints, current = match_object(previous =[126,268,786,652], 
-                                      current = './gstore-snippets/cookie_snippet/cookie_00274.jpg', 
-                                      train_img = './OT-res/KP-detect/cookie/cookie-train.jpg')
-    mean_shift(hypothesis = (760, 470), 
-               keypoints = keypoints, 
-               threshold = 10, 
-               current = current,
-               show = True)
+    match_object(previous =[126,268,786,652], 
+                 current = './gstore-snippets/cookie_snippet/cookie_00274.jpg', 
+                 train_img = './gstore-snippets/cookie_snippet/cookie_00177.jpg')
