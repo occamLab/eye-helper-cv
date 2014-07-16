@@ -54,13 +54,9 @@ def match_object(previous, current, train_img, pos, show = False):
         else:
             background_k.append(t_k[index])
             background_d.append(t_d[index])
-    # cv2.imshow('train', t_img)
-    # cv2.waitKey(0)
 
     #finds all keypoints in the query image    
     q_k, q_d = detector.detectAndCompute(q_img, None)      #query image
-    # cv2.imshow('Query', q_img)
-    # cv2.waitKey(0)
 
     try:
         #matches background to new image
@@ -102,6 +98,7 @@ def match_object(previous, current, train_img, pos, show = False):
         return new_center
     except:
         print "Likely there are no matches"
+        return center
 
 def mean_shift(hypothesis, keypoints, threshold, current = None, show = False):
     """
@@ -178,10 +175,11 @@ def mean_shift(hypothesis, keypoints, threshold, current = None, show = False):
         cv2.waitKey(0)
     
     return hypothesis, radius
-
+ 
 if __name__ == '__main__':
     center = [760, 470]
     for frame in range(177, 289):
+        print frame
         center = match_object(previous = center, 
                               current = './gstore-snippets/cookie_snippet/cookie_00%d.jpg' % frame, 
                               train_img = './gstore-snippets/cookie_snippet/cookie_00177.jpg',
