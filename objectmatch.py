@@ -3,7 +3,7 @@ import numpy as np
 import scipy as sp 
 
 
-def match_object(previous, current, train_img, pos, show = False):
+def match_object(previous, current, train_img, pos, frame, show = False):
     """
 
     Takes in:
@@ -93,14 +93,15 @@ def match_object(previous, current, train_img, pos, show = False):
                                             keypoints = good_matches, 
                                             threshold = 10, 
                                             current = q_img,
-                                            show = show)
+                                            show = show, 
+                                            frame = frame)
 
         return new_center
     except:
         print "Likely there are no matches"
         return center
 
-def mean_shift(hypothesis, keypoints, threshold, current = None, show = False):
+def mean_shift(hypothesis, keypoints, threshold, frame, current = None, show = False):
     """
     Inputs:
         hypothesis -> Previous center point as a starting hypothesis
@@ -171,6 +172,7 @@ def mean_shift(hypothesis, keypoints, threshold, current = None, show = False):
             cv2.circle(img, k, 2, [255, 0, 0], 2)
         cv2.circle(img, hypothesis, 3, [0, 0, 255], 3)
         cv2.circle(img, hypothesis, radius, [100,255,0], 2)
+        cv2.imwrite('./OT-res/meanshift/cookie/cookie_00%d.jpg' % frame, img)
         cv2.imshow('Current hypothesis', img)
         cv2.waitKey(0)
     
@@ -178,10 +180,11 @@ def mean_shift(hypothesis, keypoints, threshold, current = None, show = False):
  
 if __name__ == '__main__':
     center = [760, 470]
-    for frame in range(177, 289):
+    for frame in range(177, 289): 
         print frame
         center = match_object(previous = center, 
                               current = './gstore-snippets/cookie_snippet/cookie_00%d.jpg' % frame, 
                               train_img = './gstore-snippets/cookie_snippet/cookie_00177.jpg',
                               pos = [450,278,512,429],
-                              show = True)
+                              show = True,
+                              frame = frame)
