@@ -48,10 +48,13 @@ def match_object(previous, current, train_img):
     #Creates a mask with a probability of 1 where keypoint are and 0 where they aren't
     prob_image = np.zeros((q_img.shape[0], q_img.shape[1]))
     for match in good_matches:
-        prob_image[match[1]][match[0]] = 1
+        prob_image[match[1]][match[0]] = 255
     print good_matches
     cv2.imshow('mask', prob_image)
     cv2.waitKey(0)
+
+    #Using opencv's build in backprojection functions
+
 
     #Attempting CAMshift black magic -> hopefully it will work even though this isn't a histogram
     term_crit = ( cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 1)
@@ -66,6 +69,50 @@ def match_object(previous, current, train_img):
     else:
         print "I am sorry I have failed you"
 
+
+def mean_shift(hypothesis, keypoints, threshold):
+    """
+    Inputs:
+        Previous center point as a starting hypothesis
+        List of keypoint (x,y) coordinates
+
+    Returns:
+        New center of keypoints
+        (At some point hopefully also a radius)
+    """
+
+    #assigns a value to the weighting constant -> based on 
+    #experimental results
+    c = 1
+
+    #arbitrarily set diff high to go through loop at least once
+    diff = 100
+
+    while(diff > threshold)
+        #sets up lists of weights and weights*position
+        x_weights = []
+        y_weights = []
+        weighted_x = []
+        weighted_y = []
+        #Creats a list of weighted points, where points near the 
+        #hypothesis have a larger weight
+        for index in range(len(keypoints)):
+            x_val = np.exp(-c * (keypoints[0][index] - hypothesis[0])**2)
+            x_weights.append(x_val)
+            weighted_x.append(x_val*keypoints[0])
+            y_val = np.exp(-c * (keypoints[1][index] - hypothesis[1])**2)
+            y_weights.append(y_val)
+            weighted_y.append(y_val*keypoints[1])
+
+        #finds 'center of mass' of the points to determine new center
+        x = sum(weighted_x)/sum(x_weights)
+        y = sum(weighted_y)/sum(y_weights)
+
+        #update hypothesis
+        hypothesis = (x,y)
+
+        diff = np.sqrt((keypoints[0] - x)**2 + (keypoints[1] - y)**2)
+    return hypothesis
 
 def crop_and_display(previous, current, train_img):
     """
