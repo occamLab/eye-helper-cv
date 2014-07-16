@@ -75,9 +75,7 @@ def mean_shift(hypothesis, keypoints, threshold, current = None, show = False):
         #hypothesis have a larger weight
         last_guess = hypothesis
         for kp in keypoints:
-            print kp
             x_val = np.exp(-c * (kp[0] - last_guess[0])**2)
-            print x_val
             x_weights.append(x_val)
             weighted_x.append(x_val*kp[0])
             y_val = np.exp(-c * (kp[1] - last_guess[1])**2)
@@ -86,27 +84,40 @@ def mean_shift(hypothesis, keypoints, threshold, current = None, show = False):
 
         #finds 'center of mass' of the points to determine new center
         x = int(sum(weighted_x)/sum(x_weights))
-        print x
         y = int(sum(weighted_y)/sum(y_weights))
-        print y
 
         #update hypothesis
         hypothesis = (x,y)
 
         diff = np.sqrt((last_guess[0] - x)**2 + (last_guess[1] - y)**2)
 
-        #visualizes moving center and displays keypoints
-        if show:
-            img = current   #Remember to switch back to imread once done debugging
-            for k in keypoints:
-                cv2.circle(img, k, 2, [255, 0, 0], 2)
-            cv2.circle(img, hypothesis, 3, [0, 0, 255], 3)
-            cv2.imshow('Current hypothesis', img)
-            cv2.waitKey(0)
+        # Finding the radius:
+        norm_weights = [np.linalg.norm([x_weights[i], y_weights[i]]) for i in range(len(x_weights))]
+        avg_weight = sum(norm_weights)/len(norm_weights)
+        std_weight = np.std(norm_weights)
+
+        # Threshold based on standard deviations (to account for different kp density scenarios)
+        threshold = avg_weight + 2*std_weight
+        inliers = []
+
+        # Radius corresponds to the farthest-away keypoints are in the threshold from center of mass (x,y)
+        for index in range(len(norm_weights)):
+            if norm_weights[index] < threshold:
+                coords = [keypoints[index][0] - x, keypoints[index][1] - y] 
+                inliers.append(np.linalg.norm(coords))
+        radius = int(max(inliers))
+
+    #visualizes moving center and displays keypoints
+    if show:
+        img = current   #Remember to switch back to imread once done debugging
+        for k in keypoints:
+            cv2.circle(img, k, 2, [255, 0, 0], 2)
+        cv2.circle(img, hypothesis, 3, [0, 0, 255], 3)
+        cv2.circle(img, hypothesis, radius, [0,255,0], 2)
+        cv2.imshow('Current hypothesis', img)
+        cv2.waitKey(0)
     
     return hypothesis
-
-
 
 if __name__ == '__main__':
     keypoints, current = match_object(previous =[126,268,786,652], 
