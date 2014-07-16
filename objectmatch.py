@@ -3,13 +3,15 @@ import numpy as np
 import scipy as sp 
 
 
-def match_object(previous, current, train_img, show = True):
+def match_object(previous, current, train_img, pos, show = False):
     """
 
     Takes in:
         previous -> center of the previous image
         current ->  image being analyzed (with path)
         train_img -> training image for keypoint matching
+        pos -> corners (left top, right bottom) of object in trianing img
+        show -> determines if visualization is displayed
     Outputs:
         ??
 
@@ -30,64 +32,76 @@ def match_object(previous, current, train_img, show = True):
     #I choose YOU! ORB-achu
     detector = cv2.ORB()
 
-    x1 = 604.0
-    y1 = 400.0
-    x2 = 755.0
-    y2 = 867.0
+    x1 = pos[0]
+    y1 = pos[1]
+    x2 = pos[2]
+    y2 = pos[3]
     #create a list of keypoints for entire image, subtract out tracked object keypoints
     t_k, t_d = detector.detectAndCompute(t_img, None)         #training image
     object_k =[]
     object_d = []
     background_k = []
     background_d = []
+
+
     for index in range(len(t_k)):
-        if x1<=t_k[index].pt[0]<=x2 and y1<=t_k[index].pt[1]<=y2:
+        x_temp = t_k[index].pt[0]
+        y_temp = t_k[index].pt[1]
+        cv2.circle(t_img, (int(x_temp), int(y_temp)), 2, [0,0,255], 2)
+        if x1<=x_temp<=x2 and y1<=y_temp<=y2:
             object_k.append(t_k[index])
             object_d.append(t_d[index])
         else:
             background_k.append(t_k[index])
             background_d.append(t_d[index])
+    # cv2.imshow('train', t_img)
+    # cv2.waitKey(0)
 
     #finds all keypoints in the query image    
     q_k, q_d = detector.detectAndCompute(q_img, None)      #query image
+    # cv2.imshow('Query', q_img)
+    # cv2.waitKey(0)
 
-    #matches background to new image
-    matcher = cv2.BFMatcher(normType = cv2.NORM_HAMMING)
-    matches = matcher.knnMatch(q_d, np.array(background_d), k =2)
+    try:
+        #matches background to new image
+        matcher = cv2.BFMatcher(normType = cv2.NORM_HAMMING)
+        matches = matcher.knnMatch(q_d, np.array(background_d), k =2)
+        #Keeping only matches that pass a 2nd nearest neighbor test
+         
+        remain_k = []
+        remain_d = []
+        for m,n in matches:
+            if m.distance < 0.75*n.distance:
+                # Get coordinate of the match
+                m_x = int(q_k[m.queryIdx].pt[0])
+                m_y = int(q_k[m.queryIdx].pt[1])
+                #create list of matched background keypoints with new image
+                #remove these matches
+                for index in range(len(q_k)):
+                    if q_k[index].pt[0] != m_x and q_k[index].pt[1] != m_y:
+                        remain_k.append(q_k[index])
+                        remain_d.append(q_d[index])
 
-    #Keeping only matches that pass a 2nd nearest neighbor test
-    for m,n in matches:
-        if m.distance < 0.75*n.distance:
-            # Get coordinate of the match
-            m_x = int(q_k[m.queryIdx].pt[0])
-            m_y = int(q_k[m.queryIdx].pt[1])
-            #create list of matched background keypoints with new image
-            #remove these matches
-            for index in range(len(q_k)):
-                if q_k[index].pt[0] == m_x and q_k[index].pt[1] == m_y:
-                    del q_k[index]
-                    del q_d[index]
+        #match list of object keypoints to list of remaining matches 
+        matches = matcher.knnMatch(np.array(remain_d), np.array(object_d), k =2)
 
-    #match list of object keypoints to list of remaining matches 
-    matches = matcher.knnMatch(q_d, np.array(object_d), k =2)
-    good_matches = []
-    for m,n in matches:
-        if m.distance < 0.75*n.distance:
-            # Get coordinate of the match
-            m_x = int(q_k[m.queryIdx].pt[0])
-            m_y = int(q_k[m.queryIdx].pt[1])
-            good_matches.append((m_x, m_y))
-    print good_matches
+        good_matches = []
+        for m,n in matches:
+            if m.distance < 0.75*n.distance:
+                # Get coordinate of the match
+                m_x = int(remain_k[m.queryIdx].pt[0])
+                m_y = int(remain_k[m.queryIdx].pt[1])
+                good_matches.append((m_x, m_y))
 
+        new_center, img_radius = mean_shift(hypothesis = (previous), 
+                                            keypoints = good_matches, 
+                                            threshold = 10, 
+                                            current = q_img,
+                                            show = show)
 
-    new_center, img_radius = mean_shift(hypothesis = (760, 470), 
-                                        keypoints = good_matches, 
-                                        threshold = 10, 
-                                        current = q_img,
-                                        show = show)
-
-    return good_matches, q_img
-
+        return new_center
+    except:
+        print "Likely there are no matches"
 
 def mean_shift(hypothesis, keypoints, threshold, current = None, show = False):
     """
@@ -143,12 +157,12 @@ def mean_shift(hypothesis, keypoints, threshold, current = None, show = False):
         std_weight = np.std(norm_weights)
 
         # Threshold based on standard deviations (to account for different kp density scenarios)
-        threshold = avg_weight + 2*std_weight
+        threshold = avg_weight - 0.75*std_weight
         inliers = []
 
         # Radius corresponds to the farthest-away keypoints are in the threshold from center of mass (x,y)
         for index in range(len(norm_weights)):
-            if norm_weights[index] < threshold:
+            if norm_weights[index] > threshold:
                 coords = [keypoints[index][0] - x, keypoints[index][1] - y] 
                 inliers.append(np.linalg.norm(coords))
         radius = int(max(inliers))
@@ -166,6 +180,10 @@ def mean_shift(hypothesis, keypoints, threshold, current = None, show = False):
     return hypothesis, radius
 
 if __name__ == '__main__':
-    match_object(previous =[126,268,786,652], 
-                 current = './gstore-snippets/cookie_snippet/cookie_00274.jpg', 
-                 train_img = './gstore-snippets/cookie_snippet/cookie_00177.jpg')
+    center = [760, 470]
+    for frame in range(177, 289):
+        center = match_object(previous = center, 
+                              current = './gstore-snippets/cookie_snippet/cookie_00%d.jpg' % frame, 
+                              train_img = './gstore-snippets/cookie_snippet/cookie_00177.jpg',
+                              pos = [450,278,512,429],
+                              show = True)
