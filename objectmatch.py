@@ -22,11 +22,6 @@ def match_object(previous, current, train_img, pos, frame, show = False):
     #query image
     q_img = cv2.imread(current)
 
-    # x = previous[0] -75
-    # y = previous[1] -75
-    # x2 = previous[2] +75
-    # y2 = previous[3] +75
-
     x1 = pos[2]
     y1 = pos[3]
     x2 = pos[0]
@@ -39,30 +34,46 @@ def match_object(previous, current, train_img, pos, frame, show = False):
     #I choose YOU! ORB-achu
     detector = cv2.ORB()
 
+    #Crop the query image with a 50% padding (calculate padding w/ height and width)
+    h = y2 - y1 
+    w = x2 - x1
+
+    print h
+    print w
+    
+    cv2.imshow('before crop', q_img)
+    cv2.waitKey(0)
+
+    print x1, y1
+    print x2, y2
+    q_img = q_img[(y1-0.5*h):(y2+0.5*h), (x1-0.5*w):(x2+0.5*w)]
+
+    print (x1-0.5*w),(x2+0.5*w)
+    print (y1-0.5*h),(y2+0.5*h)
+
+    cv2.imshow('after crop', q_img)
+    cv2.waitKey(0)
+
+
     #create a list of keypoints for entire image, subtract out tracked object keypoints
     t_k, t_d = detector.detectAndCompute(t_img, None)         #training image
-    object_k =[]
-    object_d = []
-    # background_k = []
-    # background_d = []
+    # object_k =[]
+    # object_d = []
 
     q_k, q_d = detector.detectAndCompute(q_img, None)      #query image
 
-    for index in range(len(q_k)):
-        x_temp = q_k[index].pt[0]
-        y_temp = q_k[index].pt[1]
-        # cv2.circle(q_img, (int(x_temp), int(y_temp)), 2, [0,0,255], 2) # red for all the keypoints
-        if x1<=x_temp<=x2 and y1<=y_temp<=y2:
-            object_k.append(q_k[index])
-            object_d.append(q_d[index])
-            # cv2.circle(q_img, (int(x_temp), int(y_temp)), 2, [255,0,255], 2) # magenta for the keypoints within the box of interest
-        # else:
-        #     background_k.append(t_k[index])
-        #     background_d.append(t_d[index])
+    # for index in range(len(q_k)):
+    #     x_temp = q_k[index].pt[0]
+    #     y_temp = q_k[index].pt[1]
+    #     # cv2.circle(q_img, (int(x_temp), int(y_temp)), 2, [0,0,255], 2) # red for all the keypoints
+    #     if x1<=x_temp<=x2 and y1<=y_temp<=y2:
+    #         object_k.append(q_k[index])
+    #         object_d.append(q_d[index])
+    #         # cv2.circle(q_img, (int(x_temp), int(y_temp)), 2, [255,0,255], 2) # magenta for the keypoints within the box of interest
     
     #finds all keypoints in the query image    
     
-    for kp in object_k:
+    for kp in q_k:
         x_temp = kp.pt[0]
         y_temp = kp.pt[1]
         cv2.circle(q_img, (int(x_temp), int(y_temp)), 2, [255, 255, 0], 3)
@@ -92,7 +103,7 @@ def match_object(previous, current, train_img, pos, frame, show = False):
             y_temp = kp.pt[1]
             cv2.circle(t_img, (int(x_temp), int(y_temp)), 2, [255, 255, 0], 3)
 
-        for kp in object_k:
+        for kp in q_k:
             x_temp = kp.pt[0]
             y_temp = kp.pt[1]
             cv2.circle(q_img, (int(x_temp), int(y_temp)), 2, [255, 255, 0], 3)
@@ -102,19 +113,16 @@ def match_object(previous, current, train_img, pos, frame, show = False):
         cv2.waitKey(0)
 
         # #match list of object keypoints to list of remaining matches 
-        matches = matcher.knnMatch(np.array(object_d), t_d, k =2)
-
-        print matches
+        matches = matcher.knnMatch(np.array(q_d), t_d, k =2)
 
         good_matches = []
         for m,n in matches:
             if m.distance < 0.75*n.distance:
                 # Get coordinate of the match
-                m_x = int(object_k[m.queryIdx].pt[0])
-                m_y = int(object_k[m.queryIdx].pt[1])
+                m_x = int(q_k[m.queryIdx].pt[0])
+                m_y = int(q_k[m.queryIdx].pt[1])
                 good_matches.append((m_x, m_y))
 
-        print good_matches
 
         new_center, img_radius = mean_shift(hypothesis = (previous), 
                                             keypoints = good_matches, 
@@ -201,8 +209,8 @@ def mean_shift(hypothesis, keypoints, threshold, frame, current = None, show = F
                 cv2.circle(img, k, 2, [255, 0, 0], 2)
             cv2.circle(img, hypothesis, 3, [0, 0, 255], 3)
             cv2.circle(img, hypothesis, radius, [100,255,0], 2)
-            cv2.imwrite('./OT-res/meanshift/cookie/cookie_00%d.jpg' % frame, img)
             cv2.imshow('Current hypothesis', img)
+            # cv2.imwrite('./OT-res/meanshift/cookie/halfwidth_177.jpg', img)
             cv2.waitKey(0)
         
         return hypothesis, radius
@@ -217,7 +225,7 @@ def mean_shift(hypothesis, keypoints, threshold, frame, current = None, show = F
             img = current   #Needs to be np array (alread opened by cv2)
             cv2.circle(img, hypothesis, 3, [0, 0, 255], 3)
             cv2.circle(img, hypothesis, radius, [100,255,0], 2)
-            cv2.imwrite('./OT-res/meanshift/cookie/cookie_00%d.jpg' % frame, img)
+            # cv2.imwrite('./OT-res/meanshift/cookie/cookie_00%d.jpg' % frame, img)
             cv2.imshow('Current hypothesis', img)
             cv2.waitKey(0)
 
