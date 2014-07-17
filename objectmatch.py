@@ -28,7 +28,6 @@ def match_object(previous, current, train_img, pos, frame, show = False):
     y2 = pos[1]
 
     #crops image to reduce the neccessary search area
-    # q_img = img[y:y2, x:x2] # NOTE: its img[y: y + h, x: x + w] and *not* img[x: x + w, y: y + h]
     t_img = t_img[y1:y2, x1:x2]
 
     #I choose YOU! ORB-achu
@@ -38,65 +37,21 @@ def match_object(previous, current, train_img, pos, frame, show = False):
     h = y2 - y1 
     w = x2 - x1
 
-    print h
-    print w
-    
-    cv2.imshow('before crop', q_img)
-    cv2.waitKey(0)
-
-    print x1, y1
-    print x2, y2
     q_img = q_img[(y1-0.5*h):(y2+0.5*h), (x1-0.5*w):(x2+0.5*w)]
 
-    print (x1-0.5*w),(x2+0.5*w)
-    print (y1-0.5*h),(y2+0.5*h)
-
-    cv2.imshow('after crop', q_img)
-    cv2.waitKey(0)
-
-
     #create a list of keypoints for entire image, subtract out tracked object keypoints
-    t_k, t_d = detector.detectAndCompute(t_img, None)         #training image
-    # object_k =[]
-    # object_d = []
-
+    t_k, t_d = detector.detectAndCompute(t_img, None)      #training image
     q_k, q_d = detector.detectAndCompute(q_img, None)      #query image
 
-    # for index in range(len(q_k)):
-    #     x_temp = q_k[index].pt[0]
-    #     y_temp = q_k[index].pt[1]
-    #     # cv2.circle(q_img, (int(x_temp), int(y_temp)), 2, [0,0,255], 2) # red for all the keypoints
-    #     if x1<=x_temp<=x2 and y1<=y_temp<=y2:
-    #         object_k.append(q_k[index])
-    #         object_d.append(q_d[index])
-    #         # cv2.circle(q_img, (int(x_temp), int(y_temp)), 2, [255,0,255], 2) # magenta for the keypoints within the box of interest
-    
     #finds all keypoints in the query image    
-    
     for kp in q_k:
         x_temp = kp.pt[0]
         y_temp = kp.pt[1]
         cv2.circle(q_img, (int(x_temp), int(y_temp)), 2, [255, 255, 0], 3)
 
     try:
-        #matches background to new image
         matcher = cv2.BFMatcher(normType = cv2.NORM_HAMMING)
-        # matches = matcher.knnMatch(q_d, np.array(background_d), k =2)
-        #Keeping only matches that pass a 2nd nearest neighbor test
-         
-        # remain_k = []
-        # remain_d = []
-        # for m,n in matches:
-        #     if m.distance < 0.75*n.distance:
-        #         # Get coordinate of the match
-        #         m_x = int(q_k[m.queryIdx].pt[0])
-        #         m_y = int(q_k[m.queryIdx].pt[1])
-        #         #create list of matched background keypoints with new image
-        #         #remove these matches
-        #         for index in range(len(q_k)):
-        #             if q_k[index].pt[0] != m_x and q_k[index].pt[1] != m_y:
-        #                 remain_k.append(q_k[index])
-        #                 remain_d.append(q_d[index])
+
 
         for kp in t_k:
             x_temp = kp.pt[0]
@@ -107,10 +62,6 @@ def match_object(previous, current, train_img, pos, frame, show = False):
             x_temp = kp.pt[0]
             y_temp = kp.pt[1]
             cv2.circle(q_img, (int(x_temp), int(y_temp)), 2, [255, 255, 0], 3)
-
-        cv2.imshow('', t_img)
-        cv2.imshow('query', q_img)
-        cv2.waitKey(0)
 
         # #match list of object keypoints to list of remaining matches 
         matches = matcher.knnMatch(np.array(q_d), t_d, k =2)
