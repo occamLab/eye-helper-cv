@@ -5,7 +5,6 @@ import scipy as sp
 
 def match_object(previous, current, train_img, pos, frame, show = False):
     """
-
     Takes in:
         previous -> center of the previous image
         current ->  image being analyzed (with path)
