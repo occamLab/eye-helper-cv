@@ -36,7 +36,7 @@ def match_object(previous, current, train_img, pos, frame, show = False):
     #Crop the query image with a 50% padding (calculate padding w/ height and width)
     h = y2 - y1 
     w = x2 - x1
-
+    big_img = q_img
     q_img = q_img[(y1-0.5*h):(y2+0.5*h), (x1-0.5*w):(x2+0.5*w)]
 
     #create a list of keypoints for entire image, subtract out tracked object keypoints
@@ -79,11 +79,18 @@ def match_object(previous, current, train_img, pos, frame, show = False):
                                             keypoints = good_matches, 
                                             threshold = 10, 
                                             current = q_img,
-                                            show = show, 
+                                            show = True, 
                                             frame = frame)
 
+        new_center = (new_center[0]-(x1+0.5*w), new_center[1]-(y1+0.5*h))
+        # if show:
+        #     cv2.circle(big_img, (int(new_center[0]), int(new_center[1])), img_radius, [100,255,0], 2)
+        #     cv2.imshow('big Match', big_img)
         return new_center
+
     except:
+        # cv2.imshow('Frame %d : Likely there are no matches?' % frame, q_img)
+        # cv2.waitKey(0)
         print "Likely there are no matches"
         return center
 
@@ -160,9 +167,11 @@ def mean_shift(hypothesis, keypoints, threshold, frame, current = None, show = F
                 cv2.circle(img, k, 2, [255, 0, 0], 2)
             cv2.circle(img, hypothesis, 3, [0, 0, 255], 3)
             cv2.circle(img, hypothesis, radius, [100,255,0], 2)
-            cv2.imshow('Current hypothesis', img)
+            cv2.imshow('Frame %d: Current hypothesis' % frame, img)
             # cv2.imwrite('./OT-res/meanshift/cookie/halfwidth_177.jpg', img)
             cv2.waitKey(0)
+            cv2.destroyWindow('Frame %d: Current hypothesis' % frame)
+
         
         return hypothesis, radius
 
@@ -177,20 +186,31 @@ def mean_shift(hypothesis, keypoints, threshold, frame, current = None, show = F
             cv2.circle(img, hypothesis, 3, [0, 0, 255], 3)
             cv2.circle(img, hypothesis, radius, [100,255,0], 2)
             # cv2.imwrite('./OT-res/meanshift/cookie/cookie_00%d.jpg' % frame, img)
-            cv2.imshow('Current hypothesis', img)
+            cv2.imshow('Frame %d: Current hypothesis' % frame, img)
             cv2.waitKey(0)
+            cv2.destroyWindow('Frame %d: Current hypothesis' % frame)
 
         return hypothesis, radius
 
  
 if __name__ == '__main__':
-    center = [760, 470]
-    # for frame in range(177, 289): 
-    # print frame
-    frame = 177
-    center = match_object(previous = center, 
-                          current = './gstore-snippets/cookie_snippet/cookie_00%d.jpg' % frame, 
-                          train_img = './gstore-snippets/cookie_snippet/cookie_00177.jpg',
-                          pos = [744,514,606,392], #[450,278,512,429],
-                          show = True,
-                          frame = frame)
+    # initial values for prototyping w/ the cookies. :P
+    old_center = [300, 470]
+    center = old_center
+    pos = [744,514,606,392]
+
+    for frame in range(177, 202): 
+        print "Frame number: %d" % frame
+        center = match_object(previous = center, 
+                              current = './gstore-snippets/cookie_snippet/cookie_00%d.jpg' % frame, 
+                              train_img = './gstore-snippets/cookie_snippet/cookie_00177.jpg',
+                              pos = pos,
+                              show = True,
+                              frame = frame)
+        print "center: (%d, %d)" % (center[0], center[1])
+        delta_x = center[0]-old_center[0]
+        print "delta_x: %d " % delta_x
+        delta_y = center[1]-old_center[1]
+        print "delta_y: %d " % delta_y
+        old_center = center
+        pos = [pos[0]+delta_x +1, pos[1]+delta_y+1, pos[2]+delta_x -1, pos[3]+delta_y -1]
