@@ -30,8 +30,8 @@ def match_object(previous, current, train_img, pos, frame, show = False):
     #I choose YOU! ORB-achu or SIFT-emon
     detector = cv2.SIFT()
 
-    #crops image to reduce the neccessary search area
-    t_k, t_d = detector.detectAndCompute(t_img, None)      #training image
+    #Keeps only keypoints within the grocery item selection
+    t_k, t_d = detector.detectAndCompute(t_img, None)   #training image
     train_d = []
     train_k = []
     for index in range(len(t_k)):
@@ -41,36 +41,13 @@ def match_object(previous, current, train_img, pos, frame, show = False):
     t_d = train_d
     t_k = train_k
 
-    #Crop the query image with a 50% padding (calculate padding w/ height and width)
-    h = y2 - y1 
-    w = x2 - x1
-    # big_img = q_img
-    # q_img = q_img[(y1-0.5*h):(y2+0.5*h), (x1-0.5*w):(x2+0.5*w)]
-
     #create a list of keypoints for entire image, subtract out tracked object keypoints
-    # t_k, t_d = detector.detectAndCompute(t_img, None)      #training image
-    q_k, q_d = detector.detectAndCompute(q_img, None)      #query image
-
-    # #finds all keypoints in the query image    
-    # for kp in q_k:
-    #     x_temp = kp.pt[0]
-    #     y_temp = kp.pt[1]
-    #     cv2.circle(q_img, (int(x_temp), int(y_temp)), 2, [255, 255, 0], 3)
+    q_k, q_d = detector.detectAndCompute(q_img, None)   #query image
 
     try:
         matcher = cv2.BFMatcher() #(normType = cv2.NORM_HAMMING)
 
-        # for kp in t_k:
-        #     x_temp = kp.pt[0]
-        #     y_temp = kp.pt[1]
-        #     cv2.circle(t_img, (int(x_temp), int(y_temp)), 2, [255, 255, 0], 3)
-
-        # for kp in q_k:
-        #     x_temp = kp.pt[0]
-        #     y_temp = kp.pt[1]
-        #     cv2.circle(q_img, (int(x_temp), int(y_temp)), 2, [255, 255, 0], 3)
-
-        # #match list of object keypoints to list of remaining matches 
+        #match list of object keypoints to list of remaining matches 
         matches = matcher.knnMatch(np.array(t_d), q_d, k =2)
 
         good_matches = []
@@ -81,33 +58,16 @@ def match_object(previous, current, train_img, pos, frame, show = False):
                 m_y = int(q_k[m.trainIdx].pt[1])
                 good_matches.append((m_x, m_y))
 
-        for kp in good_matches:
-            cv2.circle(q_img, kp, 2, [255, 0, 0], 3)
-
-        # cv2.imshow('seeing all the kps', q_img)
-        # cv2.waitKey(0)
-
-
         new_center, img_radius = mean_shift(hypothesis = (previous), 
                                             keypoints = good_matches, 
                                             threshold = 10, 
                                             current = q_img,
                                             show = True, 
                                             frame = frame)
-
-        # new_center = (new_center[0]+(x1-0.5*w), new_center[1]+(y1-0.5*h))
-
-
-        # if show:
-        #     cv2.circle(big_img, (int(new_center[0]), int(new_center[1])), img_radius, [100,255,0], 2)
-        #     cv2.imshow('big Match %d' % frame, big_img)
-        #     cv2.waitKey(0)
         return new_center
 
     except Exception as inst:
         print inst
-        # cv2.imshow('Frame %d : Likely there are no matches?' % frame, q_img)
-        # cv2.waitKey(0)
         print "Likely there are no matches"
         return center
 
@@ -187,7 +147,6 @@ def mean_shift(hypothesis, keypoints, threshold, frame, current = None, show = F
             cv2.imshow('Frame %d: Current hypothesis' % frame, img)
             # cv2.imwrite('./OT-res/meanshift/cookie/halfwidth_177.jpg', img)
             cv2.waitKey(0)
-            # cv2.destroyWindow('Frame %d: Current hypothesis' % frame)
         return hypothesis, radius
 
     elif len(keypoints) == 1: # That moment when there's only one good match and the stdev of a single element set is zero...
@@ -203,7 +162,6 @@ def mean_shift(hypothesis, keypoints, threshold, frame, current = None, show = F
             # cv2.imwrite('./OT-res/meanshift/cookie/cookie_00%d.jpg' % frame, img)
             cv2.imshow('Frame %d: Current hypothesis' % frame, img)
             cv2.waitKey(0)
-            # cv2.destroyWindow('Frame %d: Current hypothesis' % frame)
 
         return hypothesis, radius
 
@@ -223,29 +181,5 @@ if __name__ == '__main__':
                               pos = pos,
                               show = True,
                               frame = frame)
-        print "center: (%d, %d)" % (center[0], center[1])
-        print "old_center: (%d, %d)" % (old_center[0], old_center[1])
-        delta_x = center[0]-old_center[0]
-        delta_y = center[1]-old_center[1]
-
-
-        print "delta_x: %d " % delta_x
-        print "delta_y: %d " % delta_y
-
-        max_center_delta = 5
-        if delta_x >= max_center_delta: #prevent center from moving more than 5 pixels (some threshold number...) in an iteration 
-            delta_x = max_center_delta
-        elif delta_x <= -1 * max_center_delta:
-            delta_x = -1 * max_center_delta
-
-        if delta_y >= max_center_delta: #prevent center from moving more than 5 pixels (some threshold number...) in an iteration 
-            delta_y = max_center_delta
-        elif delta_y <= -1 * max_center_delta:
-            delta_y = -1 * max_center_delta
-
-        print "delta_x: %d " % delta_x
-        print "delta_y: %d " % delta_y
-    
-
         old_center = center
-        pos = [pos[0]+delta_x +1, pos[1]+delta_y+1, pos[2]+delta_x -1, pos[3]+delta_y -1]
+  
