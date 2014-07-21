@@ -143,70 +143,73 @@ if __name__ == '__main__':
 
     # cookie sift (for the entire cookie video)
     framemax = 288
-    t_img_number = 177 #try a different training image (every 20 frames)... from frame 124 to 288 for cookie
-    methods = ['SIFT', 'ORB', 'BRISK', 'SURF']
-    m = 'SIFT'
+    methods = ['ORB', 'SIFT', 'BRISK', 'SURF']
     
-    #instantiating plottables for this training image trial
-    plottables[t_img_number] = {'frame numbers': [], 
-                                'overall accuracy': 0, 
-                                'distance from center': [], 
-                                'total kp matches': [], 
-                                'correct kp matches': []}
+    for m in methods:
+        t_img_number = 124 #try a different training image (every 20 frames)... from frame 124 to 288 for cookie
+        while t_img_number < framemax:
+            print m
+            print t_img_number
+            #instantiating plottables for this training image trial
+            plottables[t_img_number] = {'frame numbers': [], 
+                                        'overall accuracy': 0, 
+                                        'distance from center': [], 
+                                        'total kp matches': [], 
+                                        'correct kp matches': []}
 
-    ########### one trial of t_img, with SIFT
-    for line in reversed(open('./gstore-csv/%s' % 'cookie.csv').readlines()):
-        row = line.rstrip().split(',')
+            ################ start of a t_img trial
+            for line in reversed(open('./gstore-csv/%s' % 'cookie.csv').readlines()):
+                row = line.rstrip().split(',')
 
-        #training image is never a "future frame"
-        #for example, if the training image is frame 144, the test starts from frame 144, not frame 124
+                #training image is never a "future frame"
+                #for example, if the training image is frame 144, the test starts from frame 144, not frame 124
 
-        if int(row[0]) == t_img_number:
-            q_img_number = int(row[0])
-            plottables[t_img_number]['frame numbers'].append(row[0])
-            t_gtruth = [int(row[1]), int(row[2]), int(row[3]), int(row[4])]
-            q_gtruth = [int(row[1]), int(row[2]), int(row[3]), int(row[4])]
-            data = superdata(q_pickle = './OT-res/kp_pickles/cookie/SIFT/cookie_00%d_keypoints.p' % q_img_number, 
-                t_pickle = './OT-res/kp_pickles/cookie/SIFT/cookie_00%d_keypoints.p' % t_img_number, 
-                q_gtruth = q_gtruth,
-                t_gtruth = t_gtruth, 
-                frame = q_img_number, 
-                method = m, 
-                t_img = t_img_number)            
-            plottables[t_img_number]['distance from center'].append(data['d_from_c'])
-            plottables[t_img_number]['total kp matches'].append(data['kp_matches'])
-            plottables[t_img_number]['correct kp matches'].append(data['c_matches'])
+                if int(row[0]) == t_img_number:
+                    q_img_number = int(row[0])
+                    plottables[t_img_number]['frame numbers'].append(row[0])
+                    t_gtruth = [int(row[1]), int(row[2]), int(row[3]), int(row[4])]
+                    q_gtruth = [int(row[1]), int(row[2]), int(row[3]), int(row[4])]
+                    data = superdata(q_pickle = './OT-res/kp_pickles/cookie/SIFT/cookie_00%d_keypoints.p' % q_img_number, 
+                        t_pickle = './OT-res/kp_pickles/cookie/SIFT/cookie_00%d_keypoints.p' % t_img_number, 
+                        q_gtruth = q_gtruth,
+                        t_gtruth = t_gtruth, 
+                        frame = q_img_number, 
+                        method = m, 
+                        t_img = t_img_number)    
+                    if data != None:        
+                        plottables[t_img_number]['distance from center'].append(data['d_from_c'])
+                        plottables[t_img_number]['total kp matches'].append(data['kp_matches'])
+                        plottables[t_img_number]['correct kp matches'].append(data['c_matches'])
 
-        elif int(row[0]) > t_img_number:
-            q_img_number = int(row[0])
-            q_gtruth = [int(row[1]), int(row[2]), int(row[3]), int(row[4])]
-            data = superdata(q_pickle = './OT-res/kp_pickles/cookie/SIFT/cookie_00%d_keypoints.p' % q_img_number, 
-                            t_pickle = './OT-res/kp_pickles/cookie/SIFT/cookie_00%d_keypoints.p' % t_img_number, 
-                            q_gtruth = q_gtruth,
-                            t_gtruth = t_gtruth, 
-                            frame = q_img_number, 
-                            method = m, 
-                            t_img = t_img_number)
-            if data != None:
-                plottables[t_img_number]['frame numbers'].append(row[0])
-                plottables[t_img_number]['distance from center'].append(data['d_from_c'])
-                plottables[t_img_number]['total kp matches'].append(data['kp_matches'])
-                plottables[t_img_number]['correct kp matches'].append(data['c_matches'])
+                elif int(row[0]) > t_img_number:
+                    q_img_number = int(row[0])
+                    q_gtruth = [int(row[1]), int(row[2]), int(row[3]), int(row[4])]
+                    data = superdata(q_pickle = './OT-res/kp_pickles/cookie/SIFT/cookie_00%d_keypoints.p' % q_img_number, 
+                                    t_pickle = './OT-res/kp_pickles/cookie/SIFT/cookie_00%d_keypoints.p' % t_img_number, 
+                                    q_gtruth = q_gtruth,
+                                    t_gtruth = t_gtruth, 
+                                    frame = q_img_number, 
+                                    method = m, 
+                                    t_img = t_img_number)
+                    if data != None:
+                        plottables[t_img_number]['frame numbers'].append(row[0])
+                        plottables[t_img_number]['distance from center'].append(data['d_from_c'])
+                        plottables[t_img_number]['total kp matches'].append(data['kp_matches'])
+                        plottables[t_img_number]['correct kp matches'].append(data['c_matches'])
 
-    plottables[t_img_number]['overall accuracy'] = ( float(sum(plottables[t_img_number]['correct kp matches'])) / sum(plottables[t_img_number]['total kp matches']) ) * 100
-    ################
+            try:
+                plottables[t_img_number]['overall accuracy'] = ( float(sum(plottables[t_img_number]['correct kp matches'])) / sum(plottables[t_img_number]['total kp matches']) ) * 100
+            except:
+                plottables[t_img_number]['overall accuracy'] = 0
+            ################ end of a t_img trial
+            t_img_number += 20
+        pickle.dump(plottables, open('./OT-res/compare_kpd_plots/cookie_%s.p' % m, 'wb'))            
 
-    # pp.pprint(plottables)
-    plot_superdata(plottables)
+        # pp.pprint(plottables)
+        #plot_superdata(plottables)
 
-    # some pseudocode
-    # while t_img_number < framemax:
-    #     stuff happened.
-    #     plottables[t_img_number] = []
-    #     t_img_number += 20   
-
-    ### notes:
-    #normalize things
-    #maybe it's a blurry section of the video (meanshift can be dramatic)
-    #plotting precision too
-    #tuning meanshift? combining methods?
+        ### notes:
+        #normalize things
+        #maybe it's a blurry section of the video (meanshift can be dramatic)
+        #plotting precision too
+        #tuning meanshift? combining methods?
