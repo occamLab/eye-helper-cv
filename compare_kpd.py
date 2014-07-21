@@ -140,16 +140,18 @@ def plot_superdata(plottables, mstr):
             #Normalizing d_from_c values (to account for the size of the item changing as the video progresses)
             #This'll also eventually go into gen_plottables 
             hypotenuse = [math.sqrt((g_truth[float(v)][0]-g_truth[float(v)][2])**2 + (g_truth[float(v)][1]-g_truth[float(v)][3])**2) for v in trialdata['frame numbers']]
+            
             correct_kp = trialdata['correct kp matches']
+            # d_from_c = trialdata['distance from center']
             d_from_c = [trialdata['distance from center'][x]/hypotenuse[x] for x in range(len(trialdata['distance from center']))]
             plt.plot(frames, d_from_c, 'o', label=trial)
 
     plt.ylabel('distance from center of object')
     plt.xlabel('# of frames since training image')
-    plt.title('cookie %s distance from center vs frames for various training images' % mstr)
+    plt.title('cookie %s distance from center vs frames for various training images (normalized)' % mstr)
     plt.legend()
-    # plt.show()
-    plt.savefig("./OT-res/compare_kpd_plots/cookie_%s_d_from_c_all.png" % mstr)
+    plt.show()
+    # plt.savefig("./OT-res/compare_kpd_plots/cookie_%s_d_from_c_all.png" % mstr)
 
 def gen_plottables(methods, dataset, framerange):
     #plot-friendly data structure
@@ -225,16 +227,14 @@ if __name__ == '__main__':
     #loops for datasets, methods, t_img while, q_imgs
 
     methods = ['ORB', 'SIFT', 'BRISK', 'SURF']
-    plottables = gen_plottables(methods, 'cookie', [124, 288])
-
+    # plottables = gen_plottables(methods, 'cookie', [124, 288])
 
     ### notes:
     #normalize things
     #maybe it's a blurry section of the video (meanshift can be dramatic)
     #plotting precision too
     #tuning meanshift? combining methods?
-    # for mstr in methods:
-
-        # data = pickle.load(open('./OT-res/compare_kpd_plots/%s_%s.p' % ('cookie', mstr), 'rb'))
-        # pp.pprint(data)
-        # plot_superdata(data, mstr)
+    for mstr in ['SIFT']:
+        data = pickle.load(open('./OT-res/compare_kpd_plots/%s_%s.p' % ('cookie', mstr), 'rb'))
+        pp.pprint(data)
+        plot_superdata(data, mstr)
