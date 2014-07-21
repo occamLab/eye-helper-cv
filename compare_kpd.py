@@ -113,6 +113,7 @@ def superdata(q_pickle, t_pickle, q_gtruth, t_gtruth, frame, method, t_img):
         print "Likely there are no good matches..."
         return None
 
+
 def plot_superdata(plottables):
 
     #start frame in sequence vs. overall accuracy of sequence
@@ -120,18 +121,33 @@ def plot_superdata(plottables):
     #frame number (or frames since training image) vs. total keypoint matches
     #frame number (or frames since training image) vs. correct keypoint matches
 
-    for trial in plottables:
-        trialdata = plottables[trial]
-        frames = trialdata['frame numbers']
-        correct_kp = trialdata['correct kp matches']
-        d_from_c = trialdata['distance from center']
+    g_truth = {}
 
-        plt.plot(frames, d_from_c, 'o')#, label = label)
-        plt.ylabel('distance from center of object')
-        plt.xlabel('frame number')
-        plt.title('distance from center vs frames')
-        # plt.savefig("./OT-res/compare-kpd-plots/%s.png" % 'cookie sift: distance from center vs frames')
-        plt.show()
+    #Getting box coordinates for now... eventually this'll go into gen_plottables
+    for line in reversed(open('./gstore-csv/%s.csv' % 'cookie').readlines()):
+        row = line.rstrip().split(',')
+        g_truth[int(row[0])] = [int(row[1]), int(row[2]), int(row[3]), int(row[4])]
+
+    for trial in plottables:
+        if trial not in [144, 164, 284]: #we don't want to plot these
+            trialdata = plottables[trial]
+
+            #Getting temporal frame distance from training image instead of franem number from filename
+            frames = [int(x) - trial for x in trialdata['frame numbers']]
+
+            #Normalizing d_from_c values (to account for the size of the item changing as the video progresses)
+            #This'll also eventually go into gen_plottables 
+            hypotenuse = [math.sqrt((g_truth[float(v)][0]-g_truth[float(v)][2])**2 + (g_truth[float(v)][1]-g_truth[float(v)][3])**2) for v in trialdata['frame numbers']]
+            correct_kp = trialdata['correct kp matches']
+            d_from_c = [trialdata['distance from center'][x]/hypotenuse[x] for x in range(len(trialdata['distance from center']))]
+            plt.plot(frames, d_from_c, 'o', label=trial)
+
+    plt.ylabel('distance from center of object')
+    plt.xlabel('frame number')
+    plt.title('cookie sift distance from center vs frames for various training images')
+    plt.legend()
+    plt.show()
+    plt.savefig("./OT-res/compare_kpd_plots/%s.png" % 'cookie_sift_d_from_c_all')
 
 def gen_plottables(methods, dataset, framerange):
     #plot-friendly data structure
@@ -202,17 +218,19 @@ def gen_plottables(methods, dataset, framerange):
             t_img_number += 20 #try a different training image (every 20 frames)... from frame 124 to 288 for cookie
         pickle.dump(plottables, open('./OT-res/compare_kpd_plots/%s_%s.p' % (dataset, m), 'wb'))            
 
-
 if __name__ == '__main__':
-
 
     #loops for datasets, methods, t_img while, q_imgs
 
     methods = ['ORB', 'SIFT', 'BRISK', 'SURF']
     # plottables = gen_plottables(methods, 'cookie', [124, 288])
 
+
     ### notes:
     #normalize things
     #maybe it's a blurry section of the video (meanshift can be dramatic)
     #plotting precision too
     #tuning meanshift? combining methods?
+
+    data = pickle.load(open('./OT-res/compare_kpd_plots/%s_%s.p' % ('cookie', 'SIFT'), 'rb'))
+    plot_superdata(data)
