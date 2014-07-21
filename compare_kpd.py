@@ -46,6 +46,8 @@ def superdata(q_pickle, t_pickle, q_gtruth, t_gtruth, frame, method, t_img):
             kp_matches -> total number of matched keypoints
             c_matches -> number of correctly matched keypoints
     """
+    print q_pickle
+
     #load query image data
     q = pickle.load(open(q_pickle, 'rb'))
     q_k = q[0]
@@ -114,7 +116,7 @@ def superdata(q_pickle, t_pickle, q_gtruth, t_gtruth, frame, method, t_img):
         return None
 
 
-def plot_superdata(plottables):
+def plot_superdata(plottables, mstr):
 
     #start frame in sequence vs. overall accuracy of sequence
     #frame number (or frames since training image) vs distance from center of object
@@ -143,11 +145,11 @@ def plot_superdata(plottables):
             plt.plot(frames, d_from_c, 'o', label=trial)
 
     plt.ylabel('distance from center of object')
-    plt.xlabel('frame number')
-    plt.title('cookie sift distance from center vs frames for various training images')
+    plt.xlabel('# of frames since training image')
+    plt.title('cookie %s distance from center vs frames for various training images' % mstr)
     plt.legend()
-    plt.show()
-    plt.savefig("./OT-res/compare_kpd_plots/%s.png" % 'cookie_sift_d_from_c_all')
+    # plt.show()
+    plt.savefig("./OT-res/compare_kpd_plots/cookie_%s_d_from_c_all.png" % mstr)
 
 def gen_plottables(methods, dataset, framerange):
     #plot-friendly data structure
@@ -182,8 +184,8 @@ def gen_plottables(methods, dataset, framerange):
                     plottables[t_img_number]['frame numbers'].append(row[0])
                     t_gtruth = [int(row[1]), int(row[2]), int(row[3]), int(row[4])]
                     q_gtruth = [int(row[1]), int(row[2]), int(row[3]), int(row[4])]
-                    data = superdata(q_pickle = './OT-res/kp_pickles/%s/SIFT/%s_00%d_keypoints.p' % (dataset, dataset, q_img_number), 
-                        t_pickle = './OT-res/kp_pickles/%s/SIFT/%s_00%d_keypoints.p' % (dataset, dataset, t_img_number), 
+                    data = superdata(q_pickle = './OT-res/kp_pickles/%s/%s/%s_00%d_keypoints.p' % (dataset, m, dataset, q_img_number), 
+                        t_pickle = './OT-res/kp_pickles/%s/%s/%s_00%d_keypoints.p' % (dataset, m, dataset, t_img_number), 
                         q_gtruth = q_gtruth,
                         t_gtruth = t_gtruth, 
                         frame = q_img_number, 
@@ -197,8 +199,8 @@ def gen_plottables(methods, dataset, framerange):
                 elif int(row[0]) > t_img_number:
                     q_img_number = int(row[0])
                     q_gtruth = [int(row[1]), int(row[2]), int(row[3]), int(row[4])]
-                    data = superdata(q_pickle = './OT-res/kp_pickles/%s/SIFT/%s_00%d_keypoints.p' % (dataset, dataset, q_img_number), 
-                                    t_pickle = './OT-res/kp_pickles/%s/SIFT/%s_00%d_keypoints.p' % (dataset, dataset, t_img_number), 
+                    data = superdata(q_pickle = './OT-res/kp_pickles/%s/%s/%s_00%d_keypoints.p' % (dataset, m, dataset, q_img_number), 
+                                    t_pickle = './OT-res/kp_pickles/%s/%s/%s_00%d_keypoints.p' % (dataset, m, dataset, t_img_number), 
                                     q_gtruth = q_gtruth,
                                     t_gtruth = t_gtruth, 
                                     frame = q_img_number, 
@@ -223,7 +225,7 @@ if __name__ == '__main__':
     #loops for datasets, methods, t_img while, q_imgs
 
     methods = ['ORB', 'SIFT', 'BRISK', 'SURF']
-    # plottables = gen_plottables(methods, 'cookie', [124, 288])
+    plottables = gen_plottables(methods, 'cookie', [124, 288])
 
 
     ### notes:
@@ -231,6 +233,8 @@ if __name__ == '__main__':
     #maybe it's a blurry section of the video (meanshift can be dramatic)
     #plotting precision too
     #tuning meanshift? combining methods?
+    # for mstr in methods:
 
-    data = pickle.load(open('./OT-res/compare_kpd_plots/%s_%s.p' % ('cookie', 'SIFT'), 'rb'))
-    plot_superdata(data)
+        # data = pickle.load(open('./OT-res/compare_kpd_plots/%s_%s.p' % ('cookie', mstr), 'rb'))
+        # pp.pprint(data)
+        # plot_superdata(data, mstr)
