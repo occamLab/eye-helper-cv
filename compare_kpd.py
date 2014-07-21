@@ -130,23 +130,20 @@ def plot_superdata(plottables):
         plt.ylabel('distance from center of object')
         plt.xlabel('frame number')
         plt.title('distance from center vs frames')
-        plt.savefig("./OT-res/compare-kpd-plots/%s.png" % 'cookie sift: distance from center vs frames')
+        # plt.savefig("./OT-res/compare-kpd-plots/%s.png" % 'cookie sift: distance from center vs frames')
         plt.show()
 
-
-if __name__ == '__main__':
+def gen_plottables(methods, dataset, framerange):
     #plot-friendly data structure
     #{key = training image number : value = {frame numbers: [], overall accuracy: [], :distance from center: [], total kp matches: [], correct kp matches: []}}
     plottables = {}
 
-    #loops for datasets, methods, t_img while, q_imgs
-
     # cookie sift (for the entire cookie video)
-    framemax = 288
-    methods = ['ORB', 'SIFT', 'BRISK', 'SURF']
+    framestart = framerange[0]
+    framemax = framerange[1]
     
     for m in methods:
-        t_img_number = 124 #try a different training image (every 20 frames)... from frame 124 to 288 for cookie
+        t_img_number = framestart 
         while t_img_number < framemax:
             print m
             print t_img_number
@@ -158,7 +155,7 @@ if __name__ == '__main__':
                                         'correct kp matches': []}
 
             ################ start of a t_img trial
-            for line in reversed(open('./gstore-csv/%s' % 'cookie.csv').readlines()):
+            for line in reversed(open('./gstore-csv/%s.csv' % dataset).readlines()):
                 row = line.rstrip().split(',')
 
                 #training image is never a "future frame"
@@ -169,8 +166,8 @@ if __name__ == '__main__':
                     plottables[t_img_number]['frame numbers'].append(row[0])
                     t_gtruth = [int(row[1]), int(row[2]), int(row[3]), int(row[4])]
                     q_gtruth = [int(row[1]), int(row[2]), int(row[3]), int(row[4])]
-                    data = superdata(q_pickle = './OT-res/kp_pickles/cookie/SIFT/cookie_00%d_keypoints.p' % q_img_number, 
-                        t_pickle = './OT-res/kp_pickles/cookie/SIFT/cookie_00%d_keypoints.p' % t_img_number, 
+                    data = superdata(q_pickle = './OT-res/kp_pickles/%s/SIFT/%s_00%d_keypoints.p' % (dataset, dataset, q_img_number), 
+                        t_pickle = './OT-res/kp_pickles/%s/SIFT/%s_00%d_keypoints.p' % (dataset, dataset, t_img_number), 
                         q_gtruth = q_gtruth,
                         t_gtruth = t_gtruth, 
                         frame = q_img_number, 
@@ -184,8 +181,8 @@ if __name__ == '__main__':
                 elif int(row[0]) > t_img_number:
                     q_img_number = int(row[0])
                     q_gtruth = [int(row[1]), int(row[2]), int(row[3]), int(row[4])]
-                    data = superdata(q_pickle = './OT-res/kp_pickles/cookie/SIFT/cookie_00%d_keypoints.p' % q_img_number, 
-                                    t_pickle = './OT-res/kp_pickles/cookie/SIFT/cookie_00%d_keypoints.p' % t_img_number, 
+                    data = superdata(q_pickle = './OT-res/kp_pickles/%s/SIFT/%s_00%d_keypoints.p' % (dataset, dataset, q_img_number), 
+                                    t_pickle = './OT-res/kp_pickles/%s/SIFT/%s_00%d_keypoints.p' % (dataset, dataset, t_img_number), 
                                     q_gtruth = q_gtruth,
                                     t_gtruth = t_gtruth, 
                                     frame = q_img_number, 
@@ -202,14 +199,20 @@ if __name__ == '__main__':
             except:
                 plottables[t_img_number]['overall accuracy'] = 0
             ################ end of a t_img trial
-            t_img_number += 20
-        pickle.dump(plottables, open('./OT-res/compare_kpd_plots/cookie_%s.p' % m, 'wb'))            
+            t_img_number += 20 #try a different training image (every 20 frames)... from frame 124 to 288 for cookie
+        pickle.dump(plottables, open('./OT-res/compare_kpd_plots/%s_%s.p' % (dataset, m), 'wb'))            
 
-        # pp.pprint(plottables)
-        #plot_superdata(plottables)
 
-        ### notes:
-        #normalize things
-        #maybe it's a blurry section of the video (meanshift can be dramatic)
-        #plotting precision too
-        #tuning meanshift? combining methods?
+if __name__ == '__main__':
+
+
+    #loops for datasets, methods, t_img while, q_imgs
+
+    methods = ['ORB', 'SIFT', 'BRISK', 'SURF']
+    # plottables = gen_plottables(methods, 'cookie', [124, 288])
+
+    ### notes:
+    #normalize things
+    #maybe it's a blurry section of the video (meanshift can be dramatic)
+    #plotting precision too
+    #tuning meanshift? combining methods?
