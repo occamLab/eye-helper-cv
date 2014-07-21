@@ -4,7 +4,11 @@ import csv
 import pickle
 import scipy 
 import os
+import math
 from objectmatch import mean_shift
+import matplotlib.pyplot as plt  
+from plotdata import plot
+import pprint as pp
 
 def calc_center(g_truth):
     """ 
@@ -18,7 +22,7 @@ def calc_center(g_truth):
     y = int((g_truth[3]+g_truth[1])/2)
     return x, y
 
-def superdata(q_pickle, t_pickle, g_truth, frame, method, t_img):
+def superdata(q_pickle, t_pickle, q_gtruth, t_gtruth, frame, method, t_img):
     """
         we may or may not rename this function in the near future to be something more descriptive... 
         --emily and lindsey, july 18, 2014
@@ -53,11 +57,11 @@ def superdata(q_pickle, t_pickle, g_truth, frame, method, t_img):
     t_d = t[1]
 
     #iterate through the training keypoints and only keep those that are within the selected object
-    #In this case we are using ground truth as the selection
+    #In this case we are using the training image's ground truth as the selection
     train_d = []
     train_k =[]
     for index in range(len(t_k)):
-        if g_truth[2]<=t_k[index][0]<=g_truth[0] and g_truth[3]<=t_k[index][1]<=g_truth[1]:
+        if t_gtruth[2]<=t_k[index][0]<=t_gtruth[0] and t_gtruth[3]<=t_k[index][1]<=t_gtruth[1]:
             train_d.append(t_d[index])
             train_k.append(t_k[index])
     t_k = train_k
@@ -69,40 +73,140 @@ def superdata(q_pickle, t_pickle, g_truth, frame, method, t_img):
     else: #for ORB or BRISK
         bf = cv2.BFMatcher(normType = cv2.NORM_HAMMING)
 
-    #matches keypoints of *training* image to query, not other way around
-    matches = bf.knnMatch(t_d, q_d, k=2)
+    try:
+        #matches keypoints of *training* image to query, not other way around
+        matches = bf.knnMatch(t_d, q_d, k=2)
 
-    good_matches = []
-    #goes through and only keeps matches passing a nearest neighbor test to reduce false matches
-    for m,n in matches:
-        if m.distance < 0.75*n.distance:
-            # Get coordinate of the match
-            m_x = int(q_k[m.trainIdx][0])
-            m_y = int(q_k[m.trainIdx][1])
-            good_matches.append((m_x, m_y))
+        good_matches = []
+        #goes through and only keeps matches passing a nearest neighbor test to reduce false matches
+        for m,n in matches:
+            if m.distance < 0.75*n.distance:
+                # Get coordinate of the match
+                m_x = int(q_k[m.trainIdx][0])
+                m_y = int(q_k[m.trainIdx][1])
+                good_matches.append((m_x, m_y))
 
-    #uses mean_shift to find the object from the keypoints detected
-    c_center, radius = mean_shift(hypothesis = (100, 100), keypoints = good_matches, threshold = 10, frame = frame)
-    b_center = calc_center(g_truth)
+        #uses mean_shift to find the object from the keypoints detected
+        c_center, radius = mean_shift(hypothesis = (100, 100), keypoints = good_matches, threshold = 10, frame = frame)
+        b_center = calc_center(q_gtruth)
+        
+        #checking each keypoint in good_matches
+        kp_matches = len(good_matches)
+        c_matches = 0
+        for match in good_matches:
+            if q_gtruth[2]<=match[0]<=q_gtruth[0] and q_gtruth[3]<=match[1]<=q_gtruth[1]:
+                c_matches +=1
+
     
-    kp_matches = len(good_matches)
-    c_matches = 0
-    for match in good_matches:
-        if g_truth[2]<=match[0]<=g_truth[0] and g_truth[3]<=match[1]<=g_truth[1]:
-            c_matches +=1
-    
-    if g_truth[2]<=c_center<=g_truth[0] and g_truth[3]<=c_center<=g_truth[1]:
-        match = True
-    else:
-        match = False
+        #checking if the center is within the labeled query box
+        if q_gtruth[2]<=c_center<=q_gtruth[0] and q_gtruth[3]<=c_center<=q_gtruth[1]:
+            match = True
+        else:
+            match = False
 
-    return c_center, b_center, match, frame, t_img, kp_matches, c_matches
+        # distance from center 
+        d_from_c = math.hypot(c_center[0]-b_center[0], c_center[1]-b_center[1])
+        # return c_center, b_center, d_from_c, match, frame, t_img, kp_matches, c_matches
+        return {'c_center': c_center, 'b_center': b_center, 'd_from_c': d_from_c,'match': match, 'frame': frame, 't_img': t_img, 'kp_matches': kp_matches, 'c_matches': c_matches}
+   
+    except:
+        print "Likely there are no good matches..."
+        return None
+
+def plot_superdata(plottables):
+
+    #start frame in sequence vs. overall accuracy of sequence
+    #frame number (or frames since training image) vs distance from center of object
+    #frame number (or frames since training image) vs. total keypoint matches
+    #frame number (or frames since training image) vs. correct keypoint matches
+
+    for trial in plottables:
+        trialdata = plottables[trial]
+        frames = trialdata['frame numbers']
+        correct_kp = trialdata['correct kp matches']
+        d_from_c = trialdata['distance from center']
+
+        plt.plot(frames, d_from_c, 'o')#, label = label)
+        plt.ylabel('distance from center of object')
+        plt.xlabel('frame number')
+        plt.title('distance from center vs frames')
+        plt.savefig("./OT-res/compare-kpd-plots/%s.png" % 'cookie sift: distance from center vs frames')
+        plt.show()
+
 
 if __name__ == '__main__':
+    #plot-friendly data structure
+    #{key = training image number : value = {frame numbers: [], overall accuracy: [], :distance from center: [], total kp matches: [], correct kp matches: []}}
+    plottables = {}
 
-    print superdata(q_pickle = './OT-res/kp_pickles/cookie/SIFT/cookie_00107_keypoints.p', 
-                    t_pickle = './OT-res/kp_pickles/cookie/SIFT/cookie_00177_keypoints.p', 
-                    g_truth = [744,514,606,392], 
-                    frame = 177, 
-                    method = 'SIFT', 
-                    t_img = 177)
+    #loops for datasets, methods, t_img while, q_imgs
+
+    # cookie sift (for the entire cookie video)
+    framemax = 288
+    t_img_number = 177 #try a different training image (every 20 frames)... from frame 124 to 288 for cookie
+    methods = ['SIFT', 'ORB', 'BRISK', 'SURF']
+    m = 'SIFT'
+    
+    #instantiating plottables for this training image trial
+    plottables[t_img_number] = {'frame numbers': [], 
+                                'overall accuracy': 0, 
+                                'distance from center': [], 
+                                'total kp matches': [], 
+                                'correct kp matches': []}
+
+    ########### one trial of t_img, with SIFT
+    for line in reversed(open('./gstore-csv/%s' % 'cookie.csv').readlines()):
+        row = line.rstrip().split(',')
+
+        #training image is never a "future frame"
+        #for example, if the training image is frame 144, the test starts from frame 144, not frame 124
+
+        if int(row[0]) == t_img_number:
+            q_img_number = int(row[0])
+            plottables[t_img_number]['frame numbers'].append(row[0])
+            t_gtruth = [int(row[1]), int(row[2]), int(row[3]), int(row[4])]
+            q_gtruth = [int(row[1]), int(row[2]), int(row[3]), int(row[4])]
+            data = superdata(q_pickle = './OT-res/kp_pickles/cookie/SIFT/cookie_00%d_keypoints.p' % q_img_number, 
+                t_pickle = './OT-res/kp_pickles/cookie/SIFT/cookie_00%d_keypoints.p' % t_img_number, 
+                q_gtruth = q_gtruth,
+                t_gtruth = t_gtruth, 
+                frame = q_img_number, 
+                method = m, 
+                t_img = t_img_number)            
+            plottables[t_img_number]['distance from center'].append(data['d_from_c'])
+            plottables[t_img_number]['total kp matches'].append(data['kp_matches'])
+            plottables[t_img_number]['correct kp matches'].append(data['c_matches'])
+
+        elif int(row[0]) > t_img_number:
+            q_img_number = int(row[0])
+            q_gtruth = [int(row[1]), int(row[2]), int(row[3]), int(row[4])]
+            data = superdata(q_pickle = './OT-res/kp_pickles/cookie/SIFT/cookie_00%d_keypoints.p' % q_img_number, 
+                            t_pickle = './OT-res/kp_pickles/cookie/SIFT/cookie_00%d_keypoints.p' % t_img_number, 
+                            q_gtruth = q_gtruth,
+                            t_gtruth = t_gtruth, 
+                            frame = q_img_number, 
+                            method = m, 
+                            t_img = t_img_number)
+            if data != None:
+                plottables[t_img_number]['frame numbers'].append(row[0])
+                plottables[t_img_number]['distance from center'].append(data['d_from_c'])
+                plottables[t_img_number]['total kp matches'].append(data['kp_matches'])
+                plottables[t_img_number]['correct kp matches'].append(data['c_matches'])
+
+    plottables[t_img_number]['overall accuracy'] = ( float(sum(plottables[t_img_number]['correct kp matches'])) / sum(plottables[t_img_number]['total kp matches']) ) * 100
+    ################
+
+    # pp.pprint(plottables)
+    plot_superdata(plottables)
+
+    # some pseudocode
+    # while t_img_number < framemax:
+    #     stuff happened.
+    #     plottables[t_img_number] = []
+    #     t_img_number += 20   
+
+    ### notes:
+    #normalize things
+    #maybe it's a blurry section of the video (meanshift can be dramatic)
+    #plotting precision too
+    #tuning meanshift? combining methods?
