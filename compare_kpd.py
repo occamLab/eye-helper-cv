@@ -113,7 +113,7 @@ def superdata(q_pickle, t_pickle, q_gtruth, t_gtruth, frame, method, t_img):
         return None
 
 
-def plot_superdata(plottables, mstr):
+def plot_superdata(plottables, dstr, mstr):
 
     # g_truth = plottables['boxes']
     # print g_truth
@@ -126,15 +126,17 @@ def plot_superdata(plottables, mstr):
     # pp.pprint(g_truth)
 
     for trial in plottables:
-        if trial not in [164, 124, 144]: #we don't want to plot these because of lack of matches (probably bad training images)
-            trialdata = plottables[trial]
+        trialdata = plottables[trial]
+
+        #setting up kp variables to plot
+        total_kp = trialdata['total kp matches']
+
+        if len(total_kp) > 0:
 
             #Getting temporal frame distance from training image instead of franem number from filename
             frames = [int(x) - trial for x in trialdata['frame numbers']]
 
-            #setting up kp variables to plot
-            total_kp = trialdata['total kp matches']
-
+            
             correct_kp = [ trialdata['correct kp matches'][x] / float(trialdata['total kp matches'][x]) * 100 for x in range(len(frames))]
 
             # Normalizing d_from_c values (to account for the size of the item changing as the video progresses)
@@ -145,7 +147,7 @@ def plot_superdata(plottables, mstr):
             plt.plot(frames, d_from_c, 'o', label=trial)
             plt.ylabel('distance from center of object')
             plt.xlabel('# of frames since training image')
-            plt.title('cookie %s distance from center vs frames for various training images (normalized)' % mstr)
+            plt.title('%s %s distance from center vs frames for various training images (normalized)' % (dstr, mstr))
             plt.legend()
 
             #start frame in sequence vs. overall accuracy of sequence
@@ -156,7 +158,7 @@ def plot_superdata(plottables, mstr):
             plt.plot(frames, total_kp, 'o', label=trial)
             plt.ylabel('total keypoints for each frame')
             plt.xlabel('# of frames since training image')
-            plt.title('cookie %s total keypoints for each frame vs frames for various training images' % mstr)
+            plt.title('%s %s total keypoints for each frame vs frames for various training images' % (dstr, mstr))
             plt.legend()
 
             #frame number (or frames since training image) vs. correct keypoint matches/len(frames)
@@ -164,7 +166,7 @@ def plot_superdata(plottables, mstr):
             plt.plot(frames, correct_kp, 'o', label=trial)
             plt.ylabel('percent correct keypoints for each frame')
             plt.xlabel('# of frames since training image')
-            plt.title('cookie %s percent correct keypoints for each frame vs frames for various training images' % mstr)
+            plt.title('%s %s percent correct keypoints for each frame vs frames for various training images' % (dstr, mstr))
             plt.legend()
 
     plt.show()
@@ -253,16 +255,16 @@ if __name__ == '__main__':
     #loops for datasets, methods, t_img while, q_imgs
 
     # # methods = ['ORB', 'SIFT', 'BRISK', 'SURF']
-    methods = ['SIFT', 'SURF']
+    # methods = ['SIFT', 'SURF']
     # methods = ['ORB', 'BRISK']
-    plottables = gen_plottables(methods, 'cereal', [512, 695])
+    # plottables = gen_plottables(methods, 'cereal', [512, 695])
     methods = ['ORB', 'SIFT', 'BRISK', 'SURF']
 
-
+    dstr = 'cereal'
     for mstr in methods:
-        data = pickle.load(open('./OT-res/compare_kpd_plots/%s_%s.p' % ('cookie', mstr), 'rb'))
+        data = pickle.load(open('./OT-res/compare_kpd_plots/%s_%s.p' % (dstr, mstr), 'rb'))
         # pp.pprint(data)
-        plot_superdata(data, mstr)
+        plot_superdata(data, dstr, mstr)
 
     ### notes:
     #normalize things
