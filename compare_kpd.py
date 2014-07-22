@@ -46,8 +46,6 @@ def superdata(q_pickle, t_pickle, q_gtruth, t_gtruth, frame, method, t_img):
             kp_matches -> total number of matched keypoints
             c_matches -> number of correctly matched keypoints
     """
-    print q_pickle
-
     #load query image data
     q = pickle.load(open(q_pickle, 'rb'))
     q_k = q[0]
@@ -98,7 +96,6 @@ def superdata(q_pickle, t_pickle, q_gtruth, t_gtruth, frame, method, t_img):
         for match in good_matches:
             if q_gtruth[2]<=match[0]<=q_gtruth[0] and q_gtruth[3]<=match[1]<=q_gtruth[1]:
                 c_matches +=1
-
     
         #checking if the center is within the labeled query box
         if q_gtruth[2]<=c_center<=q_gtruth[0] and q_gtruth[3]<=c_center<=q_gtruth[1]:
@@ -118,12 +115,15 @@ def superdata(q_pickle, t_pickle, q_gtruth, t_gtruth, frame, method, t_img):
 
 def plot_superdata(plottables, mstr):
 
-    g_truth = {}
+    # g_truth = plottables['boxes']
+    # print g_truth
 
-    #Getting box coordinates for now... eventually this'll go into gen_plottables
-    for line in reversed(open('./gstore-csv/%s.csv' % 'cookie').readlines()):
-        row = line.rstrip().split(',')
-        g_truth[int(row[0])] = [int(row[1]), int(row[2]), int(row[3]), int(row[4])]
+    # #Getting box coordinates for now... eventually this'll go into gen_plottables
+    # for line in reversed(open('./gstore-csv/%s.csv' % 'cookie').readlines()):
+    #     row = line.rstrip().split(',')
+    #     g_truth[int(row[0])] = [int(row[1]), int(row[2]), int(row[3]), int(row[4])]
+
+    # pp.pprint(g_truth)
 
     for trial in plottables:
         if trial not in [144, 164, 284]: #we don't want to plot these
@@ -132,15 +132,13 @@ def plot_superdata(plottables, mstr):
             #Getting temporal frame distance from training image instead of franem number from filename
             frames = [int(x) - trial for x in trialdata['frame numbers']]
 
-            #setting up variables to plot
+            #setting up kp variables to plot
             total_kp = trialdata['total kp matches']
             correct_kp = [ trialdata['correct kp matches'][x]/float(trialdata['total kp matches'][x]) * 100 for x in range(len(frames))]
 
-            #Normalizing d_from_c values (to account for the size of the item changing as the video progresses)
-            #This'll also eventually go into gen_plottables 
-            hypotenuse = [math.sqrt((g_truth[float(v)][0]-g_truth[float(v)][2])**2 + (g_truth[float(v)][1]-g_truth[float(v)][3])**2) for v in trialdata['frame numbers']]
-            d_from_c = [trialdata['distance from center'][x]/hypotenuse[x] for x in range(len(trialdata['distance from center']))]
-            
+            # Normalizing d_from_c values (to account for the size of the item changing as the video progresses)
+            d_from_c = [trialdata['distance from center'][x]/trialdata['hypotenuse'][x] for x in range(len(trialdata['distance from center']))]           
+
             #frame number (or frames since training image) vs distance from center of object
             plt.subplot(3,1,1)
             plt.plot(frames, d_from_c, 'o', label=trial)
@@ -168,13 +166,12 @@ def plot_superdata(plottables, mstr):
             plt.title('cookie %s percent correct keypoints for each frame vs frames for various training images' % mstr)
             plt.legend()
 
-
     plt.show()
-    plt.savefig("./OT-res/compare_kpd_plots/cookie_%s_d_from_c_all.png" % mstr)
+    # plt.savefig("./OT-res/compare_kpd_plots/cookie_%s_d_from_c_all.png" % mstr)
 
 def gen_plottables(methods, dataset, framerange):
     #plot-friendly data structure
-    #{key = training image number : value = {frame numbers: [], overall accuracy: [], :distance from center: [], total kp matches: [], correct kp matches: []}}
+    #{key = training image number : value = {frame numbers: [], boxes: {}, overall accuracy: [], :distance from center: [], total kp matches: [], correct kp matches: []}}
     plottables = {}
 
     # cookie sift (for the entire cookie video)
@@ -183,11 +180,13 @@ def gen_plottables(methods, dataset, framerange):
     
     for m in methods:
         t_img_number = framestart 
-        while t_img_number < framemax:
+        while t_img_number < 140:# framemax:
             print m
             print t_img_number
             #instantiating plottables for this training image trial
-            plottables[t_img_number] = {'frame numbers': [], 
+            plottables[t_img_number] = {'frame numbers': [],
+                                        'boxes': {}, 
+                                        'hypotenuse': [],
                                         'overall accuracy': 0, 
                                         'distance from center': [], 
                                         'total kp matches': [], 
@@ -196,6 +195,8 @@ def gen_plottables(methods, dataset, framerange):
             ################ start of a t_img trial
             for line in reversed(open('./gstore-csv/%s.csv' % dataset).readlines()):
                 row = line.rstrip().split(',')
+                print row
+                plottables[t_img_number]['boxes'][int(row[0])] = [int(row[1]), int(row[2]), int(row[3]), int(row[4])]
 
                 #training image is never a "future frame"
                 #for example, if the training image is frame 144, the test starts from frame 144, not frame 124
@@ -213,6 +214,8 @@ def gen_plottables(methods, dataset, framerange):
                         method = m, 
                         t_img = t_img_number)    
                     if data != None:        
+                        hypotenuse = math.sqrt((q_gtruth[0]-q_gtruth[2])**2 + (q_gtruth[1]-q_gtruth[3])**2)
+                        plottables[t_img_number]['hypotenuse'].append(hypotenuse)
                         plottables[t_img_number]['distance from center'].append(data['d_from_c'])
                         plottables[t_img_number]['total kp matches'].append(data['kp_matches'])
                         plottables[t_img_number]['correct kp matches'].append(data['c_matches'])
@@ -228,6 +231,8 @@ def gen_plottables(methods, dataset, framerange):
                                     method = m, 
                                     t_img = t_img_number)
                     if data != None:
+                        hypotenuse = math.sqrt((q_gtruth[0]-q_gtruth[2])**2 + (q_gtruth[1]-q_gtruth[3])**2)
+                        plottables[t_img_number]['hypotenuse'].append(hypotenuse)
                         plottables[t_img_number]['frame numbers'].append(row[0])
                         plottables[t_img_number]['distance from center'].append(data['d_from_c'])
                         plottables[t_img_number]['total kp matches'].append(data['kp_matches'])
@@ -241,19 +246,24 @@ def gen_plottables(methods, dataset, framerange):
             t_img_number += 20 #try a different training image (every 20 frames)... from frame 124 to 288 for cookie
         pickle.dump(plottables, open('./OT-res/compare_kpd_plots/%s_%s.p' % (dataset, m), 'wb'))            
 
+
 if __name__ == '__main__':
 
     #loops for datasets, methods, t_img while, q_imgs
 
-    methods = ['ORB', 'SIFT', 'BRISK', 'SURF']
+    # # methods = ['ORB', 'SIFT', 'BRISK', 'SURF']
+    # methods = ['SIFT']
     # plottables = gen_plottables(methods, 'cookie', [124, 288])
+    # pp.pprint(plottables)
+    # plot_superdata(plottables, 'SIFT')
+
+    for mstr in ['SIFT']:
+        data = pickle.load(open('./OT-res/compare_kpd_plots/%s_%s.p' % ('cookie', mstr), 'rb'))
+        pp.pprint(data)
+        plot_superdata(data, mstr)
 
     ### notes:
     #normalize things
     #maybe it's a blurry section of the video (meanshift can be dramatic)
     #plotting precision too
     #tuning meanshift? combining methods?
-    for mstr in ['SIFT']:
-        data = pickle.load(open('./OT-res/compare_kpd_plots/%s_%s.p' % ('cookie', mstr), 'rb'))
-        # pp.pprint(data)
-        plot_superdata(data, mstr)
