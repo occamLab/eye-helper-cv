@@ -125,7 +125,7 @@ def plot_superdata(plottables, dstr, mstr):
 
     # pp.pprint(g_truth)
 
-    for trial in plottables:
+    for trial in [592]:
         trialdata = plottables[trial]
 
         #setting up kp variables to plot
@@ -135,7 +135,6 @@ def plot_superdata(plottables, dstr, mstr):
 
             #Getting temporal frame distance from training image instead of franem number from filename
             frames = [int(x) - trial for x in trialdata['frame numbers']]
-
             
             correct_kp = [ trialdata['correct kp matches'][x] / float(trialdata['total kp matches'][x]) * 100 for x in range(len(frames))]
 
@@ -143,9 +142,12 @@ def plot_superdata(plottables, dstr, mstr):
             d_from_c = [trialdata['distance from center'][x]/trialdata['hypotenuse'][x] for x in range(len(trialdata['distance from center']))]           
 
             #frame number (or frames since training image) vs distance from center of object
-            plt.subplot(3,1,1)
-            plt.plot(frames, d_from_c, 'o', label=trial)
-            plt.ylabel('distance from center of object')
+            # plt.subplot(3,1,1)
+            if trialdata['match']:
+                plt.plot(frames, d_from_c, 'go', label=trial)
+            else:
+                plt.plot(frames, d_from_c, 'ro', label=trial)                
+            plt.ylabel('distance from center of object (hypotenuse lengths)')
             plt.xlabel('# of frames since training image')
             plt.title('%s %s distance from center vs frames for various training images (normalized)' % (dstr, mstr))
             plt.legend()
@@ -153,21 +155,21 @@ def plot_superdata(plottables, dstr, mstr):
             #start frame in sequence vs. overall accuracy of sequence
             #overall accuracy to be done when we have more method data
 
-            #frame number (or frames since training image) vs. total keypoint matches
-            plt.subplot(3,1,2)
-            plt.plot(frames, total_kp, 'o', label=trial)
-            plt.ylabel('total keypoints for each frame')
-            plt.xlabel('# of frames since training image')
-            plt.title('%s %s total keypoints for each frame vs frames for various training images' % (dstr, mstr))
-            plt.legend()
+            # #frame number (or frames since training image) vs. total keypoint matches
+            # plt.subplot(3,1,2)
+            # plt.plot(frames, total_kp, 'o', label=trial)
+            # plt.ylabel('total keypoints for each frame (hypotenuse lengths)')
+            # plt.xlabel('# of frames since training image')
+            # plt.title('%s %s total keypoints for each frame vs frames for various training images' % (dstr, mstr))
+            # plt.legend()
 
-            #frame number (or frames since training image) vs. correct keypoint matches/len(frames)
-            plt.subplot(3,1,3)
-            plt.plot(frames, correct_kp, 'o', label=trial)
-            plt.ylabel('percent correct keypoints for each frame')
-            plt.xlabel('# of frames since training image')
-            plt.title('%s %s percent correct keypoints for each frame vs frames for various training images' % (dstr, mstr))
-            plt.legend()
+            # #frame number (or frames since training image) vs. correct keypoint matches/len(frames)
+            # plt.subplot(3,1,3)
+            # plt.plot(frames, correct_kp, 'o', label=trial)
+            # plt.ylabel('percent correct keypoints for each frame (hypotenuse lengths)')
+            # plt.xlabel('# of frames since training image')
+            # plt.title('%s %s percent correct keypoints for each frame vs frames for various training images' % (dstr, mstr))
+            # plt.legend()
 
     plt.show()
     # plt.savefig("./OT-res/compare_kpd_plots/cookie_%s_plots.png" % mstr)
@@ -190,6 +192,7 @@ def gen_plottables(methods, dataset, framerange):
             plottables[t_img_number] = {'frame numbers': [],
                                         'boxes': {}, 
                                         'hypotenuse': [],
+                                        'c_match': [], 
                                         'overall accuracy': 0, 
                                         'distance from center': [], 
                                         'total kp matches': [], 
@@ -219,6 +222,7 @@ def gen_plottables(methods, dataset, framerange):
                     if data != None:        
                         hypotenuse = math.sqrt((q_gtruth[0]-q_gtruth[2])**2 + (q_gtruth[1]-q_gtruth[3])**2)
                         plottables[t_img_number]['hypotenuse'].append(hypotenuse)
+                        plottables[t_img_number]['c_match'].append(data['match'])
                         plottables[t_img_number]['distance from center'].append(data['d_from_c'])
                         plottables[t_img_number]['total kp matches'].append(data['kp_matches'])
                         plottables[t_img_number]['correct kp matches'].append(data['c_matches'])
@@ -236,6 +240,7 @@ def gen_plottables(methods, dataset, framerange):
                     if data != None:
                         hypotenuse = math.sqrt((q_gtruth[0]-q_gtruth[2])**2 + (q_gtruth[1]-q_gtruth[3])**2)
                         plottables[t_img_number]['hypotenuse'].append(hypotenuse)
+                        plottables[t_img_number]['c_match'].append(data['match'])
                         plottables[t_img_number]['frame numbers'].append(row[0])
                         plottables[t_img_number]['distance from center'].append(data['d_from_c'])
                         plottables[t_img_number]['total kp matches'].append(data['kp_matches'])
@@ -254,17 +259,14 @@ if __name__ == '__main__':
 
     #loops for datasets, methods, t_img while, q_imgs
 
-    # # methods = ['ORB', 'SIFT', 'BRISK', 'SURF']
-    # methods = ['SIFT', 'SURF']
-    # methods = ['ORB', 'BRISK']
-    # plottables = gen_plottables(methods, 'cereal', [512, 695])
     methods = ['ORB', 'SIFT', 'BRISK', 'SURF']
+    plottables = gen_plottables(methods, 'cereal', [512, 695])
 
-    dstr = 'cereal'
-    for mstr in methods:
-        data = pickle.load(open('./OT-res/compare_kpd_plots/%s_%s.p' % (dstr, mstr), 'rb'))
-        # pp.pprint(data)
-        plot_superdata(data, dstr, mstr)
+    # dstr = 'cereal'
+    # for mstr in methods:
+    #     data = pickle.load(open('./OT-res/compare_kpd_plots/%s_%s.p' % (dstr, mstr), 'rb'))
+    #     pp.pprint(data)
+    #     # plot_superdata(data, dstr, mstr)
 
     ### notes:
     #normalize things
