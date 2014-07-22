@@ -264,11 +264,11 @@ if __name__ == '__main__':
     #loops for datasets, methods, t_img while, q_imgs
 
     methods = ['ORB', 'SIFT', 'BRISK', 'SURF']
-    plottables = gen_plottables(methods, 'cereal', [512, 695]) 
+    # plottables = gen_plottables(methods, 'cereal', [512, 695]) 
 
-    # dstr = 'cereal'
-    # for mstr in methods:
-    #     data = pickle.load(open('./OT-res/compare_kpd_plots/%s_%s.p' % (dstr, mstr), 'rb'))
-    #     pp.pprint(data)
-    #     plot_superdata(data, dstr, mstr)
+    dstr = 'cereal'
+    for mstr in methods:
+        data = pickle.load(open('./OT-res/compare_kpd_plots/%s_%s.p' % (dstr, mstr), 'rb'))
+        pp.pprint(data)
+        plot_superdata(data, dstr, mstr)
 
