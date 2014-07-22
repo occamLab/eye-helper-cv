@@ -98,8 +98,9 @@ def superdata(q_pickle, t_pickle, q_gtruth, t_gtruth, frame, method, t_img):
                 c_matches +=1
     
         #checking if the center is within the labeled query box
-        if q_gtruth[2]<=c_center<=q_gtruth[0] and q_gtruth[3]<=c_center<=q_gtruth[1]:
+        if q_gtruth[2]<=c_center[0]<=q_gtruth[0] and q_gtruth[3]<=c_center[1]<=q_gtruth[1]:
             match = True
+            # print 'TRUEEEE'
         else:
             match = False
 
@@ -143,7 +144,8 @@ def plot_superdata(plottables, dstr, mstr):
 
             #frame number (or frames since training image) vs distance from center of object
             # plt.subplot(3,1,1)
-            if trialdata['match']:
+            print trialdata['c_match']
+            if trialdata['c_match']:
                 plt.plot(frames, d_from_c, 'go', label=trial)
             else:
                 plt.plot(frames, d_from_c, 'ro', label=trial)                
@@ -201,7 +203,7 @@ def gen_plottables(methods, dataset, framerange):
             ################ start of a t_img trial
             for line in reversed(open('./gstore-csv/%s.csv' % dataset).readlines()):
                 row = line.rstrip().split(',')
-                print row
+                # print row
                 plottables[t_img_number]['boxes'][int(row[0])] = [int(row[1]), int(row[2]), int(row[3]), int(row[4])]
 
                 #training image is never a "future frame"
@@ -212,6 +214,7 @@ def gen_plottables(methods, dataset, framerange):
                     plottables[t_img_number]['frame numbers'].append(row[0])
                     t_gtruth = [int(row[1]), int(row[2]), int(row[3]), int(row[4])]
                     q_gtruth = [int(row[1]), int(row[2]), int(row[3]), int(row[4])]
+                    # print q_gtruth
                     data = superdata(q_pickle = './OT-res/kp_pickles/%s/%s/%s_00%d_keypoints.p' % (dataset, m, dataset, q_img_number), 
                         t_pickle = './OT-res/kp_pickles/%s/%s/%s_00%d_keypoints.p' % (dataset, m, dataset, t_img_number), 
                         q_gtruth = q_gtruth,
@@ -265,8 +268,8 @@ if __name__ == '__main__':
     # dstr = 'cereal'
     # for mstr in methods:
     #     data = pickle.load(open('./OT-res/compare_kpd_plots/%s_%s.p' % (dstr, mstr), 'rb'))
-    #     pp.pprint(data)
-    #     # plot_superdata(data, dstr, mstr)
+    #     # pp.pprint(data)
+    #     plot_superdata(data, dstr, mstr)
 
     ### notes:
     #normalize things
