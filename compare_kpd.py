@@ -126,7 +126,7 @@ def plot_superdata(plottables, dstr, mstr):
 
     # pp.pprint(g_truth)
 
-    for trial in [592]:
+    for trial in [184]:
         trialdata = plottables[trial]
 
         #setting up kp variables to plot
@@ -142,20 +142,26 @@ def plot_superdata(plottables, dstr, mstr):
             # Normalizing d_from_c values (to account for the size of the item changing as the video progresses)
             d_from_c = [trialdata['distance from center'][x]/trialdata['hypotenuse'][x] for x in range(len(trialdata['distance from center']))]           
 
-            #frame number (or frames since training image) vs distance from center of object
+            # frame number (or frames since training image) vs distance from center of object
             # plt.subplot(3,1,1)
+
             print trialdata['c_match']
-            if trialdata['c_match']:
-                plt.plot(frames, d_from_c, 'go', label=trial)
-            else:
-                plt.plot(frames, d_from_c, 'ro', label=trial)                
+
+            for frame in range(len(frames)):
+                print trialdata['c_match'][frame]
+                if trialdata['c_match'][frame]:
+                    plt.plot(frames[frame], d_from_c[frame], 'go', label='within')
+                    continue
+                else:
+                    plt.plot(frames[frame], d_from_c[frame], 'ro', label='outside')   
+
             plt.ylabel('distance from center of object (hypotenuse lengths)')
             plt.xlabel('# of frames since training image')
             plt.title('%s %s distance from center vs frames for various training images (normalized)' % (dstr, mstr))
-            plt.legend()
+            # plt.legend()
 
-            #start frame in sequence vs. overall accuracy of sequence
-            #overall accuracy to be done when we have more method data
+            # # start frame in sequence vs. overall accuracy of sequence
+            # # overall accuracy to be done when we have more method data
 
             # #frame number (or frames since training image) vs. total keypoint matches
             # plt.subplot(3,1,2)
@@ -263,13 +269,13 @@ if __name__ == '__main__':
     #loops for datasets, methods, t_img while, q_imgs
 
     methods = ['ORB', 'SIFT', 'BRISK', 'SURF']
-    plottables = gen_plottables(methods, 'cookie', [124, 288])
+    # plottables = gen_plottables(methods, 'cookie', [124, 288])
 
-    # dstr = 'cereal'
-    # for mstr in methods:
-    #     data = pickle.load(open('./OT-res/compare_kpd_plots/%s_%s.p' % (dstr, mstr), 'rb'))
-    #     # pp.pprint(data)
-    #     plot_superdata(data, dstr, mstr)
+    dstr = 'cookie'
+    for mstr in methods:
+        data = pickle.load(open('./OT-res/compare_kpd_plots/%s_%s.p' % (dstr, mstr), 'rb'))
+        # pp.pprint(data)
+        plot_superdata(data, dstr, mstr)
 
     ### notes:
     #normalize things
