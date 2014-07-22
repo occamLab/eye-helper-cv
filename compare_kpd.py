@@ -167,7 +167,7 @@ def plot_superdata(plottables, mstr):
             plt.legend()
 
     plt.show()
-    # plt.savefig("./OT-res/compare_kpd_plots/cookie_%s_d_from_c_all.png" % mstr)
+    plt.savefig("./OT-res/compare_kpd_plots/cookie_%s_d_from_c_all.png" % mstr)
 
 def gen_plottables(methods, dataset, framerange):
     #plot-friendly data structure
@@ -255,12 +255,13 @@ if __name__ == '__main__':
     methods = ['SIFT', 'SURF']
     # methods = ['ORB', 'BRISK']
     plottables = gen_plottables(methods, 'cereal', [512, 695])
-    # pp.pprint(plottables)
+    methods = ['ORB', 'SIFT', 'BRISK', 'SURF']
 
-    # for mstr in methods:
-    #     data = pickle.load(open('./OT-res/compare_kpd_plots/%s_%s.p' % ('cookie', mstr), 'rb'))
-    #     pp.pprint(data)
-    #     plot_superdata(data, mstr)
+
+    for mstr in methods:
+        data = pickle.load(open('./OT-res/compare_kpd_plots/%s_%s.p' % ('cookie', mstr), 'rb'))
+        pp.pprint(data)
+        plot_superdata(data, mstr)
 
     ### notes:
     #normalize things
