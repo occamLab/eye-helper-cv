@@ -100,7 +100,6 @@ def superdata(q_pickle, t_pickle, q_gtruth, t_gtruth, frame, method, t_img):
         #checking if the center is within the labeled query box
         if q_gtruth[2]<=c_center[0]<=q_gtruth[0] and q_gtruth[3]<=c_center[1]<=q_gtruth[1]:
             match = True
-            # print 'TRUEEEE'
         else:
             match = False
 
@@ -126,7 +125,7 @@ def plot_superdata(plottables, dstr, mstr):
 
     # pp.pprint(g_truth)
 
-    for trial in [184]:
+    for trial in plottables:
         trialdata = plottables[trial]
 
         #setting up kp variables to plot
@@ -140,25 +139,31 @@ def plot_superdata(plottables, dstr, mstr):
             correct_kp = [ trialdata['correct kp matches'][x] / float(trialdata['total kp matches'][x]) * 100 for x in range(len(frames))]
 
             # Normalizing d_from_c values (to account for the size of the item changing as the video progresses)
-            d_from_c = [trialdata['distance from center'][x]/trialdata['hypotenuse'][x] for x in range(len(trialdata['distance from center']))]           
+            d_from_c = [trialdata['distance from center'][x]/trialdata['hypotenuse'][x] for x in range(len(trialdata['distance from center']))]
+            total_centers = len(trialdata['c_match'])
+            correct_centers = len([x for x in trialdata['c_match'] if x is True])      
+            perc_correct = float(correct_centers)/total_centers * 100  
 
             # frame number (or frames since training image) vs distance from center of object
+
             # plt.subplot(3,1,1)
 
-            print trialdata['c_match']
+            # # this specifically works best when only looking at one trial 
+            # # green: center is within item box
+            # # red: center is not within item box
+            # for frame in range(len(frames)):
+            #     print trialdata['c_match'][frame]
+            #     if trialdata['c_match'][frame]:
+            #         plt.plot(frames[frame], d_from_c[frame], 'go')#, label='within')
+            #     else:
+            #         plt.plot(frames[frame], d_from_c[frame], 'ro')#, label='outside')   
 
-            for frame in range(len(frames)):
-                print trialdata['c_match'][frame]
-                if trialdata['c_match'][frame]:
-                    plt.plot(frames[frame], d_from_c[frame], 'go', label='within')
-                    continue
-                else:
-                    plt.plot(frames[frame], d_from_c[frame], 'ro', label='outside')   
-
-            plt.ylabel('distance from center of object (hypotenuse lengths)')
-            plt.xlabel('# of frames since training image')
-            plt.title('%s %s distance from center vs frames for various training images (normalized)' % (dstr, mstr))
-            # plt.legend()
+            plt.plot(len(frames), perc_correct, 'o', label=trial)
+            plt.axis([0,160,0,110])
+            plt.ylabel('percent correct centers')
+            plt.xlabel('trial length (frames)')
+            plt.title('%s %s percent correct centers vs trial length for various training images' % (dstr, mstr))
+            plt.legend()
 
             # # start frame in sequence vs. overall accuracy of sequence
             # # overall accuracy to be done when we have more method data
@@ -180,7 +185,7 @@ def plot_superdata(plottables, dstr, mstr):
             # plt.legend()
 
     plt.show()
-    # plt.savefig("./OT-res/compare_kpd_plots/cookie_%s_plots.png" % mstr)
+    plt.savefig("./OT-res/compare_kpd_plots/%s_%s_perc_correct_plots.png" % (dstr, mstr))
 
 def gen_plottables(methods, dataset, framerange):
     #plot-friendly data structure
