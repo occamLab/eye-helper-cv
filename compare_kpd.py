@@ -126,7 +126,7 @@ def plot_superdata(plottables, mstr):
     # pp.pprint(g_truth)
 
     for trial in plottables:
-        if trial not in [144, 164, 284]: #we don't want to plot these
+        if trial not in [164, 124, 144]: #we don't want to plot these because of lack of matches (probably bad training images)
             trialdata = plottables[trial]
 
             #Getting temporal frame distance from training image instead of franem number from filename
@@ -134,7 +134,8 @@ def plot_superdata(plottables, mstr):
 
             #setting up kp variables to plot
             total_kp = trialdata['total kp matches']
-            correct_kp = [ trialdata['correct kp matches'][x]/float(trialdata['total kp matches'][x]) * 100 for x in range(len(frames))]
+
+            correct_kp = [ trialdata['correct kp matches'][x] / float(trialdata['total kp matches'][x]) * 100 for x in range(len(frames))]
 
             # Normalizing d_from_c values (to account for the size of the item changing as the video progresses)
             d_from_c = [trialdata['distance from center'][x]/trialdata['hypotenuse'][x] for x in range(len(trialdata['distance from center']))]           
@@ -167,7 +168,7 @@ def plot_superdata(plottables, mstr):
             plt.legend()
 
     plt.show()
-    plt.savefig("./OT-res/compare_kpd_plots/cookie_%s_d_from_c_all.png" % mstr)
+    # plt.savefig("./OT-res/compare_kpd_plots/cookie_%s_plots.png" % mstr)
 
 def gen_plottables(methods, dataset, framerange):
     #plot-friendly data structure
@@ -257,7 +258,7 @@ if __name__ == '__main__':
 
     for mstr in methods:
         data = pickle.load(open('./OT-res/compare_kpd_plots/%s_%s.p' % ('cookie', mstr), 'rb'))
-        pp.pprint(data)
+        # pp.pprint(data)
         plot_superdata(data, mstr)
 
     ### notes:
