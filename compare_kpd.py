@@ -180,7 +180,7 @@ def gen_plottables(methods, dataset, framerange):
     
     for m in methods:
         t_img_number = framestart 
-        while t_img_number < 140:# framemax:
+        while t_img_number < framemax:
             print m
             print t_img_number
             #instantiating plottables for this training image trial
@@ -252,15 +252,15 @@ if __name__ == '__main__':
     #loops for datasets, methods, t_img while, q_imgs
 
     # # methods = ['ORB', 'SIFT', 'BRISK', 'SURF']
-    # methods = ['SIFT']
-    # plottables = gen_plottables(methods, 'cookie', [124, 288])
+    # methods = ['SIFT', 'SURF']
+    methods = ['ORB', 'BRISK']
+    plottables = gen_plottables(methods, 'cookie', [124, 288])
     # pp.pprint(plottables)
-    # plot_superdata(plottables, 'SIFT')
 
-    for mstr in ['SIFT']:
-        data = pickle.load(open('./OT-res/compare_kpd_plots/%s_%s.p' % ('cookie', mstr), 'rb'))
-        pp.pprint(data)
-        plot_superdata(data, mstr)
+    # for mstr in methods:
+    #     data = pickle.load(open('./OT-res/compare_kpd_plots/%s_%s.p' % ('cookie', mstr), 'rb'))
+    #     pp.pprint(data)
+    #     plot_superdata(data, mstr)
 
     ### notes:
     #normalize things
