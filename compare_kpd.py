@@ -252,9 +252,9 @@ if __name__ == '__main__':
     #loops for datasets, methods, t_img while, q_imgs
 
     # # methods = ['ORB', 'SIFT', 'BRISK', 'SURF']
-    # methods = ['SIFT', 'SURF']
-    methods = ['ORB', 'BRISK']
-    plottables = gen_plottables(methods, 'cookie', [124, 288])
+    methods = ['SIFT', 'SURF']
+    # methods = ['ORB', 'BRISK']
+    plottables = gen_plottables(methods, 'cereal', [512, 695])
     # pp.pprint(plottables)
 
     # for mstr in methods:
