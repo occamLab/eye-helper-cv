@@ -115,12 +115,14 @@ def superdata(q_pickle, t_pickle, q_gtruth, t_gtruth, frame, method, t_img):
 
 def plot_superdata(plottables, dstr, mstr):
 
+    plt.figure(figsize=(15,10))
+
     for trial in plottables:
         trialdata = plottables[trial]
 
         #setting up kp variables to plot
         total_kp = trialdata['total kp matches']
-
+        
         if len(total_kp) > 0:
 
             #Getting temporal frame distance from training image instead of franem number from filename
@@ -147,13 +149,12 @@ def plot_superdata(plottables, dstr, mstr):
             #         plt.plot(frames[frame], d_from_c[frame], 'go')#, label='within')
             #     else:
             #         plt.plot(frames[frame], d_from_c[frame], 'ro')#, label='outside')   
-
             plt.plot(len(frames), perc_correct, 'o', label=trial)
             plt.axis([0,160,0,110])
             plt.ylabel('percent correct centers')
             plt.xlabel('trial length (frames)')
             plt.title('%s %s percent correct centers vs trial length for various training images' % (dstr, mstr))
-            plt.legend()
+            plt.legend(loc=3)
 
             # # start frame in sequence vs. overall accuracy of sequence
             # # overall accuracy to be done when we have more method data
@@ -174,8 +175,8 @@ def plot_superdata(plottables, dstr, mstr):
             # plt.title('%s %s percent correct keypoints for each frame vs frames for various training images' % (dstr, mstr))
             # plt.legend()
 
-    plt.show()
     plt.savefig("./OT-res/compare_kpd_plots/%s_%s_perc_correct_plots.png" % (dstr, mstr))
+    # plt.show()
 
 def gen_plottables(methods, dataset, framerange):
     #plot-friendly data structure
@@ -266,9 +267,9 @@ if __name__ == '__main__':
     methods = ['ORB', 'SIFT', 'BRISK', 'SURF']
     # plottables = gen_plottables(methods, 'cereal', [512, 695]) 
 
-    dstr = 'cereal'
+    dstr = 'cookie'
     for mstr in methods:
         data = pickle.load(open('./OT-res/compare_kpd_plots/%s_%s.p' % (dstr, mstr), 'rb'))
-        pp.pprint(data)
+        # pp.pprint(data)
         plot_superdata(data, dstr, mstr)
 
