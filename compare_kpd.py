@@ -115,16 +115,6 @@ def superdata(q_pickle, t_pickle, q_gtruth, t_gtruth, frame, method, t_img):
 
 def plot_superdata(plottables, dstr, mstr):
 
-    # g_truth = plottables['boxes']
-    # print g_truth
-
-    # #Getting box coordinates for now... eventually this'll go into gen_plottables
-    # for line in reversed(open('./gstore-csv/%s.csv' % 'cookie').readlines()):
-    #     row = line.rstrip().split(',')
-    #     g_truth[int(row[0])] = [int(row[1]), int(row[2]), int(row[3]), int(row[4])]
-
-    # pp.pprint(g_truth)
-
     for trial in plottables:
         trialdata = plottables[trial]
 
@@ -274,16 +264,10 @@ if __name__ == '__main__':
     #loops for datasets, methods, t_img while, q_imgs
 
     methods = ['ORB', 'SIFT', 'BRISK', 'SURF']
-    # plottables = gen_plottables(methods, 'cookie', [124, 288])
+    plottables = gen_plottables(methods, 'cereal', [512, 695])
 
-    dstr = 'cookie'
-    for mstr in methods:
-        data = pickle.load(open('./OT-res/compare_kpd_plots/%s_%s.p' % (dstr, mstr), 'rb'))
-        # pp.pprint(data)
-        plot_superdata(data, dstr, mstr)
-
-    ### notes:
-    #normalize things
-    #maybe it's a blurry section of the video (meanshift can be dramatic)
-    #plotting precision too
-    #tuning meanshift? combining methods?
+    # dstr = 'cereal'
+    # for mstr in methods:
+    #     data = pickle.load(open('./OT-res/compare_kpd_plots/%s_%s.p' % (dstr, mstr), 'rb'))
+    #     pp.pprint(data)
+    #     plot_superdata(data, dstr, mstr)
