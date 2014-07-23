@@ -287,25 +287,25 @@ def superANOVA(dstr, methods, framerange, accuracy = False, distance = False):
 
             #If we are using this to compare distances use the relevant data generated above, do this for every trial
         if distance:
-            f, p = scipy.stats.f_oneway(d_from_c['SIFT'], d_from_c['ORB'], d_from_c['SURF'], d_from_c['BRISK'])
+            f, p = scipy.stats.f_oneway(d_from_c['SIFT'], d_from_c['SURF'], d_from_c['SURF'], d_from_c['BRISK'])
             test_res[trial] = p 
 
     # If we are interested in comparing accuracy between method use relevant data from above, do this only once
     if accuracy:
-        f,p = scipy.stats.f_oneway(testables['SIFT'], testables['ORB'], testables['SURF'], testables['BRISK'])
+        f,p = scipy.stats.f_oneway(testables['SIFT'], testables['SURF'], testables['SURF'], testables['BRISK'])
         test_res = p
 
-    pickle.dump(test_res, open('./OT-res/compare_kpd_plots/cookie_ANOVA_distance.p', 'wb'))
+    pickle.dump(test_res, open('./OT-res/compare_kpd_plots/cookie_ANOVA_distance_all.p', 'wb'))
 
     #cookie values: {224: 3.5234660070124039e-47, 164: nan, 264: 8.7558448303041051e-18, 124: nan, 204: 3.1031813039349316e-32, 144: nan, 244: 0.68427309915407042, 184: 4.2305601044218262e-14, 284: 1.4070143460462706e-06}
-    
+
     return test_res
 
 if __name__ == '__main__':
 
     #loops for datasets, methods, t_img while, q_imgs
 
-    methods = ['ORB', 'SIFT', 'BRISK', 'SURF']
+    methods = ['SURF', 'SIFT', 'BRISK', 'SURF']
     # plottables = gen_plottables(methods, 'cereal', [512, 695]) 
     dstr = 'cookie'
     framerange = [124, 288]
