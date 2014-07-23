@@ -148,11 +148,9 @@ def plot_superdata(dstr, methods, framerange):
         n += 1
         plt.savefig("./OT-res/compare_kpd_plots/method_comparison_plots/%s_trial%d_dfc_plot_sigma_two.png" % (dstr, trial))
 
-    #     n+=1
-    # plt.show()
-    # print 'yo'
+    # # plotting the percent guess accuracy
     # for m in correct_centers:
-    #     temp = correct_centers[m]
+    #     temp0 = correct_centers[m]
     #     correct_centers[m] = sorted(temp, key=lambda temp: temp[0])
     #     x = [point[0] for point in correct_centers[m]]
     #     y = scipy.ndimage.filters.gaussian_filter1d([point[1] for point in correct_centers[m]], 2)
@@ -166,73 +164,8 @@ def plot_superdata(dstr, methods, framerange):
     #     plt.legend(loc=2)
     # # plt.show()
     # plt.savefig("./OT-res/compare_kpd_plots/method_comparison_plots/%s_c_accuracy_plot_sigma_two.png" % (dstr))
-    #     # n+=1
-
-        
-        # #setting up kp variables to plot
-        # total_kp = trialdata['total kp matches']
-        
-    #     if len(total_kp) > 0:
-
-    #         #Getting temporal frame distance from training image instead of franem number from filename
-    #         frames = [int(x) - trial for x in trialdata['frame numbers']]
-            
-    #         correct_kp = [ trialdata['correct kp matches'][x] / float(trialdata['total kp matches'][x]) * 100 for x in range(len(frames))]
-
-    #         # Normalizing d_from_c values (to account for the size of the item changing as the video progresses)
-            
-    #         total_centers = len(trialdata['c_match'])
-    #         perc_correct = float(correct_centers)/total_centers * 100  
-
-    #         # d_from_c vs frames plot
-    #         plt.subplot(2, 1, 1)
-
-    #         # 
-    #         plt.subplot(2, 1, 2)
-
-
-            # frame number (or frames since training image) vs distance from center of object
-
-            # plt.subplot(3,1,1)
-
-            # # this specifically works best when only looking at one trial 
-            # # green: center is within item box
-            # # red: center is not within item box
-            # for frame in range(len(frames)):
-            #     print trialdata['c_match'][frame]
-            #     if trialdata['c_match'][frame]:
-            #         plt.plot(frames[frame], d_from_c[frame], 'go')#, label='within')
-            #     else:
-            #         plt.plot(frames[frame], d_from_c[frame], 'ro')#, label='outside')   
-            # plt.plot(len(frames), perc_correct, 'o', label=trial)
-            # plt.axis([0,160,0,110])
-            # plt.ylabel('percent correct centers')
-            # plt.xlabel('trial length (frames)')
-            # plt.title('%s %s percent correct centers vs trial length for various training images' % (dstr, mstr))
-            # plt.legend(loc=3)
-
-            # # start frame in sequence vs. overall accuracy of sequence
-            # # overall accuracy to be done when we have more method data
-
-            # #frame number (or frames since training image) vs. total keypoint matches
-            # plt.subplot(3,1,2)
-            # plt.plot(frames, total_kp, 'o', label=trial)
-            # plt.ylabel('total keypoints for each frame (hypotenuse lengths)')
-            # plt.xlabel('# of frames since training image')
-            # plt.title('%s %s total keypoints for each frame vs frames for various training images' % (dstr, mstr))
-            # plt.legend()
-
-            # #frame number (or frames since training image) vs. correct keypoint matches/len(frames)
-            # plt.subplot(3,1,3)
-            # plt.plot(frames, correct_kp, 'o', label=trial)
-            # plt.ylabel('percent correct keypoints for each frame (hypotenuse lengths)')
-            # plt.xlabel('# of frames since training image')
-            # plt.title('%s %s percent correct keypoints for each frame vs frames for various training images' % (dstr, mstr))
-            # plt.legend()
-
-    # plt.savefig("./OT-res/compare_kpd_plots/method_comparison_plots/%s_%s_mc_plots.png" % (dstr, mstr))
-    # plt.show()
-
+    #     n+=1
+    
 def gen_plottables(methods, dataset, framerange):
     #plot-friendly data structure
     #{key = training image number : value = {frame numbers: [], boxes: {}, overall accuracy: [], :distance from center: [], total kp matches: [], correct kp matches: []}}
