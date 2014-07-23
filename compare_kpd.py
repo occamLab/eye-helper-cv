@@ -2,7 +2,7 @@ import cv2
 import numpy as np 
 import csv
 import pickle
-import scipy 
+import scipy.ndimage 
 import os
 import math
 from objectmatch import mean_shift
@@ -126,43 +126,48 @@ def plot_superdata(dstr, methods, framerange):
     n = 2                    
     trial_order = []
     for trial in data:
-        # print trial
         for method in data[trial]:
             try:
                 trialdata = data[trial][method]
+                # print(trialdata)
                 frames = [int(x) - trial for x in trialdata['frame numbers']]
                 d_from_c = [trialdata['distance from center'][x]/trialdata['hypotenuse'][x] for x in range(len(trialdata['distance from center']))]
-                
+                d_from_c =scipy.ndimage.filters.gaussian_filter1d(np.array(d_from_c), 2) #smoothed data to facilitate visualization/analysis; we chose a sigma of 2 after trying some values and staring at the plots 
                 #variable is actually the *precent* of correctly matched centers not the number   
                 correct_centers[method].append([trial, float(len([x for x in trialdata['c_match'] if x is True]))/len(frames)*100])
                 # #plotting the normalized distance from center comparison between different keyopint detector methods graph
-                # plt.figure(n, figsize=(15,10))
-                # plt.plot(frames, d_from_c, '-', label = method)
-                # plt.xlabel('# of frames since training image (frames)')
-                # plt.ylabel(('Distance between guessed and actual object center (hypotenuse lengths)'))
-                # plt.title('Distance from actual center v. Frames since training image for cookie trial #%d' %trial)
-                # plt.legend()
+                plt.figure(n, figsize=(15,10))
+                plt.plot(frames, d_from_c, '-', label = method)
+                plt.xlabel('# of frames since training image (frames)')
+                plt.ylabel(('Distance between guessed and actual object center (hypotenuse lengths)'))
+                plt.title('Distance from actual center v. Frames since training image for cookie trial #%d Gaussian filter sigma = 2' %trial)
+                plt.legend()
             except:
+                print 'yo'
                 continue
-    for m in correct_centers:
-        # print(correct_centers[m])
-        # print [len(correct_centers[m]) * 100 for x in range(len(correct_centers[m])]
-        temp = correct_centers[m]
-        correct_centers[m] = sorted(temp, key=lambda temp: temp[0])
-        x = [point[0] for point in correct_centers[m]]
-        y = [point[1] for point in correct_centers[m]]
-        print correct_centers[m]
-        plt.figure(1, figsize = (15,10))
-        plt.plot(x,y, '-', label = m) #right now the color coding works but the legend has redundant entries...
-        plt.axis([100,300,0,110])
-        plt.xlabel('Trial #')
-        plt.ylabel(('Percent guesses within actual object'))
-        plt.title('Cookie trial # v. Percent guess accuracy for different methods')
-        plt.legend(loc=2)
-        plt.savefig("./OT-res/compare_kpd_plots/method_comparison_plots/%s_c_accuracy_plot.png" % (dstr))
-        # n+=1
+        n += 1
+        plt.savefig("./OT-res/compare_kpd_plots/method_comparison_plots/%s_trial%d_dfc_plot_sigma_two.png" % (dstr, trial))
 
+    #     n+=1
     # plt.show()
+    # print 'yo'
+    # for m in correct_centers:
+    #     temp = correct_centers[m]
+    #     correct_centers[m] = sorted(temp, key=lambda temp: temp[0])
+    #     x = [point[0] for point in correct_centers[m]]
+    #     y = scipy.ndimage.filters.gaussian_filter1d([point[1] for point in correct_centers[m]], 2)
+    #     print correct_centers[m]
+    #     plt.figure(1, figsize = (15,10))
+    #     plt.plot(x,y, '-', label = m) #right now the color coding works but the legend has redundant entries...
+    #     plt.axis([100,300,0,110])
+    #     plt.xlabel('Trial #')
+    #     plt.ylabel(('Percent guesses within actual object'))
+    #     plt.title('Cookie trial # v. Percent guess accuracy for different methods with Gaussian filter sigma = 2')
+    #     plt.legend(loc=2)
+    # # plt.show()
+    # plt.savefig("./OT-res/compare_kpd_plots/method_comparison_plots/%s_c_accuracy_plot_sigma_two.png" % (dstr))
+    #     # n+=1
+
         
         # #setting up kp variables to plot
         # total_kp = trialdata['total kp matches']
