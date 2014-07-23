@@ -113,28 +113,84 @@ def superdata(q_pickle, t_pickle, q_gtruth, t_gtruth, frame, method, t_img):
         return None
 
 
-def plot_superdata(plottables, dstr, mstr):
+def plot_superdata(dstr, methods, framerange):
 
-    plt.figure(figsize=(15,10))
+    # open data to plot and put it into a dictionary :)
+    data = {}
 
-    for trial in plottables:
-        trialdata = plottables[trial]
+    for trial in range(framerange[0], framerange[1], 20):
+        print trial
+        data[trial] ={}
+        for mstr in methods:
+            data[trial][mstr]= pickle.load(open('./OT-res/compare_kpd_plots/%s_%s.p' % (dstr, mstr), 'rb'))[trial]
 
-        #setting up kp variables to plot
-        total_kp = trialdata['total kp matches']
+    n = 2                    
+    for trial in data:
+        # print trial
+        for method in data[trial]:
+            try:
+                trialdata = data[trial][method]
+                frames = [int(x) - trial for x in trialdata['frame numbers']]
+                d_from_c = [trialdata['distance from center'][x]/trialdata['hypotenuse'][x] for x in range(len(trialdata['distance from center']))]
+                correct_centers = len([x for x in trialdata['c_match'] if x is True])      
+                
+                # print frames
+                # print d_from_c
+
+                #plotting the normalized distance from center comparison between different keyopint detector methods graph
+                plt.figure(n, figsize=(15,10))
+                plt.plot(frames, d_from_c, '-', label = method)
+                plt.xlabel('# of frames since training image (frames)')
+                plt.ylabel(('Distance between guessed and actual object center (hypotenuse lengths)'))
+                plt.title('Distance from actual center v. Frames since training image for trial #%d' %trial)
+                plt.legend()
+
+                # if method == 'SIFT':
+                #     c = 'r'
+                # elif method == 'SURF':
+                #     c = 'g'
+                # elif method == 'ORB':
+                #     c = 'b'
+                # else:
+                #     c = 'k'
+                # plt.figure(1, figsize = (15,10))
+                # plt.plot(trial, float(correct_centers)/len(frames)*100, c+'o', label = method) #right now the color coding works but the legend has redundant entries...
+                # plt.axis([100,300,0,110])
+                # plt.xlabel('Trial #')
+                # plt.ylabel(('Percent guesses within actual object'))
+                # plt.title('Trial # v. Percent guess accuracy for different methods')
+            except:
+                continue
+        plt.savefig("./OT-res/compare_kpd_plots/method_comparison_plots/%s_trial%d_dfc_plots.png" % (dstr, trial))
+
+        n+=1
+
+    # plt.legend()
+
         
-        if len(total_kp) > 0:
+    # plt.legend(1)
+    # plt.show(1)
+        # #setting up kp variables to plot
+        # total_kp = trialdata['total kp matches']
+        
+    #     if len(total_kp) > 0:
 
-            #Getting temporal frame distance from training image instead of franem number from filename
-            frames = [int(x) - trial for x in trialdata['frame numbers']]
+    #         #Getting temporal frame distance from training image instead of franem number from filename
+    #         frames = [int(x) - trial for x in trialdata['frame numbers']]
             
-            correct_kp = [ trialdata['correct kp matches'][x] / float(trialdata['total kp matches'][x]) * 100 for x in range(len(frames))]
+    #         correct_kp = [ trialdata['correct kp matches'][x] / float(trialdata['total kp matches'][x]) * 100 for x in range(len(frames))]
 
-            # Normalizing d_from_c values (to account for the size of the item changing as the video progresses)
-            d_from_c = [trialdata['distance from center'][x]/trialdata['hypotenuse'][x] for x in range(len(trialdata['distance from center']))]
-            total_centers = len(trialdata['c_match'])
-            correct_centers = len([x for x in trialdata['c_match'] if x is True])      
-            perc_correct = float(correct_centers)/total_centers * 100  
+    #         # Normalizing d_from_c values (to account for the size of the item changing as the video progresses)
+            
+    #         total_centers = len(trialdata['c_match'])
+    #         perc_correct = float(correct_centers)/total_centers * 100  
+
+    #         # d_from_c vs frames plot
+    #         plt.subplot(2, 1, 1)
+
+    #         # 
+    #         plt.subplot(2, 1, 2)
+
 
             # frame number (or frames since training image) vs distance from center of object
 
@@ -149,12 +205,12 @@ def plot_superdata(plottables, dstr, mstr):
             #         plt.plot(frames[frame], d_from_c[frame], 'go')#, label='within')
             #     else:
             #         plt.plot(frames[frame], d_from_c[frame], 'ro')#, label='outside')   
-            plt.plot(len(frames), perc_correct, 'o', label=trial)
-            plt.axis([0,160,0,110])
-            plt.ylabel('percent correct centers')
-            plt.xlabel('trial length (frames)')
-            plt.title('%s %s percent correct centers vs trial length for various training images' % (dstr, mstr))
-            plt.legend(loc=3)
+            # plt.plot(len(frames), perc_correct, 'o', label=trial)
+            # plt.axis([0,160,0,110])
+            # plt.ylabel('percent correct centers')
+            # plt.xlabel('trial length (frames)')
+            # plt.title('%s %s percent correct centers vs trial length for various training images' % (dstr, mstr))
+            # plt.legend(loc=3)
 
             # # start frame in sequence vs. overall accuracy of sequence
             # # overall accuracy to be done when we have more method data
@@ -175,7 +231,7 @@ def plot_superdata(plottables, dstr, mstr):
             # plt.title('%s %s percent correct keypoints for each frame vs frames for various training images' % (dstr, mstr))
             # plt.legend()
 
-    plt.savefig("./OT-res/compare_kpd_plots/%s_%s_perc_correct_plots.png" % (dstr, mstr))
+    # plt.savefig("./OT-res/compare_kpd_plots/method_comparison_plots/%s_%s_mc_plots.png" % (dstr, mstr))
     # plt.show()
 
 def gen_plottables(methods, dataset, framerange):
@@ -268,8 +324,6 @@ if __name__ == '__main__':
     # plottables = gen_plottables(methods, 'cereal', [512, 695]) 
 
     dstr = 'cookie'
-    for mstr in methods:
-        data = pickle.load(open('./OT-res/compare_kpd_plots/%s_%s.p' % (dstr, mstr), 'rb'))
-        # pp.pprint(data)
-        plot_superdata(data, dstr, mstr)
+    framerange = [124, 288]
+    plot_superdata(dstr, methods, framerange)
 
