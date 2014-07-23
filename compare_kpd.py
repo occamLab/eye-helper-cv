@@ -117,14 +117,14 @@ def plot_superdata(dstr, methods, framerange):
 
     # open data to plot and put it into a dictionary :)
     data = {}
-
+    correct_centers = {}
     for trial in range(framerange[0], framerange[1], 20):
-        print trial
         data[trial] ={}
         for mstr in methods:
             data[trial][mstr]= pickle.load(open('./OT-res/compare_kpd_plots/%s_%s.p' % (dstr, mstr), 'rb'))[trial]
-
+            correct_centers[mstr] = []
     n = 2                    
+    trial_order = []
     for trial in data:
         # print trial
         for method in data[trial]:
@@ -132,44 +132,38 @@ def plot_superdata(dstr, methods, framerange):
                 trialdata = data[trial][method]
                 frames = [int(x) - trial for x in trialdata['frame numbers']]
                 d_from_c = [trialdata['distance from center'][x]/trialdata['hypotenuse'][x] for x in range(len(trialdata['distance from center']))]
-                correct_centers = len([x for x in trialdata['c_match'] if x is True])      
                 
-                # print frames
-                # print d_from_c
-
-                #plotting the normalized distance from center comparison between different keyopint detector methods graph
-                plt.figure(n, figsize=(15,10))
-                plt.plot(frames, d_from_c, '-', label = method)
-                plt.xlabel('# of frames since training image (frames)')
-                plt.ylabel(('Distance between guessed and actual object center (hypotenuse lengths)'))
-                plt.title('Distance from actual center v. Frames since training image for trial #%d' %trial)
-                plt.legend()
-
-                # if method == 'SIFT':
-                #     c = 'r'
-                # elif method == 'SURF':
-                #     c = 'g'
-                # elif method == 'ORB':
-                #     c = 'b'
-                # else:
-                #     c = 'k'
-                # plt.figure(1, figsize = (15,10))
-                # plt.plot(trial, float(correct_centers)/len(frames)*100, c+'o', label = method) #right now the color coding works but the legend has redundant entries...
-                # plt.axis([100,300,0,110])
-                # plt.xlabel('Trial #')
-                # plt.ylabel(('Percent guesses within actual object'))
-                # plt.title('Trial # v. Percent guess accuracy for different methods')
+                #variable is actually the *precent* of correctly matched centers not the number   
+                correct_centers[method].append([trial, float(len([x for x in trialdata['c_match'] if x is True]))/len(frames)*100])
+                # #plotting the normalized distance from center comparison between different keyopint detector methods graph
+                # plt.figure(n, figsize=(15,10))
+                # plt.plot(frames, d_from_c, '-', label = method)
+                # plt.xlabel('# of frames since training image (frames)')
+                # plt.ylabel(('Distance between guessed and actual object center (hypotenuse lengths)'))
+                # plt.title('Distance from actual center v. Frames since training image for cookie trial #%d' %trial)
+                # plt.legend()
             except:
                 continue
-        plt.savefig("./OT-res/compare_kpd_plots/method_comparison_plots/%s_trial%d_dfc_plots.png" % (dstr, trial))
+    for m in correct_centers:
+        # print(correct_centers[m])
+        # print [len(correct_centers[m]) * 100 for x in range(len(correct_centers[m])]
+        temp = correct_centers[m]
+        correct_centers[m] = sorted(temp, key=lambda temp: temp[0])
+        x = [point[0] for point in correct_centers[m]]
+        y = [point[1] for point in correct_centers[m]]
+        print correct_centers[m]
+        plt.figure(1, figsize = (15,10))
+        plt.plot(x,y, '-', label = m) #right now the color coding works but the legend has redundant entries...
+        plt.axis([100,300,0,110])
+        plt.xlabel('Trial #')
+        plt.ylabel(('Percent guesses within actual object'))
+        plt.title('Cookie trial # v. Percent guess accuracy for different methods')
+        plt.legend(loc=2)
+        plt.savefig("./OT-res/compare_kpd_plots/method_comparison_plots/%s_c_accuracy_plot.png" % (dstr))
+        # n+=1
 
-        n+=1
-
-    # plt.legend()
-
+    # plt.show()
         
-    # plt.legend(1)
-    # plt.show(1)
         # #setting up kp variables to plot
         # total_kp = trialdata['total kp matches']
         
