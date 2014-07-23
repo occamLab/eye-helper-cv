@@ -3,6 +3,7 @@ import numpy as np
 import csv
 import pickle
 import scipy.ndimage 
+import scipy.stats
 import os
 import math
 from objectmatch import mean_shift
@@ -247,6 +248,53 @@ def gen_plottables(methods, dataset, framerange):
             t_img_number += 20 #try a different training image (every 20 frames)... from frame 124 to 288 for cookie
         pickle.dump(plottables, open('./OT-res/compare_kpd_plots/%s_%s.p' % (dataset, m), 'wb'))            
 
+def superANOVA(dstr, methods, framerange, accuracy = False, distance = False):
+    """
+    A function to determine if there is any actual statistically siginificant differences in or data
+    between the different keypoint detection methods
+
+    """
+    data = {}
+    correct_centers = {}
+    testables = {}
+    test_res = {}
+    
+    #Loads the pickles which have all the possible data that we could want
+    for trial in range(framerange[0], framerange[1], 20):
+        data[trial] ={}
+        for mstr in methods:
+            data[trial][mstr]= pickle.load(open('./OT-res/compare_kpd_plots/%s_%s.p' % (dstr, mstr), 'rb'))[trial]
+            correct_centers[mstr] = []
+            testables[mstr] = []
+
+
+    
+    # #generates the accuracy and normalized distance from center information that we are interested in 
+    for trial in data:
+        d_from_c = {}
+        for method in data[trial]:
+            try:
+                trialdata = data[trial][method]
+                frames = [int(x) - trial for x in trialdata['frame numbers']]
+                d_from_c[method] = ([trialdata['distance from center'][x]/trialdata['hypotenuse'][x] for x in range(len(trialdata['distance from center']))])
+                #variable is actually the *precent* of correctly matched centers not the number   
+                
+                if accuracy:
+                    # print float(len([x for x in trialdata['c_match'] if x is True])) / len(frames)
+                    testables[method].append(len([x for x in trialdata['c_match'] if x is True]) / len(frames) * 100)
+            except:
+                print("If only I hadn't Failed!")
+
+            #If we are using this to compare distances use the relevant data generated above, do this for every trial
+        if distance:
+            f, p = scipy.stats.f_oneway(d_from_c['SIFT'], d_from_c['ORB'], d_from_c['SURF'], d_from_c['BRISK'])
+            test_res[trial] = p 
+
+    # If we are interested in comparing accuracy between method use relevant data from above, do this only once
+    if accuracy:
+        f,p = scipy.stats.f_oneway(testables['SIFT'], testables['ORB'], testables['SURF'], testables['BRISK'])
+        test_res = p
+    return test_res
 
 if __name__ == '__main__':
 
@@ -254,8 +302,10 @@ if __name__ == '__main__':
 
     methods = ['ORB', 'SIFT', 'BRISK', 'SURF']
     # plottables = gen_plottables(methods, 'cereal', [512, 695]) 
-
     dstr = 'cookie'
     framerange = [124, 288]
-    plot_superdata(dstr, methods, framerange)
+
+
+    print superANOVA(dstr, methods, framerange, distance = True)
+    # plot_superdata(dstr, methods, framerange)
 
