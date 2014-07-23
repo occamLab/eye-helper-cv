@@ -294,6 +294,11 @@ def superANOVA(dstr, methods, framerange, accuracy = False, distance = False):
     if accuracy:
         f,p = scipy.stats.f_oneway(testables['SIFT'], testables['ORB'], testables['SURF'], testables['BRISK'])
         test_res = p
+
+    pickle.dump(test_res, open('./OT-res/compare_kpd_plots/cookie_ANOVA_distance.p', 'wb'))
+
+    #cookie values: {224: 3.5234660070124039e-47, 164: nan, 264: 8.7558448303041051e-18, 124: nan, 204: 3.1031813039349316e-32, 144: nan, 244: 0.68427309915407042, 184: 4.2305601044218262e-14, 284: 1.4070143460462706e-06}
+    
     return test_res
 
 if __name__ == '__main__':
