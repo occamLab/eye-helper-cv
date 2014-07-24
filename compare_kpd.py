@@ -303,7 +303,7 @@ if __name__ == '__main__':
 
     #loops for datasets, methods, t_img while, q_imgs
 
-    methods = ['SURF', 'SIFT', 'BRISK', 'SURF']
+    methods = ['SURF', 'SIFT', 'BRISK', 'ORB']
     # plottables = gen_plottables(methods, 'cereal', [512, 695]) 
     dstr = 'cookie'
     framerange = [124, 288]
