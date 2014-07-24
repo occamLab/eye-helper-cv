@@ -285,7 +285,7 @@ def superANOVA(dstr, methods, framerange, accuracy = False, distance = False):
 
             #If we are using this to compare distances use the relevant data generated above, do this for every trial
         if distance:
-            f, p = scipy.stats.f_oneway([d_from_c[methods[0]], d_from_c[methods[1]], d_from_c[methods[2]], d_from_c[methods[3]]])
+            f, p = scipy.stats.f_oneway([d_from_c[methods[0]], d_from_c[methods[1]], d_from_c[methods[2]], d_from_c[methods[3]])
             test_res[trial] = p 
 
     # If we are interested in comparing accuracy between method use relevant data from above, do this only once
