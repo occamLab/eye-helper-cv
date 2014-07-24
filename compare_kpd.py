@@ -267,8 +267,6 @@ def superANOVA(dstr, methods, framerange, accuracy = False, distance = False):
             correct_centers[mstr] = []
             testables[mstr] = []
 
-
-    
     # #generates the accuracy and normalized distance from center information that we are interested in 
     for trial in data:
         d_from_c = {}
@@ -287,12 +285,12 @@ def superANOVA(dstr, methods, framerange, accuracy = False, distance = False):
 
             #If we are using this to compare distances use the relevant data generated above, do this for every trial
         if distance:
-            f, p = scipy.stats.f_oneway(d_from_c['SIFT'], d_from_c['SURF'], d_from_c['SURF'], d_from_c['BRISK'])
+            f, p = scipy.stats.f_oneway([d_from_c[methods[0]], d_from_c[methods[1]], d_from_c[methods[2]], d_from_c[methods[3]]])
             test_res[trial] = p 
 
     # If we are interested in comparing accuracy between method use relevant data from above, do this only once
     if accuracy:
-        f,p = scipy.stats.f_oneway(testables['SIFT'], testables['SURF'], testables['SURF'], testables['BRISK'])
+        f,p = scipy.stats.f_oneway(testables[methods[0]], testables[methods[1]], testables[methods[2]], testables[methods[3]])
         test_res = p
 
     pickle.dump(test_res, open('./OT-res/compare_kpd_plots/cookie_ANOVA_distance_all.p', 'wb'))
