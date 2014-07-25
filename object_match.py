@@ -175,8 +175,8 @@ if __name__ == '__main__':
         cv2.destroyAllWindows()
         print "Frame number: %d" % frame
         center = match_object(previous = center, 
-                              current = './gstore-snippets/cookie_snippet/cookie_00%d.jpg' % frame, 
-                              train_img = './gstore-snippets/cookie_snippet/cookie_00177.jpg',
+                              current = '../gstore-snippets/cookie_snippet/cookie_00%d.jpg' % frame, 
+                              train_img = '../gstore-snippets/cookie_snippet/cookie_00177.jpg',
                               pos = pos,
                               show = True,
                               frame = frame)

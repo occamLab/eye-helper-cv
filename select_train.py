@@ -4,7 +4,10 @@ import scipy as sp
 import time
 
 def select_train(video, path = None, start_frame = None, end_frame = None, from_cam = True):
-    """Takes in a video/camera id and allows the user to freeze
+    """
+    Work in progress. 
+
+    Takes in a video/camera id and allows the user to freeze
     on a frame and select an object that they wish to track through later frames
 
     inputs: a camera number or a video name, path, start and end frame, and the input False

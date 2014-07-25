@@ -6,10 +6,11 @@ import scipy.ndimage
 import scipy.stats
 import os
 import math
-from objectmatch import mean_shift
 import matplotlib.pyplot as plt  
-from plotdata import plot
 import pprint as pp
+
+from object_match import mean_shift
+from plot_data import plot
 
 def calc_center(g_truth):
     """ 
@@ -122,7 +123,7 @@ def plot_superdata(dstr, methods, framerange):
     for trial in range(framerange[0], framerange[1], 20):
         data[trial] ={}
         for mstr in methods:
-            data[trial][mstr]= pickle.load(open('./OT-res/compare_kpd_plots/%s_%s.p' % (dstr, mstr), 'rb'))[trial]
+            data[trial][mstr]= pickle.load(open('../OT-res/compare_kpd_plots/%s_%s.p' % (dstr, mstr), 'rb'))[trial]
             correct_centers[mstr] = []
     n = 2                    
     trial_order = []
@@ -147,7 +148,7 @@ def plot_superdata(dstr, methods, framerange):
                 print 'yo'
                 continue
         n += 1
-        plt.savefig("./OT-res/compare_kpd_plots/method_comparison_plots/%s_trial%d_dfc_plot_sigma_two.png" % (dstr, trial))
+        plt.savefig("../OT-res/compare_kpd_plots/method_comparison_plots/%s_trial%d_dfc_plot_sigma_two.png" % (dstr, trial))
 
     # # plotting the percent guess accuracy
     # for m in correct_centers:
@@ -192,7 +193,7 @@ def gen_plottables(methods, dataset, framerange):
                                         'correct kp matches': []}
 
             ################ start of a t_img trial
-            for line in reversed(open('./gstore-csv/%s.csv' % dataset).readlines()):
+            for line in reversed(open('../gstore-csv/%s.csv' % dataset).readlines()):
                 row = line.rstrip().split(',')
                 # print row
                 plottables[t_img_number]['boxes'][int(row[0])] = [int(row[1]), int(row[2]), int(row[3]), int(row[4])]
@@ -206,8 +207,8 @@ def gen_plottables(methods, dataset, framerange):
                     t_gtruth = [int(row[1]), int(row[2]), int(row[3]), int(row[4])]
                     q_gtruth = [int(row[1]), int(row[2]), int(row[3]), int(row[4])]
                     # print q_gtruth
-                    data = superdata(q_pickle = './OT-res/kp_pickles/%s/%s/%s_00%d_keypoints.p' % (dataset, m, dataset, q_img_number), 
-                        t_pickle = './OT-res/kp_pickles/%s/%s/%s_00%d_keypoints.p' % (dataset, m, dataset, t_img_number), 
+                    data = superdata(q_pickle = '../OT-res/kp_pickles/%s/%s/%s_00%d_keypoints.p' % (dataset, m, dataset, q_img_number), 
+                        t_pickle = '../OT-res/kp_pickles/%s/%s/%s_00%d_keypoints.p' % (dataset, m, dataset, t_img_number), 
                         q_gtruth = q_gtruth,
                         t_gtruth = t_gtruth, 
                         frame = q_img_number, 
@@ -224,8 +225,8 @@ def gen_plottables(methods, dataset, framerange):
                 elif int(row[0]) > t_img_number:
                     q_img_number = int(row[0])
                     q_gtruth = [int(row[1]), int(row[2]), int(row[3]), int(row[4])]
-                    data = superdata(q_pickle = './OT-res/kp_pickles/%s/%s/%s_00%d_keypoints.p' % (dataset, m, dataset, q_img_number), 
-                                    t_pickle = './OT-res/kp_pickles/%s/%s/%s_00%d_keypoints.p' % (dataset, m, dataset, t_img_number), 
+                    data = superdata(q_pickle = '../OT-res/kp_pickles/%s/%s/%s_00%d_keypoints.p' % (dataset, m, dataset, q_img_number), 
+                                    t_pickle = '../OT-res/kp_pickles/%s/%s/%s_00%d_keypoints.p' % (dataset, m, dataset, t_img_number), 
                                     q_gtruth = q_gtruth,
                                     t_gtruth = t_gtruth, 
                                     frame = q_img_number, 
@@ -246,7 +247,7 @@ def gen_plottables(methods, dataset, framerange):
                 plottables[t_img_number]['overall accuracy'] = 0
             ################ end of a t_img trial
             t_img_number += 20 #try a different training image (every 20 frames)... from frame 124 to 288 for cookie
-        pickle.dump(plottables, open('./OT-res/compare_kpd_plots/%s_%s.p' % (dataset, m), 'wb'))            
+        pickle.dump(plottables, open('../OT-res/compare_kpd_plots/%s_%s.p' % (dataset, m), 'wb'))            
 
 def superANOVA(dstr, methods, framerange, accuracy = False, distance = False):
     """

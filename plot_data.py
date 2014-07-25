@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt  
-
 import numpy as np 
 import pickle
 
@@ -30,7 +29,7 @@ if __name__ == '__main__':
     pickle_list = ['catfood', 'catfood-a-long', 'catfood-a-short', 'catfood-r-long', 'catfood-r-short','cereal', 'cereal-a-long', 'cereal-a-short', 'cookie', 'cookie-a-long', 'cookie-a-short']
     for thing in pickle_list:
         try:
-            name = './OT-res/pickles/p3/%s.p' %(thing)
+            name = '../OT-res/pickles/p3/%s.p' %(thing)
             print(name)
             temp = open(name, 'r')
             data = pickle.load(temp)
@@ -44,7 +43,7 @@ if __name__ == '__main__':
                      plot_title = thing,
                      label = str(key))
             plt.legend()
-            plt.savefig("./OT-res/plots/p3/%s.png" % thing)
+            plt.savefig("../OT-res/plots/p3/%s.png" % thing)
             plt.show()
         except:
             print('hello')

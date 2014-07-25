@@ -32,5 +32,5 @@ if __name__ == '__main__':
         for dataset in datasets:
             print 'method: %s, dataset: %s' % (method, dataset)
             for frame in range(datasets[dataset][0], datasets[dataset][1] + 1):
-                res = find_kp('./gstore-snippets/%s_snippet/%s_00%d.jpg' % (dataset, dataset, frame),method)
-                pickle.dump(res, open('./OT-res/kp_pickles/%s/%s/%s_00%d_keypoints.p' % (dataset, method, dataset, frame), 'wb'))
+                res = find_kp('../gstore-snippets/%s_snippet/%s_00%d.jpg' % (dataset, dataset, frame),method)
+                pickle.dump(res, open('../OT-res/kp_pickles/%s/%s/%s_00%d_keypoints.p' % (dataset, method, dataset, frame), 'wb'))

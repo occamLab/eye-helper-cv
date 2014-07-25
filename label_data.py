@@ -18,7 +18,7 @@ def labelData(basename, startframe, endframe):
     c1 = (0,0)
     c2 = (20,20)
     #creates a new csv file to store data
-    path = './gstore-snippets/%s_snippet/' %basename
+    path = '../gstore-snippets/%s_snippet/' %basename
     print('Begining calibration, please press the up key')
     temp = cv2.namedWindow('calibrate')
     k = cv2.waitKey(0)

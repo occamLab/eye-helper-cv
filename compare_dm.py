@@ -67,7 +67,7 @@ def compare_dm(videoname, trainimg, gt_csv, d_methods = ['ORB'] ,visualize = Fal
     """    
 
     # Video snippet path
-    path = './gstore-snippets/%s_snippet/' %videoname
+    path = '../gstore-snippets/%s_snippet/' %videoname
 
     # For calculating the success ratio...
 
@@ -112,7 +112,7 @@ def compare_dm(videoname, trainimg, gt_csv, d_methods = ['ORB'] ,visualize = Fal
         # Assumes the csv is in reverse order (b/c label-data built the csv in reversed order)
         # For prototyping we will iterate through the frames in chronological order
         # (because that makes more sense for updating the hypothesis and whatnot)
-        for line in reversed(open('./gstore-csv/%s' % gt_csv).readlines()):
+        for line in reversed(open('../gstore-csv/%s' % gt_csv).readlines()):
             row = line.rstrip().split(',')
 
             # pos is a counter for which frame the program is at
@@ -256,21 +256,21 @@ if __name__ == '__main__':
     cerealcsv = ['cereal.csv', 'cereal-a-long.csv', 'cereal-a-short.csv']
     cookiecsv = ['cookie.csv', 'cookie-a-long.csv', 'cookie-a-short.csv']
     
-    inputs = {'cookie':['./OT-res/KP-detect/cookie/cookie-train.jpg', cookiecsv],
-              'cereal':['./OT-res/KP-detect/cereal/cereal-train.jpg', cerealcsv],
-              'catfood':['./OT-res/KP-detect/catfood/catfood-train.jpg', catfoodcsv]}
+    inputs = {'cookie':['../OT-res/KP-detect/cookie/cookie-train.jpg', cookiecsv],
+              'cereal':['../OT-res/KP-detect/cereal/cereal-train.jpg', cerealcsv],
+              'catfood':['../OT-res/KP-detect/catfood/catfood-train.jpg', catfoodcsv]}
 
     for v in inputs:       
         print v
         for x in range(len(inputs[v][1])):
             try:
                 res = compare_dm(videoname = v, 
-                               trainimg = './OT-res/KP-detect/%s/%s-train.jpg' % (v, inputs[v][1][x][:-4]),
+                               trainimg = '../OT-res/KP-detect/%s/%s-train.jpg' % (v, inputs[v][1][x][:-4]),
                                gt_csv = inputs[v][1][x],
                                d_methods = ['ORB', 'SIFT', 'BRISK'],
                                visualize = False)
 
-                pickle.dump(res, open("./OT-res/pickles/p3/%s.p" % (inputs[v][1][x][:-4]), "wb"))
+                pickle.dump(res, open("../OT-res/pickles/p3/%s.p" % (inputs[v][1][x][:-4]), "wb"))
                 print res
                 # print_dm_res(res, inputs[v][1][x])
             except:
