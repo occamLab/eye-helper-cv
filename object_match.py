@@ -2,6 +2,11 @@ import cv2
 import numpy as np 
 import scipy as sp 
 
+"""
+Object matching shenanigans with meanshift. 
+
+--Emily and Lindsey, July 25, 2014
+"""
 
 def match_object(previous, current, train_img, pos, frame, show = False):
     """
@@ -11,8 +16,9 @@ def match_object(previous, current, train_img, pos, frame, show = False):
         train_img -> training image for keypoint matching
         pos -> corners (left top, right bottom) of object in trianing img
         show -> determines if visualization is displayed
-    Outputs:
-        ??
+    Output:
+        new_center -> new center determined by meanshift
+                      if there are no matches, original center is returned instead
 
     """
     #Take in training image with coordinates of tracked object
@@ -26,7 +32,7 @@ def match_object(previous, current, train_img, pos, frame, show = False):
     x2 = pos[0]
     y2 = pos[1]
 
-    #I choose YOU! ORB-achu or SIFT-emon
+    #I choose YOU! SIFT-emon
     detector = cv2.SIFT()
 
     #Keeps only keypoints within the grocery item selection
@@ -40,15 +46,16 @@ def match_object(previous, current, train_img, pos, frame, show = False):
     t_d = train_d
     t_k = train_k
 
-    #create a list of keypoints for entire image, subtract out tracked object keypoints
+    #finds all the keypoints in the query image
     q_k, q_d = detector.detectAndCompute(q_img, None)   #query image
 
     try:
         matcher = cv2.BFMatcher() #(normType = cv2.NORM_HAMMING)
 
-        #match list of object keypoints to list of remaining matches 
+        #match list of object keypoints to query image, not other way around
         matches = matcher.knnMatch(np.array(t_d), q_d, k =2)
 
+        #Nearest neighbor test to reduce false matches
         good_matches = []
         for m,n in matches:
             if m.distance < 0.75*n.distance:
@@ -65,7 +72,7 @@ def match_object(previous, current, train_img, pos, frame, show = False):
                                             frame = frame)
         return new_center
 
-    except Exception as inst:
+    except Exception as inst: #printing the error associated with why the except code chunk ran
         print inst
         print "Likely there are no matches"
         return center
@@ -118,6 +125,7 @@ def mean_shift(hypothesis, keypoints, threshold, frame, current = None, show = F
             #update hypothesis
             hypothesis = (x,y)
 
+            #difference between the current and last guess
             diff = np.sqrt((last_guess[0] - x)**2 + (last_guess[1] - y)**2)
 
             # Finding the radius:
@@ -136,7 +144,7 @@ def mean_shift(hypothesis, keypoints, threshold, frame, current = None, show = F
                     inliers.append(np.linalg.norm(coords))
             radius = int(max(inliers))
 
-        #visualizes moving center and displays keypoints
+        #visualizes moving center and displays keypoints if show==True
         if show:
             img = current   #Needs to be np array (alread opened by cv2)
             for k in keypoints:

@@ -3,6 +3,12 @@ import numpy as np
 import scipy as sp
 import pickle
 
+"""
+This function puts the keypoints in a form that can be easily pickled. 
+May or may not be helpful for future import endeavors.
+-Emily and Lindsey, July 25, 2014
+"""
+
 def find_kp(img, method):
     """
         inputs:
@@ -12,11 +18,14 @@ def find_kp(img, method):
             pickle of [keypoints, descriptors]
     """
     im = cv2.imread(img)
+    
+    #finding keypoints and descriptors
     detector = cv2.FeatureDetector_create(method)
     descriptor = cv2.DescriptorExtractor_create(method)     
     im_k = detector.detect(im)
     im_k, im_d = descriptor.compute(im, im_k)
 
+    #saving keypoint coordinates in a list because keypoint objects can't be pickled
     kps =[]
     for point in im_k:
         kps.append((point.pt[0], point.pt[1]))

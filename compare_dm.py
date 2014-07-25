@@ -5,8 +5,13 @@ from matplotlib import pyplot as plt
 import scipy as sp
 import time
 import pickle
+import pprint as pp
+
+"""
+This script will compare descriptor methods and visualize their performance if desired.
+"""
    
-def kpvisualize(img_t, img_q, box, good_matches, t_k, q_k):
+def kp_visualize(img_t, img_q, box, good_matches, t_k, q_k):
     """ 
     Displays the ground truth box and matches on the query image
 
@@ -231,25 +236,6 @@ def compare_dm(videoname, trainimg, gt_csv, d_methods = ['ORB'] ,visualize = Fal
     # Return dictionary of method: success ratio
     return successes
 
-def print_dm_res(d, csv_str):
-    "For rapid prototyping purposes: Printing out the metrics in an easy-to-read fashion."
-    for key in d:
-        print "%s with the %s snippet" % (key, csv_str)
-        current = d[key]
-        print current
-        # print "\tcorrectmatches: %d" % current[]
-        # print "\ttotalmatches: %d" % current[]
-        # print "\t%d%% accuracy" % current[0] 
-        # print "\tmethod total runtime: %f seconds" % current[]
-        # print current[1]
-        # frametimes = current[]
-        # print "\t\taverage start to end time per frame: %f seconds" % frametimes['start_to_end_time']
-        # print "\t\taverage image opening time per frame: %f seconds" % frametimes['open_time']
-        # print "\t\taverage keypoint detection time per frame: %f seconds" % frametimes['kp_detect_time']
-        # print "\t\taverage feature matching time per frame: %f seconds" % frametimes['match_time']
-        # print "\t\taverage visualization time per frame: %f seconds" % frametimes['vis_time']
-        print '\n'
-
 if __name__ == '__main__':
 
     catfoodcsv = ['catfood.csv', 'catfood-a-long.csv', 'catfood-a-short.csv', 'catfood-r-long.csv', 'catfood-r-short.csv']
@@ -272,6 +258,5 @@ if __name__ == '__main__':
 
                 pickle.dump(res, open("../OT-res/pickles/p3/%s.p" % (inputs[v][1][x][:-4]), "wb"))
                 print res
-                # print_dm_res(res, inputs[v][1][x])
             except:
                 pass

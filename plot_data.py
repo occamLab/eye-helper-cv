@@ -2,10 +2,10 @@ import matplotlib.pyplot as plt
 import numpy as np 
 import pickle
 
-#graphs we're interested in:
-# speed v. accuracy
-#   rotation, affine, overall
-#temporal distance from training image
+"""
+A little script for plotting things. :)
+--Emily and Lindsey, July 25, 2014
+"""
 
 def plot(data, plot_xlabel, plot_ylabel, plot_title, label):
     """Inputs:

@@ -14,11 +14,15 @@ def labelData(basename, startframe, endframe):
     ***Creates a csv file where the first entry is the frame, the second and 
     third represent the x,y coordinates of the top left corner and the fourth
     and fifth represent the x,y coordinates of the bottom right corner
+    ***Beware the corner crossover that happens when labeling data. 
+    The rest of the code takes this into account so the actual results are fine.
     """
     c1 = (0,0)
     c2 = (20,20)
     #creates a new csv file to store data
     path = '../gstore-snippets/%s_snippet/' %basename
+    
+    #calibrate arrow key controls to the current keyboard
     print('Begining calibration, please press the up key')
     temp = cv2.namedWindow('calibrate')
     k = cv2.waitKey(0)
@@ -37,7 +41,9 @@ def labelData(basename, startframe, endframe):
     if k != -1:
         right = k
     cv2.destroyAllWindows()
-    print('Thank you. Done Calibrating')
+    print('Thank you. Done Calibrating') 
+
+    #setting up the csv for the results
     with open(path + basename +".csv", "w") as csvfile:
         keypointwriter = csv.writer(csvfile, delimiter= ',',
                                quotechar='|', quoting=csv.QUOTE_MINIMAL)  
@@ -59,7 +65,7 @@ def labelData(basename, startframe, endframe):
                     c1= (c1[0]-2, c1[1])
                 elif k == ord('w'):
                     c1= (c1[0], c1[1]-2)
-                elif k == right:        #expand box width
+                elif k == right:       #expand box width
                     c1 = (c1[0]+2, c1[1])
                     c2 = (c2[0]+2, c2[1])
                 elif k == left:        #decrease box width

@@ -14,7 +14,7 @@ from plot_data import plot
 
 def calc_center(g_truth):
     """ 
-        Function finds the center of a box
+        Function finds the center of object box
 
         Inputs: g_truth -> four corners of a box
         Returns: center -> the center of the box
@@ -29,6 +29,7 @@ def superdata(q_pickle, t_pickle, q_gtruth, t_gtruth, frame, method, t_img):
         we may or may not rename this function in the near future to be something more descriptive... 
         --emily and lindsey, july 18, 2014
 
+        Function calculates all the data we think we might later use
         Inputs:
             q_pickle -> keypoint and descriptor data from query image
             t_pickle -> keypoint and descriptor data from training image
@@ -37,7 +38,7 @@ def superdata(q_pickle, t_pickle, q_gtruth, t_gtruth, frame, method, t_img):
             method -> kp detector method used to get points
             t_img -> training image frame number
 
-        We assume that the object has been perfectly selecdted so we use ground truth values for the training image region.
+        We assume that the object has been perfectly selected so we use ground truth values for the training image region.
 
         Returns:
             c_center -> center of the object tracking circle
@@ -150,7 +151,9 @@ def plot_superdata(dstr, methods, framerange):
         n += 1
         plt.savefig("../OT-res/compare_kpd_plots/method_comparison_plots/%s_trial%d_dfc_plot_sigma_two.png" % (dstr, trial))
 
-    # # plotting the percent guess accuracy
+    # plotting the percent guess accuracy
+    # Commented out for now because we only wanted to generate one type of plot at once. Don't delete this chunk of code without good reason!
+    ###
     # for m in correct_centers:
     #     temp0 = correct_centers[m]
     #     correct_centers[m] = sorted(temp, key=lambda temp: temp[0])
@@ -167,7 +170,8 @@ def plot_superdata(dstr, methods, framerange):
     # # plt.show()
     # plt.savefig("./OT-res/compare_kpd_plots/method_comparison_plots/%s_c_accuracy_plot_sigma_two.png" % (dstr))
     #     n+=1
-    
+    ###
+
 def gen_plottables(methods, dataset, framerange):
     #plot-friendly data structure
     #{key = training image number : value = {frame numbers: [], boxes: {}, overall accuracy: [], :distance from center: [], total kp matches: [], correct kp matches: []}}
@@ -195,8 +199,9 @@ def gen_plottables(methods, dataset, framerange):
             ################ start of a t_img trial
             for line in reversed(open('../gstore-csv/%s.csv' % dataset).readlines()):
                 row = line.rstrip().split(',')
-                # print row
                 plottables[t_img_number]['boxes'][int(row[0])] = [int(row[1]), int(row[2]), int(row[3]), int(row[4])]
+
+                #starting with training image number, calculate the superdata.
 
                 #training image is never a "future frame"
                 #for example, if the training image is frame 144, the test starts from frame 144, not frame 124
@@ -206,7 +211,6 @@ def gen_plottables(methods, dataset, framerange):
                     plottables[t_img_number]['frame numbers'].append(row[0])
                     t_gtruth = [int(row[1]), int(row[2]), int(row[3]), int(row[4])]
                     q_gtruth = [int(row[1]), int(row[2]), int(row[3]), int(row[4])]
-                    # print q_gtruth
                     data = superdata(q_pickle = '../OT-res/kp_pickles/%s/%s/%s_00%d_keypoints.p' % (dataset, m, dataset, q_img_number), 
                         t_pickle = '../OT-res/kp_pickles/%s/%s/%s_00%d_keypoints.p' % (dataset, m, dataset, t_img_number), 
                         q_gtruth = q_gtruth,
@@ -214,6 +218,8 @@ def gen_plottables(methods, dataset, framerange):
                         frame = q_img_number, 
                         method = m, 
                         t_img = t_img_number)    
+
+                    #saving the results
                     if data != None:        
                         hypotenuse = math.sqrt((q_gtruth[0]-q_gtruth[2])**2 + (q_gtruth[1]-q_gtruth[3])**2)
                         plottables[t_img_number]['hypotenuse'].append(hypotenuse)
@@ -232,6 +238,8 @@ def gen_plottables(methods, dataset, framerange):
                                     frame = q_img_number, 
                                     method = m, 
                                     t_img = t_img_number)
+
+                    #saving the results
                     if data != None:
                         hypotenuse = math.sqrt((q_gtruth[0]-q_gtruth[2])**2 + (q_gtruth[1]-q_gtruth[3])**2)
                         plottables[t_img_number]['hypotenuse'].append(hypotenuse)
@@ -251,8 +259,11 @@ def gen_plottables(methods, dataset, framerange):
 
 def superANOVA(dstr, methods, framerange, accuracy = False, distance = False):
     """
+    Update: We currently don't have enough data for an ANOVA test to be helpful (or it'd be violating assumptions of these types of F/p/t tests anyways...)
+    Will potentially revisit when we have more data and stats would be useful. --Emily and Lindsey, July 25, 2014
+
     A function to determine if there is any actual statistically siginificant differences in or data
-    between the different keypoint detection methods
+    between the different keypoint detection methods.
 
     """
     data = {}
