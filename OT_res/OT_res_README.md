@@ -21,9 +21,6 @@ OT_res_README
 ####kp_pickles
 - for when we decided to just generate all the keypoints once and put them into pickles for future use. :) definitely a timesaver.
 
-####meanshift
-- screenshots from first attempts with meanshift. beware - matching was done query to training rather than the other way around; so these screenshots aren't as accurate as they should be.
-
 ####pickles_day30
 - pickled the results from day 30 work (see blog post for deets)
 

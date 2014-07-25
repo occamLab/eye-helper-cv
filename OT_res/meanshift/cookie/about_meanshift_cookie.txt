@@ -1,6 +1,0 @@
-july 16, 2014
--ran objectmatch.py on the cookie dataset
--input frames 177-289
--only frames that had keypoints (i.e. had a resulting image instead of 'Likely there are no matches') have images in this results folder
--some of these images were featured in the day 33 blog post
--ran on Emily's laptop
