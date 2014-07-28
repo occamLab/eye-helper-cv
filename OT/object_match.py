@@ -64,6 +64,12 @@ def match_object(previous, current, train_img, pos, frame, show = False):
                 m_y = int(q_k[m.trainIdx].pt[1])
                 good_matches.append((m_x, m_y))
 
+        img = np.copy(q_img)
+        cv2.circle(img, (previous[0], previous[1]), 3, [0, 0, 255], 3)
+        # cv2.imshow('Frame %d: original center' % (frame), img)
+        cv2.imwrite('../OT_res/meanshift_demo/cookie_f%d_center_original.jpg' % (frame), img)
+        # cv2.waitKey(0)
+
         new_center, img_radius = mean_shift(hypothesis = (previous), 
                                             keypoints = good_matches, 
                                             threshold = 10, 
@@ -91,7 +97,8 @@ def mean_shift(hypothesis, keypoints, threshold, frame, current = None, show = F
         Radius
         If show is true -> displays the center, keypoints and a circle around the object
     """
-
+    print 'hypothesis'
+    print hypothesis
     n=0
     if len(keypoints) > 1:
 
@@ -175,6 +182,8 @@ def mean_shift(hypothesis, keypoints, threshold, frame, current = None, show = F
 
     #     return hypothesis, radius
 
+    #show the very first original guess
+
  
 if __name__ == '__main__':
     # initial values for prototyping w/ the cookies. :P
@@ -182,14 +191,14 @@ if __name__ == '__main__':
     center = old_center
     pos = [744,514,606,392]
 
-    for frame in range(180, 185): 
+    for frame in range(177, 289): 
         cv2.destroyAllWindows()
         print "Frame number: %d" % frame
         center = match_object(previous = center, 
                               current = '../gstore_snippets/cookie_snippet/cookie_00%d.jpg' % frame, 
                               train_img = '../gstore_snippets/cookie_snippet/cookie_00177.jpg',
                               pos = pos,
-                              show = True,
+                              show = False,
                               frame = frame)
         old_center = center
   
