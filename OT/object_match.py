@@ -66,9 +66,9 @@ def match_object(previous, current, train_img, pos, frame, show = False):
 
         img = np.copy(q_img)
         cv2.circle(img, (previous[0], previous[1]), 3, [0, 0, 255], 3)
-        # cv2.imshow('Frame %d: original center' % (frame), img)
-        cv2.imwrite('../OT_res/meanshift_demo/cookie_f%d_center_original.jpg' % (frame), img)
-        # cv2.waitKey(0)
+        cv2.imshow('Frame %d: original center' % (frame), img)
+        cv2.imwrite('../OT_res/meanshift_presentation/cookie_f%d_center_original.jpg' % (frame), img)
+        cv2.waitKey(0)
 
         new_center, img_radius = mean_shift(hypothesis = (previous), 
                                             keypoints = good_matches, 
@@ -104,7 +104,7 @@ def mean_shift(hypothesis, keypoints, threshold, frame, current = None, show = F
 
         #assigns a value to the weighting constant -> based on 
         #experimental results on cropped cookie_00274
-        c = 0.00001
+        c = 0.0001
 
         #arbitrarily set diff high to go through loop at least once
         diff = 1000
@@ -160,7 +160,7 @@ def mean_shift(hypothesis, keypoints, threshold, frame, current = None, show = F
                 cv2.circle(img, hypothesis, 3, [0, 0, 255], 3)
                 cv2.circle(img, hypothesis, radius, [100,255,0], 2)
                 cv2.imshow('Frame %d: Current hypothesis, meanshift guess %d' % (frame, n), img)
-                cv2.imwrite('../OT_res/meanshift_demo/cookie_f%d_guess%d.jpg' % (frame, n), img)
+                cv2.imwrite('../OT_res/meanshift_presentation/cookie_f%d_guess%d.jpg' % (frame, n), img)
                 cv2.waitKey(0)
                 n+=1
 
@@ -191,14 +191,14 @@ if __name__ == '__main__':
     center = old_center
     pos = [744,514,606,392]
 
-    for frame in range(177, 289): 
+    for frame in range(180, 182): 
         cv2.destroyAllWindows()
         print "Frame number: %d" % frame
         center = match_object(previous = center, 
                               current = '../gstore_snippets/cookie_snippet/cookie_00%d.jpg' % frame, 
                               train_img = '../gstore_snippets/cookie_snippet/cookie_00177.jpg',
                               pos = pos,
-                              show = False,
+                              show = True,
                               frame = frame)
         old_center = center
   
