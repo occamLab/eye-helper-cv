@@ -68,7 +68,7 @@ def match_object(previous, current, train_img, pos, frame, show = False):
                                             keypoints = good_matches, 
                                             threshold = 10, 
                                             current = q_img,
-                                            show = True, 
+                                            show = show, 
                                             frame = frame)
         return new_center
 
@@ -92,6 +92,7 @@ def mean_shift(hypothesis, keypoints, threshold, frame, current = None, show = F
         If show is true -> displays the center, keypoints and a circle around the object
     """
 
+    n=0
     if len(keypoints) > 1:
 
         #assigns a value to the weighting constant -> based on 
@@ -144,47 +145,49 @@ def mean_shift(hypothesis, keypoints, threshold, frame, current = None, show = F
                     inliers.append(np.linalg.norm(coords))
             radius = int(max(inliers))
 
-        #visualizes moving center and displays keypoints if show==True
-        if show:
-            img = current   #Needs to be np array (alread opened by cv2)
-            for k in keypoints:
-                cv2.circle(img, k, 2, [255, 0, 0], 2)
-            cv2.circle(img, hypothesis, 3, [0, 0, 255], 3)
-            cv2.circle(img, hypothesis, radius, [100,255,0], 2)
-            cv2.imshow('Frame %d: Current hypothesis' % frame, img)
-            # cv2.imwrite('./OT-res/meanshift/cookie/halfwidth_177.jpg', img)
-            cv2.waitKey(0)
-        return hypothesis, radius
-
-    elif len(keypoints) == 1: # That moment when there's only one good match and the stdev of a single element set is zero...
-
-        hypothesis = (keypoints[0][0], keypoints[0][1])
-        radius = 10
-
-        #visualizes moving center and displays keypoints
-        if show:
-            img = current   #Needs to be np array (alread opened by cv2)
-            cv2.circle(img, hypothesis, 3, [0, 0, 255], 3)
-            cv2.circle(img, hypothesis, radius, [100,255,0], 2)
-            # cv2.imwrite('./OT-res/meanshift/cookie/cookie_00%d.jpg' % frame, img)
-            cv2.imshow('Frame %d: Current hypothesis' % frame, img)
-            cv2.waitKey(0)
+            #visualizes moving center and displays keypoints if show==True
+            if show:
+                img = np.copy(current)   #Needs to be np array (already opened by cv2)
+                for k in keypoints:
+                    cv2.circle(img, k, 2, [255, 0, 0], 2)
+                cv2.circle(img, hypothesis, 3, [0, 0, 255], 3)
+                cv2.circle(img, hypothesis, radius, [100,255,0], 2)
+                cv2.imshow('Frame %d: Current hypothesis, meanshift guess %d' % (frame, n), img)
+                # cv2.imwrite('./OT-res/meanshift/cookie/halfwidth_177.jpg', img)
+                cv2.waitKey(0)
+                n+=1
 
         return hypothesis, radius
+
+    # elif len(keypoints) == 1: # That moment when there's only one good match and the stdev of a single element set is zero...
+
+    #     hypothesis = (keypoints[0][0], keypoints[0][1])
+    #     radius = 10
+
+    #     #visualizes moving center and displays keypoints
+    #     if show:
+    #         img = np.copy(current)   #Needs to be np array (alread opened by cv2)
+    #         cv2.circle(img, hypothesis, 3, [0, 0, 255], 3)
+    #         cv2.circle(img, hypothesis, radius, [100,255,0], 2)
+    #         # cv2.imwrite('./OT-res/meanshift/cookie/cookie_00%d.jpg' % frame, img)
+    #         cv2.imshow('Frame %d: Current hypothesis' % frame, img)
+    #         cv2.waitKey(0)
+
+    #     return hypothesis, radius
 
  
 if __name__ == '__main__':
     # initial values for prototyping w/ the cookies. :P
-    old_center = [600, 470]
+    old_center = [1000, 170]
     center = old_center
     pos = [744,514,606,392]
 
-    for frame in range(177,280): 
+    for frame in range(180, 185): 
         cv2.destroyAllWindows()
         print "Frame number: %d" % frame
         center = match_object(previous = center, 
-                              current = '../gstore-snippets/cookie_snippet/cookie_00%d.jpg' % frame, 
-                              train_img = '../gstore-snippets/cookie_snippet/cookie_00177.jpg',
+                              current = '../gstore_snippets/cookie_snippet/cookie_00%d.jpg' % frame, 
+                              train_img = '../gstore_snippets/cookie_snippet/cookie_00177.jpg',
                               pos = pos,
                               show = True,
                               frame = frame)
