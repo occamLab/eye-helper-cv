@@ -153,7 +153,7 @@ def mean_shift(hypothesis, keypoints, threshold, frame, current = None, show = F
                 cv2.circle(img, hypothesis, 3, [0, 0, 255], 3)
                 cv2.circle(img, hypothesis, radius, [100,255,0], 2)
                 cv2.imshow('Frame %d: Current hypothesis, meanshift guess %d' % (frame, n), img)
-                # cv2.imwrite('./OT-res/meanshift/cookie/halfwidth_177.jpg', img)
+                cv2.imwrite('../OT_res/meanshift_demo/cookie_f%d_guess%d.jpg' % (frame, n), img)
                 cv2.waitKey(0)
                 n+=1
 
