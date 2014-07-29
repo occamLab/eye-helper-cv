@@ -8,25 +8,23 @@ Object matching shenanigans with meanshift.
 --Emily and Lindsey, July 25, 2014
 """
 
-def match_object(previous, current, train_img, pos, frame, show = False):
+def match_object(previous, current, train_img, pos, frame=0, show = False, live = False, t = ()):
     """
     Takes in:
         previous -> center of the previous image
-        current ->  image being analyzed (with path)
+        current ->  image being analyzed (if not live: the img path)
         train_img -> training image for keypoint matching
-        pos -> corners (left top, right bottom) of object in trianing img
+        pos -> corners (left top, right bottom) of object in training img
         show -> determines if visualization is displayed
     Output:
         new_center -> new center determined by meanshift
                       if there are no matches, original center is returned instead
 
     """
-    #Take in training image with coordinates of tracked object
-    t_img = cv2.imread(train_img)
 
-    #query image
-    q_img = cv2.imread(current)
+    print pos
 
+    # corners of selected item in training image, accounts for the flipping
     x1 = pos[2]
     y1 = pos[3]
     x2 = pos[0]
@@ -35,16 +33,43 @@ def match_object(previous, current, train_img, pos, frame, show = False):
     #I choose YOU! SIFT-emon
     detector = cv2.SIFT()
 
-    #Keeps only keypoints within the grocery item selection
-    t_k, t_d = detector.detectAndCompute(t_img, None)   #training image
-    train_d = []
-    train_k = []
-    for index in range(len(t_k)):
-        if x1<=t_k[index].pt[0]<= x2 and y1<= t_k[index].pt[1] <=y2:
-            train_d.append(t_d[index])
-            train_k.append(t_k[index])
-    t_d = train_d
-    t_k = train_k
+    if not live:
+        #Take in training image with coordinates of tracked object
+        t_img = cv2.imread(train_img)
+
+        #query image
+        q_img = cv2.imread(current)
+
+        #Keeps only keypoints within the grocery item selection
+        t_k, t_d = detector.detectAndCompute(t_img, None)   #training image
+
+        train_d = []
+        train_k = []
+
+        for index in range(len(t_k)):
+            if x1<=t_k[index].pt[0]<= x2 and y1<= t_k[index].pt[1] <=y2:
+                train_k.append(t_k[index])
+                train_d.append(t_d[index])
+        t_k = train_k
+        t_d = train_d
+
+
+    else:
+        #to account for how the webcam version of this deals with inputs differently
+        # t_img = train_img #should be cap.read()[1] 
+        q_img = current
+        t_k = t[0] 
+        t_d = t[1]
+
+        train_d = []
+        train_k = []
+
+        for index in range(len(t_k)):
+            if x1<=t_k[index][0]<= x2 and y1<= t_k[index][1] <=y2:
+                train_k.append(t_k[index])
+                train_d.append(t_d[index])
+        t_k = train_k
+        t_d = train_d
 
     #finds all the keypoints in the query image
     q_k, q_d = detector.detectAndCompute(q_img, None)   #query image
@@ -64,26 +89,29 @@ def match_object(previous, current, train_img, pos, frame, show = False):
                 m_y = int(q_k[m.trainIdx].pt[1])
                 good_matches.append((m_x, m_y))
 
-        img = np.copy(q_img)
-        cv2.circle(img, (previous[0], previous[1]), 3, [0, 0, 255], 3)
-        cv2.imshow('Frame %d: original center' % (frame), img)
-        cv2.imwrite('../OT_res/meanshift_presentation/cookie_f%d_center_original.jpg' % (frame), img)
-        cv2.waitKey(0)
+        # for the sake of visualizing the original center. should not affect OT functionality. 
+        # img = np.copy(q_img)
+        # cv2.circle(img, (previous[0], previous[1]), 3, [0, 0, 255], 3)
+        # cv2.imshow('Frame %d: original center' % (frame), img)
+        # cv2.imwrite('../OT_res/meanshift_presentation/cookie_f%d_center_original.jpg' % (frame), img)
+        # cv2.waitKey(0)
 
         new_center, img_radius = mean_shift(hypothesis = (previous), 
                                             keypoints = good_matches, 
                                             threshold = 10, 
                                             current = q_img,
                                             show = show, 
-                                            frame = frame)
+                                            frame = frame, 
+                                            live = True, 
+                                            show_iterations = False)
         return new_center
 
     except Exception as inst: #printing the error associated with why the except code chunk ran
         print inst
         print "Likely there are no matches"
-        return center
+        return previous
 
-def mean_shift(hypothesis, keypoints, threshold, frame, current = None, show = False):
+def mean_shift(hypothesis, keypoints, threshold, frame, current = None, show = False, live = False, show_iterations = False):
     """
     Inputs:
         hypothesis -> Previous center point as a starting hypothesis
@@ -97,8 +125,7 @@ def mean_shift(hypothesis, keypoints, threshold, frame, current = None, show = F
         Radius
         If show is true -> displays the center, keypoints and a circle around the object
     """
-    print 'hypothesis'
-    print hypothesis
+
     n=0
     if len(keypoints) > 1:
 
@@ -152,17 +179,29 @@ def mean_shift(hypothesis, keypoints, threshold, frame, current = None, show = F
                     inliers.append(np.linalg.norm(coords))
             radius = int(max(inliers))
 
-            #visualizes moving center and displays keypoints if show==True
-            if show:
+            #visualizes moving center and displays keypoints for every meanshift iteration if show_iterations==True
+            if show_iterations:
                 img = np.copy(current)   #Needs to be np array (already opened by cv2)
                 for k in keypoints:
                     cv2.circle(img, k, 2, [255, 0, 0], 2)
                 cv2.circle(img, hypothesis, 3, [0, 0, 255], 3)
                 cv2.circle(img, hypothesis, radius, [100,255,0], 2)
                 cv2.imshow('Frame %d: Current hypothesis, meanshift guess %d' % (frame, n), img)
-                cv2.imwrite('../OT_res/meanshift_presentation/cookie_f%d_guess%d.jpg' % (frame, n), img)
+                # cv2.imwrite('../OT_res/meanshift_presentation/cookie_f%d_guess%d.jpg' % (frame, n), img)
                 cv2.waitKey(0)
                 n+=1
+        
+        #visualizes moving center and displays keypoints if show==True for the frame 
+        #(so, this happens once per call of the function)
+        if show:
+            img = np.copy(current)   #Needs to be np array (already opened by cv2)
+            for k in keypoints:
+                cv2.circle(img, k, 2, [255, 0, 0], 2)
+            cv2.circle(img, hypothesis, 3, [0, 0, 255], 3)
+            cv2.circle(img, hypothesis, radius, [100,255,0], 2)
+            cv2.imshow('Frame %d: Current hypothesis' % (frame), img)
+            # cv2.imwrite('../OT_res/meanshift_presentation/cookie_f%d_guess%d.jpg' % (frame, n), img)
+            cv2.waitKey(0)
 
         return hypothesis, radius
 
@@ -181,9 +220,6 @@ def mean_shift(hypothesis, keypoints, threshold, frame, current = None, show = F
     #         cv2.waitKey(0)
 
     #     return hypothesis, radius
-
-    #show the very first original guess
-
  
 if __name__ == '__main__':
     # initial values for prototyping w/ the cookies. :P

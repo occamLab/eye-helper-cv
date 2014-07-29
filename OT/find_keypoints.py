@@ -9,7 +9,7 @@ May or may not be helpful for future import endeavors.
 -Emily and Lindsey, July 25, 2014
 """
 
-def find_kp(img, method):
+def find_kp(img, method, live=False):
     """
         inputs:
             img -> image you are searching through
@@ -17,7 +17,10 @@ def find_kp(img, method):
         outputs:
             pickle of [keypoints, descriptors]
     """
-    im = cv2.imread(img)
+    if live:
+        im = img
+    else:
+        im = cv2.imread(img)
     
     #finding keypoints and descriptors
     detector = cv2.FeatureDetector_create(method)

@@ -1,5 +1,18 @@
 import cv2
 import numpy as np
+from find_keypoints import find_kp
+import object_match as om
+from compare_kpd import calc_center
+
+"""
+Python script that does object tracking in real time with webcam footage. 
+Beware the current setup with global variables in the mouse callback functions - 
+may or may not create an OOP version of this script for future efforts.
+However remember that ultimately the object selection will be on the eye-helper webapp
+and probably not on python opencv. - July 28, 2014
+"""
+
+### Webcam things
 
 cap = cv2.VideoCapture(0)
 
@@ -30,7 +43,7 @@ r = None
 
 # mouse callback function
 def draw_rectangle(event,x,y,flags,param):
-    global ix,iy,drawing,mode,img, r
+    global ix,iy,drawing,mode,img,r
 
     if event == cv2.EVENT_LBUTTONDOWN:
         drawing = True
@@ -46,9 +59,10 @@ def draw_rectangle(event,x,y,flags,param):
         drawing = False
         if mode == True:
             cv2.rectangle(img,(ix,iy),(x,y),(0,255,0))
-            r = [(ix,iy),(x,y)]
+            r = [x,y,ix,iy]
 
-# Create a black image, a window and bind the function to window
+# Obtain a copy of the current frame (so there's only one rectangle 
+# seen at a time), a window and bind the function to window
 img = np.copy(frame)
 cv2.namedWindow('image')
 cv2.setMouseCallback('image',draw_rectangle)
@@ -59,10 +73,27 @@ while(1):
     if cv2.waitKey(20) & 0xFF == 32: #hit spacebar when done 
         break
 
-# get keypoints of selected area (training image)
+# Get keypoints of selected area (training image)
+t = find_kp(cap.read()[1], 'SIFT', live=True)
 
-# now that we have the training image keypoints, commence object tracking on the video stream!
+# Setting up inputs for om.match_object
+previous = calc_center(r)
+current = cap.read()[1] 
+train_img = None #since we're not specifying a training image in a subfolder somewhere else on our computer
+pos = r
+frame = 0
 
-# When everything done, release the capture
+# Now that we have the training image keypoints, commence object tracking on the video stream!
+om.match_object(previous, 
+                current, 
+                train_img, 
+                pos, 
+                frame, 
+                show = True, 
+                live = True,
+                t = t)
+
+
+# When everything's done, release the capture
 cap.release()
 cv2.destroyAllWindows()
