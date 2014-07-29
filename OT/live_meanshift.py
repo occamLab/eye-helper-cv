@@ -12,6 +12,8 @@ However remember that ultimately the object selection will be on the eye-helper 
 and probably not on python opencv. - July 28, 2014
 """
 
+
+
 ### Webcam things
 
 cap = cv2.VideoCapture(0)
@@ -76,23 +78,27 @@ while(1):
 # Get keypoints of selected area (training image)
 t = find_kp(cap.read()[1], 'SIFT', live=True)
 
-# Setting up inputs for om.match_object
-previous = calc_center(r)
-current = cap.read()[1] 
-train_img = None #since we're not specifying a training image in a subfolder somewhere else on our computer
-pos = r
-frame = 0
+while True:
+    # Setting up inputs for om.match_object
+    previous = calc_center(r)
+    current = cap.read()[1] 
+    train_img = None #since we're not specifying a training image in a subfolder somewhere else on our computer
+    pos = r
+    frame = 0
 
-# Now that we have the training image keypoints, commence object tracking on the video stream!
-om.match_object(previous, 
-                current, 
-                train_img, 
-                pos, 
-                frame, 
-                show = True, 
-                live = True,
-                t = t)
+    # Now that we have the training image keypoints, commence object tracking on the video stream!
+    center, current = om.match_object(previous, 
+                                            current, 
+                                            train_img, 
+                                            pos, 
+                                            frame, 
+                                            show = True, 
+                                            live = True,
+                                            t = t)
 
+    cv2.imshow('OT demo', current)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
 
 # When everything's done, release the capture
 cap.release()

@@ -8,6 +8,21 @@ Object matching shenanigans with meanshift.
 --Emily and Lindsey, July 25, 2014
 """
 
+def draw_circles(img, c, radius, kp=None):
+    """Takes in:
+        img -> opened numpy array of image
+        kp -> list of the keypoint coordinates 
+        c -> center of 'mass' of keypoints
+        radius -> estimated radius of object
+    """
+    if kp != None:
+        for k in kp:
+            cv2.circle(img, (k[0], k[1]), 1, [255, 0, 0], 2)
+    # cv2.circle(img, c, radius, [100,255,0], 2)
+    if c != None:
+        cv2.circle(img, c, 6, [0,0,255], 6)
+    # return img
+
 def match_object(previous, current, train_img, pos, frame=0, show = False, live = False, t = ()):
     """
     Takes in:
@@ -21,8 +36,6 @@ def match_object(previous, current, train_img, pos, frame=0, show = False, live 
                       if there are no matches, original center is returned instead
 
     """
-
-    print pos
 
     # corners of selected item in training image, accounts for the flipping
     x1 = pos[2]
@@ -89,6 +102,8 @@ def match_object(previous, current, train_img, pos, frame=0, show = False, live 
                 m_y = int(q_k[m.trainIdx].pt[1])
                 good_matches.append((m_x, m_y))
 
+        print 'length of good_matches %d' % len(good_matches)
+
         # for the sake of visualizing the original center. should not affect OT functionality. 
         # img = np.copy(q_img)
         # cv2.circle(img, (previous[0], previous[1]), 3, [0, 0, 255], 3)
@@ -96,20 +111,20 @@ def match_object(previous, current, train_img, pos, frame=0, show = False, live 
         # cv2.imwrite('../OT_res/meanshift_presentation/cookie_f%d_center_original.jpg' % (frame), img)
         # cv2.waitKey(0)
 
-        new_center, img_radius = mean_shift(hypothesis = (previous), 
-                                            keypoints = good_matches, 
-                                            threshold = 10, 
-                                            current = q_img,
-                                            show = show, 
-                                            frame = frame, 
-                                            live = True, 
-                                            show_iterations = False)
-        return new_center
+        new_center, img_radius, current = mean_shift(hypothesis = (previous), 
+                                                    keypoints = good_matches, 
+                                                    threshold = 10, 
+                                                    current = q_img,
+                                                    show = show, 
+                                                    frame = frame, 
+                                                    live = True, 
+                                                    show_iterations = False)
+        return new_center, current
 
     except Exception as inst: #printing the error associated with why the except code chunk ran
         print inst
         print "Likely there are no matches"
-        return previous
+        return None, current
 
 def mean_shift(hypothesis, keypoints, threshold, frame, current = None, show = False, live = False, show_iterations = False):
     """
@@ -194,16 +209,19 @@ def mean_shift(hypothesis, keypoints, threshold, frame, current = None, show = F
         #visualizes moving center and displays keypoints if show==True for the frame 
         #(so, this happens once per call of the function)
         if show:
-            img = np.copy(current)   #Needs to be np array (already opened by cv2)
-            for k in keypoints:
-                cv2.circle(img, k, 2, [255, 0, 0], 2)
-            cv2.circle(img, hypothesis, 3, [0, 0, 255], 3)
-            cv2.circle(img, hypothesis, radius, [100,255,0], 2)
-            cv2.imshow('Frame %d: Current hypothesis' % (frame), img)
-            # cv2.imwrite('../OT_res/meanshift_presentation/cookie_f%d_guess%d.jpg' % (frame, n), img)
-            cv2.waitKey(0)
+            # img = np.copy(current)   #Needs to be np array (already opened by cv2)
+            # for k in keypoints:
+            #     cv2.circle(img, k, 2, [255, 0, 0], 2)
+            # cv2.circle(img, hypothesis, 3, [0, 0, 255], 3)
+            # cv2.circle(img, hypothesis, radius, [100,255,0], 2)
+            # cv2.imshow('Frame %d: Current hypothesis' % (frame), img)
+            # # cv2.imwrite('../OT_res/meanshift_presentation/cookie_f%d_guess%d.jpg' % (frame, n), img)
+            # cv2.waitKey(0)
+            draw_circles(img=current, kp=keypoints, c = hypothesis, radius = radius)
+            # cv2.imshow('current', current)
+            # cv2.waitKey(0)
 
-        return hypothesis, radius
+        return hypothesis, radius, current
 
     # elif len(keypoints) == 1: # That moment when there's only one good match and the stdev of a single element set is zero...
 
@@ -230,7 +248,7 @@ if __name__ == '__main__':
     for frame in range(180, 182): 
         cv2.destroyAllWindows()
         print "Frame number: %d" % frame
-        center = match_object(previous = center, 
+        center, current = match_object(previous = center, 
                               current = '../gstore_snippets/cookie_snippet/cookie_00%d.jpg' % frame, 
                               train_img = '../gstore_snippets/cookie_snippet/cookie_00177.jpg',
                               pos = pos,
