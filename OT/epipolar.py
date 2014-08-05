@@ -4,7 +4,22 @@ from matplotlib import pyplot as plt
 import glob
 import numpy.linalg 
 
-def extract_r_t(im1, im2):
+
+def in_front_of_both_cameras(first_points, second_points, rot, trans):
+    # check if the point correspondences are in front of both images
+    rot_inv = rot
+    for first, second in zip(first_points, second_points):
+        first_z = np.dot(rot[0, :] - second[0]*rot[2, :], trans) / np.dot(rot[0, :] - second[0]*rot[2, :], second)
+        first_3d_point = np.array([first[0] * first_z, second[0] * first_z, first_z])
+        second_3d_point = np.dot(rot.T, first_3d_point) - np.dot(rot.T, trans)
+ 
+        if first_3d_point[2] < 0 or second_3d_point[2] < 0:
+            return False
+ 
+    return True
+
+
+def extract_r_t(im1, im2, mtx, dst):
 
     """
     This function will find the essential matrix from an estimation of the 
@@ -28,16 +43,19 @@ def extract_r_t(im1, im2):
         A large amount of the code in this function (anything from essential matrix on)
         comes from code developed here: https://gist.github.com/jensenb/8668000
     """
-    #K = [[ 598.28339238    0.          338.53221923]
+    # K = [[ 598.28339238    0.          338.53221923]
     #    [   0.          595.80675436  230.06429972]
     #    [   0.            0.            1.        ]]
 
     #d = [[ 0.10643171 -0.55556305 -0.00786038  0.00290519  0.98123148]]
 
     #d the distortion matrix with three extra zeros on the end...we're not yet sure why the zeros are there
-    d = np.array([ 0.10643171, -0.55556305, -0.00786038,  0.00290519,  0.98123148, 0.0, 0.0, 0.0]).reshape(1,8)
-    #K the camera matrix (contains intrinsic camrea parameters)
-    K = np.array([598.28339238, 0.0, 338.53221923, 0.0, 595.80675436,  230.06429972, 0.0, 0.0, 1.0]).reshape(3,3)
+    # d = np.array([ 0.10643171, -0.55556305, -0.00786038,  0.00290519,  0.98123148, 0.0, 0.0, 0.0]).reshape(1,8)
+    # #K the camera matrix (contains intrinsic camrea parameters)
+    # K = np.array([598.28339238, 0.0, 338.53221923, 0.0, 595.80675436,  230.06429972, 0.0, 0.0, 1.0]).reshape(3,3)
+    d = dst 
+    K = mtx
+
     #K_inv is the inverse of K
     K_inv = np.linalg.inv(K)
     
@@ -80,7 +98,9 @@ def extract_r_t(im1, im2):
 
     # We select only inlier points
     pts1 = pts1[mask.ravel()==1]
+    pts1 = [np.append(pt, 0.0) for pt in pts1]
     pts2 = pts2[mask.ravel()==1]
+    pts2 = [np.append(pt, 0.0) for pt in pts2]
 
     #Decompsing the essential matrix from the fundamental matrix based on MATH!
     E = K.T.dot(F).dot(K)
@@ -94,6 +114,18 @@ def extract_r_t(im1, im2):
     R = U.dot(W).dot(V)
     T = U[:, 2]
 
+    if not in_front_of_both_cameras(pts1, pts2, R, T):
+        # Second choice: R = U * W * Vt, T = -u_3
+        T = - U[:, 2]
+        if not in_front_of_both_cameras(pts1, pts2, R, T):
+            # Third choice: R = U * Wt * Vt, T = u_3
+            R = U.dot(W.T).dot(V)
+            T = U[:, 2]
+     
+            if not in_front_of_both_cameras(pts1, pts2, R, T):
+                # Fourth choice: R = U * Wt * Vt, T = -u_3
+                T = - U[:, 2]
+    
     return R, T, pts1, pts2
 
 
@@ -119,8 +151,6 @@ def grab_galib_pics(camera):
         cv2.imshow('frame', gray)
         cv2.waitKey(0)
         cv2.destroyWindow('frame')
-        print ret
-        print corners
         if ret:
             cv2.imwrite('img_%d.jpg' %good, frame)
             good +=1
@@ -170,4 +200,12 @@ def calibrate_from_chessboard():
 
 
 if __name__ == '__main__':
-    extract_r_t('img_0.jpg', 'img_1.jpg')
+    mtx, dst = calibrate_from_chessboard()
+    # np.append(dst, [0.0, 0.0, 0.0]) 
+    R,T, pts1, pts2 = extract_r_t('img_1.jpg', 'img_1.jpg', mtx, dst)
+    center = np.array([0.0, 0.0, 0.0]).reshape(1,3)
+    new_center = (center+T).dot(R)
+    print 'R: ', R 
+    print 'T: ', T
+    # print 'first center: ', center
+    # print 'new center: ', new_center
