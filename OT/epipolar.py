@@ -195,12 +195,12 @@ def calibrate_from_chessboard():
 
     ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1],None,None)
 
-    return mtx, dist
+    return mtx, dist, rvecs, tvecs
 
 
 
 if __name__ == '__main__':
-    mtx, dst = calibrate_from_chessboard()
+    mtx, dst, rvecs, tvecs = calibrate_from_chessboard()
     # np.append(dst, [0.0, 0.0, 0.0]) 
     R,T, pts1, pts2 = extract_r_t('img_1.jpg', 'img_1.jpg', mtx, dst)
     center = np.array([0.0, 0.0, 0.0]).reshape(1,3)
