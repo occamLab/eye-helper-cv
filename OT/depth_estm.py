@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 def find_depth(img1, img2):
     """
-    Goal:
+    Goal:+
         calculated disparity map
         From disparity map estimate depth of image objects
 

@@ -128,31 +128,44 @@ def extract_r_t(im1, im2, mtx, dst):
     
     return R, T, pts1, pts2
 
-# def rectify(K, d, R, T, first_img, second_img):
-#     """
-#     Performs the image rectification that needs to happen before calculuating disparity. 
+def rectify(K, d, R, T, img1_path, img2_path):
+    """
+    Performs the image rectification that needs to happen before calculuating disparity. 
 
-#     Inputs:
-#     K -> intrinsic camera parameters matrix
-#     d -> camera distortion parameters matrix
-#     R -> rotation from one camera to another
-#     T -> translation from one camera to another
-#     first_img -> filepath. generally speaking, the left-hand-side image 
-#     second_img -> filepath. generally speaking, the right-hand-side image
+    Inputs:
+    K -> intrinsic camera parameters matrix
+    d -> camera distortion parameters matrix
+    R -> rotation from one camera to another
+    T -> translation from one camera to another
+    first_img -> filepath. generally speaking, the left-hand-side image 
+    second_img -> filepath. generally speaking, the right-hand-side image
 
-#     """
+    """
 
-#     first_img = cv2.imread(first_img)
-#     second_img = cv2.imread(second_img)
+    img_1 = cv2.imread(img1_path)
+    img_2 = cv2.imread(img2_path)
 
-#     # cv2.imshow('img_rect1', img_rect1)
-#     # cv2.imshow('img_rect2', img_rect2)
-#     # cv2.waitKey(0)
+    #step 1: elements of Rrect (following guide in image rectification slide deck)
+    e1 = T / np.linalg.norm(T)
+    e2 = ( 1 / np.sqrt( T[0]**2 + T[1]**2 ) ) * np.array([-T[1], T[0], 0]).T 
+    e3 = np.cross(e1, e2)
+    R_rect = np.array([e1.T, e2.T, e3.T])
 
-#     #result naming convension:
-#     #rect_0_1 and rect_1_0, etc. (they come in pairs)
+    # step 2
+    R_L = R_rect
+    R_R = np.dot(R, R_rect)
 
-#     return img_rect1, img_rect2
+    #not done yet! there's still step 3-4
+
+
+    # cv2.imshow('img_rect1', img_rect1)
+    # cv2.imshow('img_rect2', img_rect2)
+    # cv2.waitKey(0)
+
+    #result naming convension:
+    #rect_0_1 and rect_1_0, etc. (they come in pairs)
+
+    return img_rect1, img_rect2
 
 
 def grab_galib_pics(camera):
@@ -225,6 +238,7 @@ def calibrate_from_chessboard():
 
 
 
+
 if __name__ == '__main__':
     mtx, dst, rvecs, tvecs = calibrate_from_chessboard()
     # np.append(dst, [0.0, 0.0, 0.0]) 
@@ -237,13 +251,3 @@ if __name__ == '__main__':
     # print 'new center: ', new_center
 
     # rectify(mtx, dst, R, T, 'img_0.jpg', 'img_1.jpg')
-
-    img_0 = cv2.imread('img_0.jpg')
-    img_0_size = img_0.shape
-
-    R1 = np.zeros(9).reshape(3,3)
-    R2 = np.zeros(9).reshape(3,3)
-    P1 = np.zeros(12).reshape(3,4)
-    P2 = np.zeros(12).reshape(3,4)
-
-    cv2.cv.stereoRectify(mtx, mtx, dst, dst, img_0_size, R, T, R1, R2, P1, P2)
