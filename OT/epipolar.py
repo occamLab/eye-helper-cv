@@ -19,7 +19,7 @@ def in_front_of_both_cameras(first_points, second_points, rot, trans):
     return True
 
 
-def extract_r_t(im1, im2, mtx, dst):
+def extract_r_t_f(im1, im2, mtx, dst):
 
     """
     This function will find the essential matrix from an estimation of the 
@@ -37,7 +37,7 @@ def extract_r_t(im1, im2, mtx, dst):
                       enough with other image points to make the fundamental matrix
         T -> translation matrix
         R -> rotation matrix
-
+        F -> fundamental matrix
 
     Reference: 
         A large amount of the code in this function (anything from essential matrix on)
@@ -126,9 +126,9 @@ def extract_r_t(im1, im2, mtx, dst):
                 # Fourth choice: R = U * Wt * Vt, T = -u_3
                 T = - U[:, 2]
     
-    return R, T, pts1, pts2
+    return R, T, F, pts1, pts2
 
-def rectify(K, d, R, T, img1_path, img2_path):
+def rectify(K, d, R, T, F, img1_path, img2_path, pts1, pts2):
     """
     Performs the image rectification that needs to happen before calculuating disparity. 
 
@@ -137,25 +137,37 @@ def rectify(K, d, R, T, img1_path, img2_path):
     d -> camera distortion parameters matrix
     R -> rotation from one camera to another
     T -> translation from one camera to another
-    first_img -> filepath. generally speaking, the left-hand-side image 
-    second_img -> filepath. generally speaking, the right-hand-side image
+    F -> fundamental matrix
+    img1_path -> filepath. generally speaking, the left-hand-side image 
+    img2_path -> filepath. generally speaking, the right-hand-side image
+    pts1 -> the matched point locations in image 1
+    pts2 -> the matched point location in image2
 
     """
 
-    img_1 = cv2.imread(img1_path)
-    img_2 = cv2.imread(img2_path)
+    img_1 = cv2.imread(img1_path,0)
+    img_2 = cv2.imread(img2_path,0)
+    size = img_1.shape
+    print size
 
-    #step 1: elements of Rrect (following guide in image rectification slide deck)
-    e1 = T / np.linalg.norm(T)
-    e2 = ( 1 / np.sqrt( T[0]**2 + T[1]**2 ) ) * np.array([-T[1], T[0], 0]).T 
-    e3 = np.cross(e1, e2)
-    R_rect = np.array([e1.T, e2.T, e3.T])
+    cv2.stereoRectifyUncalibrated(points1=pts1, points2=pts2, F=F, imgSize=size)
 
-    # step 2
-    R_L = R_rect
-    R_R = np.dot(R, R_rect)
+    ##### image rect. slide deck
+    # #step 1: elements of Rrect (following guide in image rectification slide deck)
+    # e1 = T / np.linalg.norm(T)
+    # e2 = ( 1 / np.sqrt( T[0]**2 + T[1]**2 ) ) * np.array([-T[1], T[0], 0]).T 
+    # e3 = np.cross(e1, e2)
+    # R_rect = np.array([e1.T, e2.T, e3.T])
 
-    #not done yet! there's still step 3-4
+    # # step 2
+    # R_L = R_rect
+    # R_R = np.dot(R, R_rect)
+
+    # step 3-4... to be done soon!
+
+    #prototype webcam has focal length of 2.0
+    #google glass camera has focal length of 3.0, according to interwebs.
+    ######
 
 
     # cv2.imshow('img_rect1', img_rect1)
@@ -168,7 +180,7 @@ def rectify(K, d, R, T, img1_path, img2_path):
     return img_rect1, img_rect2
 
 
-def grab_galib_pics(camera):
+def grab_calib_pics(camera):
     """Walks through getting callibration matrix for a camera"""
 
     cap = cv2.VideoCapture(camera)
@@ -242,7 +254,7 @@ def calibrate_from_chessboard():
 if __name__ == '__main__':
     mtx, dst, rvecs, tvecs = calibrate_from_chessboard()
     # np.append(dst, [0.0, 0.0, 0.0]) 
-    R,T, pts1, pts2 = extract_r_t('img_0.jpg', 'img_1.jpg', mtx, dst)
+    R,T, F, pts1, pts2 = extract_r_t_f('img_0.jpg', 'img_1.jpg', mtx, dst)
     center = np.array([0.0, 0.0, 0.0]).reshape(1,3)
     new_center = (center+T).dot(R)
     print 'R: ', R 
@@ -250,4 +262,7 @@ if __name__ == '__main__':
     # print 'first center: ', center
     # print 'new center: ', new_center
 
-    # rectify(mtx, dst, R, T, 'img_0.jpg', 'img_1.jpg')
+    pts1 = np.array(pts1)
+    pts2 = np.array(pts2)
+
+    rectify(mtx, dst, R, T, F, 'img_0.jpg', 'img_1.jpg', pts1, pts2)
