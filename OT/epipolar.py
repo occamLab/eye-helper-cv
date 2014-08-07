@@ -150,24 +150,41 @@ def rectify(K, d, R, T, F, img1_path, img2_path, pts1, pts2):
     size = img_1.shape
     print size
 
-    cv2.stereoRectifyUncalibrated(points1=pts1, points2=pts2, F=F, imgSize=size)
+    #blue powerpoint
+    #getting H this way gave us a c++ error... grr. 
+    #cv2.stereoRectifyUncalibrated(points1=pts1, points2=pts2, F=F, imgSize=size)
 
-    ##### image rect. slide deck
-    # #step 1: elements of Rrect (following guide in image rectification slide deck)
-    # e1 = T / np.linalg.norm(T)
-    # e2 = ( 1 / np.sqrt( T[0]**2 + T[1]**2 ) ) * np.array([-T[1], T[0], 0]).T 
-    # e3 = np.cross(e1, e2)
-    # R_rect = np.array([e1.T, e2.T, e3.T])
-
-    # # step 2
-    # R_L = R_rect
-    # R_R = np.dot(R, R_rect)
-
-    # step 3-4... to be done soon!
-
+    #### image rect. slide deck
     #prototype webcam has focal length of 2.0
     #google glass camera has focal length of 3.0, according to interwebs.
-    ######
+    f = 0.49 # converting to the 2.45cm square side unit (relevant to the checkerboard calibration)
+
+    #step 1: elements of Rrect (following guide in image rectification slide deck)
+    e1 = T / np.linalg.norm(T)
+    e2 = ( 1 / np.sqrt( T[0]**2 + T[1]**2 ) ) * np.array([-T[1], T[0], 0]).T 
+    e3 = np.cross(e1, e2)
+    R_rect = np.array([e1.T, e2.T, e3.T])
+
+    # step 2
+    R_L = R_rect
+    R_R = np.dot(R, R_rect)
+
+    #left, 1
+    #right, 2
+
+    p1 = [np.array([pt[0], pt[1], f]).T for pt in pts1]
+    p2 = [np.array([pt[0], pt[1], f]).T for pt in pts2]
+
+    R_L_p1 = [np.dot(R_L, pt) for pt in p1]
+    R_L_p2 = [np.dot(R_L, pt) for pt in p2]
+
+    #coordinates of corr. rectified points
+    #slicing at 0:2 to get rid of the f element (i.e. the z element)
+    p1_prime = [(f/pt[2]) * pt[0:2] for pt in R_L_p1]
+    p2_prime = [(f/pt[2]) * pt[0:2] for pt in R_L_p2]
+
+    #to do next: verify that these are the correct steps. 
+    #we're getting negative numbers in our results; investigate further before continuing...
 
 
     # cv2.imshow('img_rect1', img_rect1)
@@ -177,7 +194,7 @@ def rectify(K, d, R, T, F, img1_path, img2_path, pts1, pts2):
     #result naming convension:
     #rect_0_1 and rect_1_0, etc. (they come in pairs)
 
-    return img_rect1, img_rect2
+    # return img_rect1, img_rect2
 
 
 def grab_calib_pics(camera):
