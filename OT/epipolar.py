@@ -169,6 +169,9 @@ def rectify(K, d, R, T, F, img1_path, img2_path, pts1, pts2):
     R_L = R_rect
     R_R = np.dot(R, R_rect)
 
+
+    # step 3-4
+
     #left, 1
     #right, 2
 
@@ -186,6 +189,10 @@ def rectify(K, d, R, T, F, img1_path, img2_path, pts1, pts2):
     #to do next: verify that these are the correct steps. 
     #we're getting negative numbers in our results; investigate further before continuing...
 
+    #should be the same.... hm.
+    print [pt[1] for pt in p1_prime]
+    print
+    print [pt[1] for pt in p2_prime]
 
     # cv2.imshow('img_rect1', img_rect1)
     # cv2.imshow('img_rect2', img_rect2)
