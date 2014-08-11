@@ -10,13 +10,19 @@ Beware the current setup with global variables in the mouse callback functions -
 may or may not create an OOP version of this script for future efforts.
 However remember that ultimately the object selection will be on the eye-helper webapp
 and probably not on python opencv. - July 28, 2014
+
+Keyboard controls to know once this program starts...
+First, hit 's' and another window will pop up for selecting the training image.
+Then, use the mouse to drag a box around the item of interest. If you mess up, simply draw a new rectangle!
+Then, once you are satisfied with the selection box, hit 'enter' and object tracking will begin.
+To end the demo, hit the 'q' key. - July 29, 2014
 """
-
-
 
 ### Webcam things
 
 cap = cv2.VideoCapture(0)
+# 0 for built-in laptop webcam
+# 1 for external webcam
 
 while(True):
     # Capture frame-by-frame
@@ -27,14 +33,7 @@ while(True):
     if cv2.waitKey(1) & 0xFF == ord('s'): #s for selection mode...
         break
 
-### Selecting things
-
-# Display the frame when 's' key was hit
-#cv2.imshow('selection frame', frame)
-#cv2.waitKey(0)
-
-### Selecting the item of interest to track (i.e. the training image)
-
+### Selecting things: Selecting the item of interest to track (i.e. the training image)
 # snippets taken from mousing.py.... beware mouse callbacks and global-ish variables.
 
 # setting state variables
@@ -78,6 +77,7 @@ while(1):
 # Get keypoints of selected area (training image)
 t = find_kp(cap.read()[1], 'SIFT', live=True)
 
+# OT demo loop
 while True:
     # Setting up inputs for om.match_object
     previous = calc_center(r)
