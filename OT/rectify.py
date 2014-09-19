@@ -105,15 +105,15 @@ def find_projective_transform(F, T, img1path, img2path):
     eigvalsprime, eigvecsprime = np.linalg.eig(keyprime)
 
     #find largest eigenvalue
-    largest_eigval = eigvals[0]
+    largest_eigval = abs(eigvals[0])
     for i in range(len(eigvals)):
-        if abs(eigvals[i]) > largest_eigval:
+        if abs(eigvals[i]) >= largest_eigval:
             largest_eigval = eigvals[i]
             y = eigvecs[i] #corresponding eigenvector to that largest eigenvalue
 
-    largest_eigvalprime = eigvalsprime[0]
+    largest_eigvalprime = abs(eigvalsprime[0])
     for i in range(len(eigvalsprime)):
-        if abs(eigvalsprime[i]) > largest_eigvalprime:
+        if abs(eigvalsprime[i]) >= largest_eigvalprime:
             largest_eigvalprime = eigvalsprime[i]
             yprime = eigvecs[i] #corresponding eigenvector to that largest eigenvalue
 
@@ -137,6 +137,7 @@ def find_projective_transform(F, T, img1path, img2path):
 if __name__ == '__main__':
     mtx, dst, rvecs, tvecs = ep.calibrate_from_chessboard()
     R,T, F, pts1, pts2 = ep.extract_r_t_f('img_0.jpg', 'img_1.jpg', mtx, dst)
+
     w, wprime, Hp, Hpprime = find_projective_transform(F, T, 'img_0.jpg', 'img_1.jpg')    
 
     # center = np.array([0.0, 0.0, 0.0]).reshape(1,3)
