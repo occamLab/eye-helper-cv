@@ -1,0 +1,84 @@
+##Code Architecture
+
+Proposed code architecture for the complete eye-helper prototype.
+Includes public methods and all that jazz.
+
+###Wrapper
+```
+public void initialize(Matcher, Interface, Audio) {}
+    /*
+    Initializes Matcher, Interface, and Audio objects
+    */
+
+public void run_session() {}
+    /*
+    Based on input from the interface, matching will begin
+    and audio generation until the session is done. 
+    ('done' signal is received from the interface)
+    */
+```
+
+```
+####Interface 
+public void initialize(black magic) {
+    /*
+    sets up connection to website
+    sets done attribute to false
+    */    
+}
+public int[] getTrainImage(unknown website connection magic){
+    /*
+    retrieves the training image from the website 
+    Returns a list of the keypoints and descriptors
+    */
+}
+
+public bool isDone(webinterface){
+    /*
+    checks with website to determine if session is still running
+    returns false if website indicates item has been found
+    */    
+}
+
+
+```
+
+```
+####Matcher object
+public void initialize() {
+    /* 
+    setting up everything for matching:
+        training keypoints
+        training descriptors
+        image keypoints
+        image descriptors
+        center
+    */    
+}
+
+public int[] match() {
+    /*
+    returns the updated center guess for the current frame 
+    */    
+}
+
+```
+
+```
+####Audio
+public void initialize() {
+    /*
+    sets things up for audio playback...
+    */
+
+public void playPositionalSound(center) {
+    /*
+    given the object center's position in the frame,
+    plays the appropriate sound to communicate
+    to the user
+    */
+}
+}
+
+
+```
