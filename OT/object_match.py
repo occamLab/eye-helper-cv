@@ -31,6 +31,7 @@ def match_object(previous, current, train_img, pos, frame=0, show = False, live 
         train_img -> training image for keypoint matching
         pos -> corners (left top, right bottom) of object in training img
         show -> determines if visualization is displayed
+        t -> passes in keypoints and descriptors of training image IF we're using the live_meanshift.py file
     Output:
         new_center -> new center determined by meanshift
                       if there are no matches, original center is returned instead
@@ -71,8 +72,9 @@ def match_object(previous, current, train_img, pos, frame=0, show = False, live 
         #to account for how the webcam version of this deals with inputs differently
         # t_img = train_img #should be cap.read()[1] 
         q_img = current
-        t_k = t[0] 
-        t_d = t[1]
+        t_k = t[0] #keypoints = locations (think x, y coords)
+        t_d = t[1] #descriptors = 128-element vectors (via SIFT) that gives information 
+                   #about gradient of surrounding change (changes in intensity) and orientation
 
         train_d = []
         train_k = []
@@ -95,6 +97,9 @@ def match_object(previous, current, train_img, pos, frame=0, show = False, live 
 
         #Nearest neighbor test to reduce false matches
         good_matches = []
+        # b/c k=2....
+        # m is the nearest match
+        # n is the next nearest match
         for m,n in matches:
             if m.distance < 0.75*n.distance:
                 # Get coordinate of the match
