@@ -1,6 +1,8 @@
 import cv2
 import numpy as np 
 import scipy as sp 
+import csv
+import pandas
 
 """
 Object matching shenanigans with meanshift. 
@@ -109,14 +111,7 @@ def match_object(previous, current, train_img, pos, frame=0, show = False, live 
 
         print 'length of good_matches %d' % len(good_matches)
 
-        # for the sake of visualizing the original center. should not affect OT functionality. 
-        # img = np.copy(q_img)
-        # cv2.circle(img, (previous[0], previous[1]), 3, [0, 0, 255], 3)
-        # cv2.imshow('Frame %d: original center' % (frame), img)
-        # cv2.imwrite('../OT_res/meanshift_presentation/cookie_f%d_center_original.jpg' % (frame), img)
-        # cv2.waitKey(0)
-
-        new_center, img_radius, current = mean_shift(hypothesis = (previous), 
+        new_center, current = mean_shift(hypothesis = (previous), 
                                                     keypoints = good_matches, 
                                                     threshold = 10, 
                                                     current = q_img,
@@ -183,21 +178,6 @@ def mean_shift(hypothesis, keypoints, threshold, frame, current = None, show = F
             #difference between the current and last guess
             diff = np.sqrt((last_guess[0] - x)**2 + (last_guess[1] - y)**2)
 
-            # Finding the radius:
-            norm_weights = [np.linalg.norm([x_weights[i], y_weights[i]]) for i in range(len(x_weights))]
-            avg_weight = sum(norm_weights)/len(norm_weights)
-            std_weight = np.std(norm_weights)
-
-            # Threshold based on standard deviations (to account for different kp density scenarios)
-            threshold = avg_weight #- .25*std_weight
-            inliers = []
-
-            # Radius corresponds to the farthest-away keypoints are in the threshold from center of mass (x,y)
-            for index in range(len(norm_weights)):
-                if norm_weights[index] > threshold:
-                    coords = [keypoints[index][0] - x, keypoints[index][1] - y] 
-                    inliers.append(np.linalg.norm(coords))
-            radius = int(max(inliers))
 
             #visualizes moving center and displays keypoints for every meanshift iteration if show_iterations==True
             if show_iterations:
@@ -205,7 +185,7 @@ def mean_shift(hypothesis, keypoints, threshold, frame, current = None, show = F
                 for k in keypoints:
                     cv2.circle(img, k, 2, [255, 0, 0], 2)
                 cv2.circle(img, hypothesis, 3, [0, 0, 255], 3)
-                cv2.circle(img, hypothesis, radius, [100,255,0], 2)
+                cv2.circle(img, hypothesis, 5, [100,255,0], 2)
                 cv2.imshow('Frame %d: Current hypothesis, meanshift guess %d' % (frame, n), img)
                 # cv2.imwrite('../OT_res/meanshift_presentation/cookie_f%d_guess%d.jpg' % (frame, n), img)
                 cv2.waitKey(0)
@@ -214,50 +194,51 @@ def mean_shift(hypothesis, keypoints, threshold, frame, current = None, show = F
         #visualizes moving center and displays keypoints if show==True for the frame 
         #(so, this happens once per call of the function)
         if show:
-            # img = np.copy(current)   #Needs to be np array (already opened by cv2)
-            # for k in keypoints:
-            #     cv2.circle(img, k, 2, [255, 0, 0], 2)
-            # cv2.circle(img, hypothesis, 3, [0, 0, 255], 3)
-            # cv2.circle(img, hypothesis, radius, [100,255,0], 2)
-            # cv2.imshow('Frame %d: Current hypothesis' % (frame), img)
-            # # cv2.imwrite('../OT_res/meanshift_presentation/cookie_f%d_guess%d.jpg' % (frame, n), img)
-            # cv2.waitKey(0)
-            draw_circles(img=current, kp=keypoints, c = hypothesis, radius = radius)
-            # cv2.imshow('current', current)
-            # cv2.waitKey(0)
+            draw_circles(img=current, kp=keypoints, c = hypothesis, radius = 5)
+            cv2.imshow('current', current)
+            cv2.waitKey(0)
 
-        return hypothesis, radius, current
+        return hypothesis, current
 
-    # elif len(keypoints) == 1: # That moment when there's only one good match and the stdev of a single element set is zero...
+def dictionify(array):
+    """takes in an array and outputs a dictionary where the keys are the first value of each row"""
+    dictionary = {}
+    for row in array:
+        dictionary[row[0]] = row[1:]
+    return dictionary
 
-    #     hypothesis = (keypoints[0][0], keypoints[0][1])
-    #     radius = 10
-
-    #     #visualizes moving center and displays keypoints
-    #     if show:
-    #         img = np.copy(current)   #Needs to be np array (alread opened by cv2)
-    #         cv2.circle(img, hypothesis, 3, [0, 0, 255], 3)
-    #         cv2.circle(img, hypothesis, radius, [100,255,0], 2)
-    #         # cv2.imwrite('./OT-res/meanshift/cookie/cookie_00%d.jpg' % frame, img)
-    #         cv2.imshow('Frame %d: Current hypothesis' % frame, img)
-    #         cv2.waitKey(0)
-
-    #     return hypothesis, radius
- 
 if __name__ == '__main__':
     # initial values for prototyping w/ the cookies. :P
     old_center = [1000, 170]
     center = old_center
     pos = [744,514,606,392]
 
-    for frame in range(180, 182): 
+    # with open('../gstore_csv/cookie.csv', 'r') as csvfile:
+    #     reader = csv.reader(csvfile)
+
+    data = np.loadtxt('../gstore_csv/cookie.csv', dtype=int, delimiter=',')
+    data_dict = dictionify(data)
+
+    it_works = 0
+
+    start = 180
+    stop = 190
+    for frame in range(start, stop): 
         cv2.destroyAllWindows()
         print "Frame number: %d" % frame
         center, current = match_object(previous = center, 
                               current = '../gstore_snippets/cookie_snippet/cookie_00%d.jpg' % frame, 
                               train_img = '../gstore_snippets/cookie_snippet/cookie_00177.jpg',
                               pos = pos,
-                              show = True,
+                              show = False,
                               frame = frame)
         old_center = center
+        if data_dict[frame][2] <= old_center[0] <= data_dict[frame][0] and data_dict[frame][3] <= old_center[1] <= data_dict[frame][1]:
+            it_works = it_works +1
+        
+    percent_success = float(it_works)/(stop-start)
+    print(percent_success)
+
+
+
   
