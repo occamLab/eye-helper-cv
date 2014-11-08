@@ -151,27 +151,6 @@ def plot_superdata(dstr, methods, framerange):
         n += 1
         plt.savefig("../OT-res/compare_kpd_plots/method_comparison_plots/%s_trial%d_dfc_plot_sigma_two.png" % (dstr, trial))
 
-    # plotting the percent guess accuracy
-    # Commented out for now because we only wanted to generate one type of plot at once. Don't delete this chunk of code without good reason!
-    ###
-    # for m in correct_centers:
-    #     temp0 = correct_centers[m]
-    #     correct_centers[m] = sorted(temp, key=lambda temp: temp[0])
-    #     x = [point[0] for point in correct_centers[m]]
-    #     y = scipy.ndimage.filters.gaussian_filter1d([point[1] for point in correct_centers[m]], 2)
-    #     print correct_centers[m]
-    #     plt.figure(1, figsize = (15,10))
-    #     plt.plot(x,y, '-', label = m) #right now the color coding works but the legend has redundant entries...
-    #     plt.axis([100,300,0,110])
-    #     plt.xlabel('Trial #')
-    #     plt.ylabel(('Percent guesses within actual object'))
-    #     plt.title('Cookie trial # v. Percent guess accuracy for different methods with Gaussian filter sigma = 2')
-    #     plt.legend(loc=2)
-    # # plt.show()
-    # plt.savefig("./OT-res/compare_kpd_plots/method_comparison_plots/%s_c_accuracy_plot_sigma_two.png" % (dstr))
-    #     n+=1
-    ###
-
 def gen_plottables(methods, dataset, framerange):
     #plot-friendly data structure
     #{key = training image number : value = {frame numbers: [], boxes: {}, overall accuracy: [], :distance from center: [], total kp matches: [], correct kp matches: []}}
