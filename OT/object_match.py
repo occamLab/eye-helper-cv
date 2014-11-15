@@ -209,8 +209,6 @@ def dictionify(array):
 
 if __name__ == '__main__':
     # initial values for prototyping w/ the cookies. :P
-    old_center = [1000, 170]
-    center = old_center
     pos = [744,514,606,392]
 
     # with open('../gstore_csv/cookie.csv', 'r') as csvfile:
@@ -219,26 +217,32 @@ if __name__ == '__main__':
     data = np.loadtxt('../gstore_csv/cookie.csv', dtype=int, delimiter=',')
     data_dict = dictionify(data)
 
-    it_works = 0
 
-    start = 180
-    stop = 190
-    for frame in range(start, stop): 
-        cv2.destroyAllWindows()
-        print "Frame number: %d" % frame
-        center, current = match_object(previous = center, 
-                              current = '../gstore_snippets/cookie_snippet/cookie_00%d.jpg' % frame, 
-                              train_img = '../gstore_snippets/cookie_snippet/cookie_00177.jpg',
-                              pos = pos,
-                              show = False,
-                              frame = frame)
-        old_center = center
-        if data_dict[frame][2] <= old_center[0] <= data_dict[frame][0] and data_dict[frame][3] <= old_center[1] <= data_dict[frame][1]:
-            it_works = it_works +1
-        
-    percent_success = float(it_works)/(stop-start)
-    print(percent_success)
+    start = 170
+    stop = 270
 
+    success_list = []
 
+    for step in range(1, 21):
 
-  
+        it_works = 0
+        old_center = [1000, 170]
+        center = old_center
+
+        for frame in range(start, stop, step): 
+            cv2.destroyAllWindows()
+            print "Frame number: %d" % frame
+            center, current = match_object(previous = center, 
+                                  current = '../gstore_snippets/cookie_snippet/cookie_00%d.jpg' % frame, 
+                                  train_img = '../gstore_snippets/cookie_snippet/cookie_00177.jpg',
+                                  pos = pos,
+                                  show = False,
+                                  frame = frame)
+            old_center = center
+            if old_center != None: 
+                if data_dict[frame][2] <= old_center[0] <= data_dict[frame][0] and data_dict[frame][3] <= old_center[1] <= data_dict[frame][1]:
+                    it_works = it_works +1
+            
+        percent_success = float(it_works)/(stop-start) * step
+        success_list.append(percent_success)
+    print(success_list)  
