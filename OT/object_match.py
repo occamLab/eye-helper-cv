@@ -196,7 +196,8 @@ def mean_shift(hypothesis, keypoints, threshold, frame, current = None, show = F
         if show:
             draw_circles(img=current, kp=keypoints, c = hypothesis, radius = 5)
             cv2.imshow('current', current)
-            cv2.waitKey(0)
+            if not live:
+                cv2.waitKey(0)
 
         return hypothesis, current
 
