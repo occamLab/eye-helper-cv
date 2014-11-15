@@ -1,8 +1,11 @@
+#!/usr/bin/env python
+
 import cv2
 import numpy as np
 from find_keypoints import find_kp
 import object_match as om
 from compare_kpd import calc_center
+import rospy
 
 """
 Python script that does object tracking in real time with webcam footage. 
@@ -18,6 +21,7 @@ Then, once you are satisfied with the selection box, hit 'enter' and object trac
 To end the demo, hit the 'q' key. - July 29, 2014
 """
 
+#rospy.init_node('eyehelper')
 ### Webcam things
 
 cap = cv2.VideoCapture(0)
