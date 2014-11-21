@@ -3,6 +3,7 @@ import numpy as np
 import scipy as sp 
 import csv
 import pandas
+import subprocess
 
 """
 Object matching shenanigans with meanshift. 
@@ -75,7 +76,7 @@ def match_object(previous, current, train_img, pos, frame=0, show = False, live 
         # t_img = train_img #should be cap.read()[1] 
         q_img = current
         t_k = t[0] #keypoints = locations (think x, y coords)
-        t_d = t[1] #descriptors = 128-element vectors (via SIFT) that gives information 
+        t_d = t[1] #descriptors = 128-elemehnt vectors (via SIFT) that gives information 
                    #about gradient of surrounding change (changes in intensity) and orientation
 
         train_d = []
@@ -200,6 +201,21 @@ def mean_shift(hypothesis, keypoints, threshold, frame, current = None, show = F
                 cv2.waitKey(0)
 
         return hypothesis, current
+
+def play_wave(filename, player='aplay'):
+    """plays an inputted wav file
+    """
+    cmd = '{} {}'.format(player, filename)
+    popen = subprocess.Popen(cmd, shell=True)
+    popen.communicate()
+
+def play_audio(center):
+    """plays a generated audio file based on the inputted center
+    inputs: center - the center of the kyepoints for a tracked image (x,y)
+    """
+    w = 
+    np.arctan(center[0]) #finds 
+
 
 def dictionify(array):
     """takes in an array and outputs a dictionary where the keys are the first value of each row"""
