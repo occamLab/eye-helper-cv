@@ -5,12 +5,23 @@ import scipy as sp
 import csv
 import pandas
 import subprocess
+import threading
+import time
+import Queue
 
 """
 Object matching shenanigans with meanshift. 
 
 --Emily and Lindsey, July 25, 2014
 """
+
+
+def audio_loop(queue):
+    filename = "../../GeneratedSoundFiles/height0angle_5.wav"
+    while True:
+        time.sleep(0.5)
+        center = queue.pop()
+        filename = play_audio(center, filename)
 
 def draw_circles(img, c, radius, kp=None):
     """Takes in:
@@ -259,6 +270,8 @@ if __name__ == '__main__':
 
     start = 180
     stop = 190
+    q = Queue.Queue(maxsize=1)
+    threading.Thread(target=audio_loop, args=(q,)).start()
     for frame in range(start, stop): 
         cv2.destroyAllWindows()
         print "Frame number: %d" % frame
@@ -268,7 +281,10 @@ if __name__ == '__main__':
                               pos = pos,
                               show = False,
                               frame = frame)
+
         old_center = center
+        q.empty()
+        q.put(center)
         if data_dict[frame][2] <= old_center[0] <= data_dict[frame][0] and data_dict[frame][3] <= old_center[1] <= data_dict[frame][1]:
             it_works = it_works +1
         
