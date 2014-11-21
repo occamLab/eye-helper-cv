@@ -8,6 +8,8 @@ from compare_kpd import calc_center
 import rospy
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image
+import threading
+import Queue
 
 """
 Python script that does object tracking in real time with webcam footage. 
@@ -94,6 +96,8 @@ while(1):
 
 # Get keypoints of selected area (training image)
 t = find_kp(t_img, 'SIFT', live=True)
+q = Queue.Queue(maxsize=1)
+threading.Thread(target=om.audio_loop, args=(q,)).start()
 
 # OT demo loop
 while True:
@@ -113,6 +117,9 @@ while True:
                                             show = True, 
                                             live = True,
                                             t = t)
+
+    q.empty()
+    q.put(center)
 
     cv2.imshow('OT demo', current)
     if cv2.waitKey(1) & 0xFF == ord('q'):
