@@ -5,7 +5,9 @@ import numpy as np
 from find_keypoints import find_kp
 import object_match as om
 from compare_kpd import calc_center
-import rospy
+import Queue
+import threading
+# import rospy
 
 """
 Python script that does object tracking in real time with webcam footage. 
@@ -80,6 +82,8 @@ while(1):
 
 # Get keypoints of selected area (training image)
 t = find_kp(cap.read()[1], 'SIFT', live=True)
+q = Queue.Queue(maxsize=1)
+threading.Thread(target=om.audio_loop, args=(q,)).start()
 
 # OT demo loop
 while True:
@@ -99,10 +103,16 @@ while True:
                                             show = True, 
                                             live = True,
                                             t = t)
-
+    #Show image
     cv2.imshow('OT demo', current)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
+
+#Add new center to the queue, do this after showing the image so as not to slow down the object tracking
+#If there is something in the queue, remove it
+    if not q.empty():
+        q.get(block=False)
+    q.put(center)
 
 # When everything's done, release the capture
 cap.release()

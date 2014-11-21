@@ -1,14 +1,26 @@
+from __future__ import division
 import cv2
 import numpy as np 
 import scipy as sp 
 import csv
 import pandas
+import subprocess
+import threading
+import time
+import Queue
 
 """
 Object matching shenanigans with meanshift. 
 
 --Emily and Lindsey, July 25, 2014
 """
+def audio_loop(queue):
+    filename = "../../GeneratedSoundFiles/height0angle_5.wav"
+    while True:
+        time.sleep(0.5)
+        if not queue.empty():
+            center = queue.get(block=False)
+            filename = play_audio(center, filename)
 
 def draw_circles(img, c, radius, kp=None):
     """Takes in:
@@ -200,6 +212,40 @@ def mean_shift(hypothesis, keypoints, threshold, frame, current = None, show = F
                 cv2.waitKey(0)
 
         return hypothesis, current
+
+def play_wave(filename, player='aplay'):
+    """plays an inputted wav file
+    """
+    cmd = '{} {}'.format(player, filename)
+    popen = subprocess.Popen(cmd, shell=True)
+    popen.communicate()
+
+def play_audio(center, previous_file):
+    """plays a generated audio file based on the inputted center
+    inputs: center - the center of the kyepoints for a tracked image (x,y)
+            previous_file - the previous audio file we played
+    """
+    w = 512 # TODO: put in width of image
+    max_height = 512 # TODO: height of the image
+    path = "../GeneratedSoundFiles/"
+    max_angle = np.pi / 2
+    min_angle = -max_angle
+    angle = np.arctan(center[0])
+    height_bin = int(round(center[1] / max_height * 7))
+    angle_bin = int(myround(angle / max_angle * 85))
+    if angle_bin % 10 == 0:
+        filename = previous_file
+    else:
+        if angle_bin > 0:
+            filename = "{}height{}angle{}.wav".format(path, height_bin, angle_bin)
+        else:
+            filename = "{}height{}angle_{}.wav".format(path, height_bin, abs(angle_bin))
+    play_wave(filename, player="aplay")
+    return filename
+
+def myround(x, base=5):
+    return int(base * round(float(x)/base))
+
 
 def dictionify(array):
     """takes in an array and outputs a dictionary where the keys are the first value of each row"""
