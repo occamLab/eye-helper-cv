@@ -117,13 +117,16 @@ while True:
                                             show = True, 
                                             live = True,
                                             t = t)
-
-    q.empty()
-    q.put(center)
-
+#Show image
     cv2.imshow('OT demo', current)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
+
+#Add new center to the queue, do this after showing the image so as not to slow down the object tracking
+#If there is something in the queue, remove it
+    if not q.empty():
+        q.get(block=False)
+    q.put(center)
 
 # When everything's done, release the capture
 cv2.destroyAllWindows()

@@ -232,7 +232,7 @@ def play_audio(center, previous_file):
     max_angle = np.pi / 2
     min_angle = -max_angle
     angle = np.arctan(center[0])
-    height_bin = int(round(center[1] / max_height * 7))
+    height_bin = 7 - (int(round(center[1] / max_height * 7)))
     angle_bin = int(myround(angle / max_angle * 85))
     if angle_bin % 10 == 0:
         filename = previous_file
