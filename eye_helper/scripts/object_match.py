@@ -17,13 +17,13 @@ Object matching shenanigans with meanshift.
 
 
 def audio_loop(queue):
-    print 'HI'
     filename = "../GeneratedSoundFiles/height0angle_5.wav"
     while True:
         time.sleep(0.5)
         center = queue.get(block=False)
-        filename = play_audio(center, filename)
-        print filename
+        if center != None:
+            filename = play_audio(center, filename)
+            print filename
 
 def draw_circles(img, c, radius, kp=None):
     """Takes in:
