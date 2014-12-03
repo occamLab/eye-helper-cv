@@ -97,6 +97,7 @@ while(1):
 # Get keypoints of selected area (training image)
 t = find_kp(t_img, 'SIFT', live=True)
 q = Queue.Queue(maxsize=1)
+print 'HI HI'
 threading.Thread(target=om.audio_loop, args=(q,)).start()
 
 # OT demo loop

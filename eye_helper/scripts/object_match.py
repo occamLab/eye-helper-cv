@@ -17,11 +17,13 @@ Object matching shenanigans with meanshift.
 
 
 def audio_loop(queue):
-    filename = "../../GeneratedSoundFiles/height0angle_5.wav"
+    print 'HI'
+    filename = "../GeneratedSoundFiles/height0angle_5.wav"
     while True:
         time.sleep(0.5)
         center = queue.get(block=False)
         filename = play_audio(center, filename)
+        print filename
 
 def draw_circles(img, c, radius, kp=None):
     """Takes in:
@@ -122,7 +124,7 @@ def match_object(previous, current, train_img, pos, frame=0, show = False, live 
                 m_y = int(q_k[m.trainIdx].pt[1])
                 good_matches.append((m_x, m_y))
 
-        print 'length of good_matches %d' % len(good_matches)
+        # print 'length of good_matches %d' % len(good_matches)
 
         new_center, current = mean_shift(hypothesis = (previous), 
                                                     keypoints = good_matches, 
@@ -228,7 +230,7 @@ def play_audio(center, previous_file):
     """
     w = 512 # TODO: put in width of image
     max_height = 512 # TODO: height of the image
-    path = "../../GeneratedSoundFiles/"
+    path = "../GeneratedSoundFiles/"
     max_angle = np.pi / 2
     min_angle = -max_angle
     angle = np.arctan(center[0])
@@ -241,7 +243,7 @@ def play_audio(center, previous_file):
             filename = "{}height{}angle{}.wav".format(path, height_bin, angle_bin)
         else:
             filename = "{}height{}angle_{}.wav".format(path, height_bin, abs(angle_bin))
-    play_wave(filename, player="afplay")
+    play_wave(filename, player="aplay")
     return filename
 
 def myround(x, base=5):
