@@ -17,7 +17,7 @@ Object matching shenanigans with meanshift.
 
 
 def audio_loop(queue):
-    filename = "../GeneratedSoundFiles/height0angle_5.wav"
+    filename = ''
     while True:
         time.sleep(0.5)
         center = queue.get(block=False)
@@ -157,7 +157,7 @@ def mean_shift(hypothesis, keypoints, threshold, frame, current = None, show = F
     """
 
     n=0
-    if len(keypoints) > 1:
+    if len(keypoints) > 5: # increased to 5 for testing purposes
 
         #assigns a value to the weighting constant -> based on 
         #experimental results on cropped cookie_00274
@@ -233,9 +233,12 @@ def play_audio(center, previous_file):
     path = "../GeneratedSoundFiles/"
     max_angle = np.pi / 2
     min_angle = -max_angle
-    angle = np.arctan(center[0])
-    height_bin = 7 - (int(round(center[1] / max_height * 7)))
-    angle_bin = int(myround(angle / max_angle * 85))
+    # angle = np.arctan(center[0])
+    angle = (center[0]/640.0) * 170.0 - 85.0
+    # height_bin = 7 - (int(round(center[1] / max_height * 7)))
+    height_bin = 4
+    angle_bin = int(myround(angle))
+    print angle_bin
     if angle_bin % 10 == 0:
         filename = previous_file
     else:
