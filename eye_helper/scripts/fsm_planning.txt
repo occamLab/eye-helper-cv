@@ -1,0 +1,82 @@
+fsm planning!
+
+cvbridge stuff
+camera starts
+class Eyehleper()
+
+    IS
+    t_img
+    t_img_corners
+
+    OM
+    t_kp
+    t_d
+    q_kp
+    q_d
+    q_img
+    matches?
+
+    EH
+    center
+    State
+    
+    A
+    angle
+    height
+
+
+initilization:
+    instaniate (image selectiong, keypoint/object matching, positional audio playing) objects
+    pick_grocery() -> human selects training image
+    start audio thread for sound playback
+    start object_matching loop
+
+
+
+Image selection
+    pick_grocery()
+        user draws box around grocery target
+        freeze t_img
+        draw_rectangle()
+            mouse callback things
+            editing the t_img frame that's being shown
+            updating t_img corners
+
+Object Matcher
+    init(self, Image_Select object)
+        finds kp/ descriptors on training image
+    steps:
+        gets kp and descriptors for q_img
+        matcher stuff
+        mean_shift
+
+
+Flow of Execution
+
+    Finite state machine:
+
+        if State == No Grocery:
+            display frame
+            if s:
+                freeze frame
+                State = selecting
+            if q:
+                exit
+        if State == Selecting a Grocery:
+            (frame should be frozen)
+            draw_rectange()
+            if spacebar:
+                save training image and corners
+                State = Grocery
+            if q:
+                exit
+        if State == Grocery:
+            start audio thread
+            start object matching loop
+
+
+if __name__ == main:
+    eh = EyeHelper()
+    cvbridge stuff
+    eh.pick_grocery()
+    while frames:
