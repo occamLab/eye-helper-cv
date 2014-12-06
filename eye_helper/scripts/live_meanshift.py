@@ -39,6 +39,7 @@ rospy.Subscriber('/camera/image_raw', Image, process_frame)
 #cap = cv2.VideoCapture(0)
 
 bridge = CvBridge()
+
 # 0 for built-in laptop webcam
 # 1 for external webcam
 
