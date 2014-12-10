@@ -30,6 +30,7 @@ class EyeHelper():
         bridge = CvBridge()
 
     def process_frame(self, msg):
+        # TODO: make sure the callback works
         "callback for camera stuff"
         frame = bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
 

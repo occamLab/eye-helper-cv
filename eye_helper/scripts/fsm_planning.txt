@@ -2,7 +2,7 @@ fsm planning!
 
 cvbridge stuff
 camera starts
-class Eyehleper()
+class EyeHelper()
 
     IS
     t_img
