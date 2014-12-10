@@ -16,7 +16,7 @@ class EyeHelper():
 
     def __init__(self):
         # yaaay class variables
-        self.center = []
+        self.center = ()
         self.state = 'no_grocery'
 
         self.ims = ImageSelector()       
@@ -30,11 +30,15 @@ class EyeHelper():
 
     def process_frame(self, msg):
         # TODO: make sure the callback works
-        "callback for camera stuff"
+        """
+        callback for camera stuff
+        """
+        print "process_frame"
+
         frame = bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
 
         ### continuous stuff happens here ###
-        if self.state = 'grocery':
+        if self.state == 'grocery':
             if 0xFF == ord('d'):
                 # all other windows except for the raw stream should be closed
                 self.state = 'no_grocery'
@@ -48,8 +52,9 @@ class EyeHelper():
             else:
                 # tracking stuff!
                 # lots of helper function calling here
+                pass
 
-        elif self.state = 'no_grocery':
+        elif self.state == 'no_grocery':
             if 0xFF == ord('s'):
                 # just a transition state
                 
@@ -62,7 +67,8 @@ class EyeHelper():
                 # continue showing the raw stream
                 print 'no_grocery else' # for debugging
 
-        elif self.state = 'selecting':
+        elif self.state == 'selecting':
+            # TODO: ... check: Will process_frame happen over and over again while the image selection thing is frozen?
             if 0xFF == 32: #spacebar
                 self.state = 'grocery'
             elif 0xFF == ord('q'):
@@ -72,5 +78,5 @@ class EyeHelper():
             else:
                 print 'selecting else' # for debugging
 
-if __name__ == main:
+if __name__ == "main":
     eh = EyeHelper()
