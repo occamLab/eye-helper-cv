@@ -19,9 +19,8 @@ class EyeHelper():
         self.center = []
         self.state = 'no_grocery'
 
-        # initialize helper objects, yo 
         self.ims = ImageSelector()       
-        self.om = ObjectMatcher()
+        self.om = ObjectMatcher() 
         self.ap = AudioPlayer()
 
         # Camera via the comprobo raspberry pi setup
@@ -53,6 +52,7 @@ class EyeHelper():
         elif self.state = 'no_grocery':
             if 0xFF == ord('s'):
                 # just a transition state
+                
                 self.state = 'selecting'
             elif 0xFF == ord('q'):
                 # TODO: byebye
@@ -74,4 +74,3 @@ class EyeHelper():
 
 if __name__ == main:
     eh = EyeHelper()
-    # eh.run()
