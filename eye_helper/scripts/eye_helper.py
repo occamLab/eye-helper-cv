@@ -35,8 +35,43 @@ class EyeHelper():
         frame = bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
 
         ### continuous stuff happens here ###
+        if self.state = 'grocery':
+            if 0xFF == ord('d'):
+                # all other windows except for the raw stream should be closed
+                self.state = 'no_grocery'
+
+            elif 0xFF == ord('q'):
+                # TODO: byebye
+                # "quit" the rosrun ; what do people usually do with keyboard quitting in ROS setups?? (probably an odd situation to begin with)
+                print 'byebye'
+                return
+
+            else:
+                # tracking stuff!
+                # lots of helper function calling here
+
+        elif self.state = 'no_grocery':
+            if 0xFF == ord('s'):
+                # just a transition state
+                self.state = 'selecting'
+            elif 0xFF == ord('q'):
+                # TODO: byebye
+                print 'byebye'
+                return
+            else:
+                # continue showing the raw stream
+                print 'no_grocery else' # for debugging
+
+        elif self.state = 'selecting':
+            if 0xFF == 32: #spacebar
+                self.state = 'grocery'
+            elif 0xFF == ord('q'):
+                # TODO: byebye
+                print 'byebye'
+                return
+            else:
+                print 'selecting else' # for debugging
 
 if __name__ == main:
     eh = EyeHelper()
-    eh.run()
-
+    # eh.run()
