@@ -16,7 +16,7 @@ class EyeHelper():
 
     def __init__(self):
         # yaaay class variables
-        self.center = []
+        self.center = ()
         self.state = 'no_grocery'
 
         self.ims = ImageSelector()       
