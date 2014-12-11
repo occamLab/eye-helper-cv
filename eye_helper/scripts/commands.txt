@@ -2,6 +2,8 @@ ping 192.168.17.210
 
 roslaunch gscam raspi_nodelet.launch host:=192.168.17.205
 
+roslaunch neato_node bringup.launch host:=192.168.17.210
+
 rosrun eye_helper live_meanshift.py
 
 rosrun image_view image_view image:=/camera/image_raw

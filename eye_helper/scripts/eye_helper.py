@@ -7,7 +7,7 @@ from cv_bridge import CvBridge, CvBridgeError
 from image_selector import *
 from object_matcher import *
 from audio_player import *
-
+from sensor_msgs.msg import Image
 
 class EyeHelper():
     """
@@ -19,23 +19,22 @@ class EyeHelper():
         self.center = ()
         self.state = 'no_grocery'
 
-        self.ims = ImageSelector()       
-        self.om = ObjectMatcher() 
-        self.ap = AudioPlayer()
+        # self.ims = ImageSelector()       
+        # self.om = ObjectMatcher() 
+        # self.ap = AudioPlayer()
 
         # Camera via the comprobo raspberry pi setup
         rospy.init_node('eyehelper')
-        rospy.Subscriber('/camera/image_raw', Image, process_frame)
-        bridge = CvBridge()
+        rospy.Subscriber('/camera/image_raw', Image, self.process_frame)
+        self.bridge = CvBridge()
 
     def process_frame(self, msg):
         # TODO: make sure the callback works
         """
         callback for camera stuff
         """
-        print "process_frame"
 
-        frame = bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
+        frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
 
         ### continuous stuff happens here ###
         if self.state == 'grocery':
@@ -78,5 +77,9 @@ class EyeHelper():
             else:
                 print 'selecting else' # for debugging
 
-if __name__ == "main":
+if __name__ == "__main__":
     eh = EyeHelper()
+    r = rospy.Rate(5) # 5hz
+
+    while not rospy.is_shutdown():
+        r.sleep()
