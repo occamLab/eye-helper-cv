@@ -17,11 +17,11 @@ class EyeHelper():
     def __init__(self):
         # yaaay class variables
         self.center = ()
-        self.state = 'no_grocery'
+        self.state = 'selecting'
 
-        # self.ims = ImageSelector()       
-        # self.om = ObjectMatcher() 
-        # self.ap = AudioPlayer()
+        self.ims = ImageSelector()       
+        self.om = ObjectMatcher() 
+        self.ap = AudioPlayer()
 
         # Camera via the comprobo raspberry pi setup
         rospy.init_node('eyehelper')
@@ -68,6 +68,7 @@ class EyeHelper():
 
         elif self.state == 'selecting':
             # TODO: ... check: Will process_frame happen over and over again while the image selection thing is frozen?
+s            # TODO: for selecting - only make the new window if we don't already have one up 
             if 0xFF == 32: #spacebar
                 self.state = 'grocery'
             elif 0xFF == ord('q'):
@@ -75,6 +76,7 @@ class EyeHelper():
                 print 'byebye'
                 return
             else:
+                self.ims.run(frame)
                 print 'selecting else' # for debugging
 
 if __name__ == "__main__":

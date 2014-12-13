@@ -4,9 +4,7 @@ import cv2
 import numpy as np
 
 class ObjectMatcher():
-    def __init__(self, t_img, t_img_corners):
-        self.t_img = t_img # for future viewing purposes
-        self.t_img_corners = t_img_corners # [x1, y1, x2, y2]
+    def __init__(self):
         self.t_kp = []
         self.t_d = []
 
@@ -19,7 +17,7 @@ class ObjectMatcher():
         self.matcher = cv2.BFMatcher()
         self.matches = []
 
-    def find_kpd(self, frame):
+    def find_kpd(self, frame, t_img, t_img_corners):
         # TODO: test with hardware
 
         """
@@ -30,13 +28,13 @@ class ObjectMatcher():
 
         # Do this once for a particular training image
         if self.t_kp == []:
-            x1 = self.t_img_corners[0]
-            y1 = self.t_img_corners[1]
-            x2 = self.t_img_corners[2]
-            y2 = self.t_img_corners[3]
+            x1 = t_img_corners[0]
+            y1 = t_img_corners[1]
+            x2 = t_img_corners[2]
+            y2 = t_img_corners[3]
 
             # First, find all the keypoints and descriptors for this training image
-            t_kp_all, t_d_all = self.detector.detectAndCompute(self.t_img, None)
+            t_kp_all, t_d_all = self.detector.detectAndCompute(t_img, None)
 
             # Look at keypoint coord vals; keep the keypoints within the grocery item selection box
             for index in range(len(t_kp_all)):
