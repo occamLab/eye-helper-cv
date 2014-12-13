@@ -50,13 +50,10 @@ class AudioPlayer():
         self.angle = int(self.myround((self.om.center[0]/640.0) * 170.0 - 85.0))
         self.height = 4 # hard-coded at 4 for current testing
         
-        if self.angle % 10 == 0:
-            pass
+        if self.angle > 0:
+            self.filename = "{}height{}angle{}.wav".format(self.path, self.height, self.angle)
         else:
-            if self.angle > 0:
-                self.filename = "{}height{}angle{}.wav".format(self.path, self.height, self.angle)
-            else:
-                self.filename = "{}height{}angle_{}.wav".format(self.path, self.height, abs(self.angle))
+            self.filename = "{}height{}angle_{}.wav".format(self.path, self.height, abs(self.angle))
         print self.angle
         print self.height
         self.play_wave()
