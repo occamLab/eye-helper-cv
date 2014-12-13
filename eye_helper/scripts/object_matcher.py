@@ -11,7 +11,7 @@ class ObjectMatcher():
         self.q_kp = []
         self.q_d = []
 
-        self.center = (100, 100)
+        self.center = None
 
         self.detector = cv2.SIFT()
         self.matcher = cv2.BFMatcher()

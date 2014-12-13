@@ -3,22 +3,24 @@
 import cv2
 import numpy as np
 import subprocess
+import time
 
 class AudioPlayer():
 
-    def __init__(self):
+    def __init__(self, om):
         self.angle = 85
         self.height = 4
         self.path = "../GeneratedSoundFiles/"
         self.filename = "{}height{}angle{}.wav".format(self.path, self.height, self.angle)
         self.player = 'aplay'
+        self.om = om
 
-    def audio_loop(self, center):
+    def audio_loop(self):
         while True:
             time.sleep(0.5)
-            center = queue.get(block=False)
+            center = self.om.center
             if center != None:
-                self.filename = play_audio(center, self.filename)
+                self.filename = self.play_audio()
                 print self.filename
 
     def play_wave(self):
@@ -34,7 +36,7 @@ class AudioPlayer():
     def myround(self,x, base=5):
         return int(base * round(float(x)/base))
 
-    def play_audio(self, center):
+    def play_audio(self):
         """
         plays a generated audio file based on the inputted center
         inputs: center - the center of the keypoints for a tracked image (x,y)
@@ -45,7 +47,7 @@ class AudioPlayer():
         
         max_angle = np.pi / 2
         min_angle = -max_angle
-        self.angle = int(self.myround((center[0]/640.0) * 170.0 - 85.0))
+        self.angle = int(self.myround((self.om.center[0]/640.0) * 170.0 - 85.0))
         self.height = 4 # hard-coded at 4 for current testing
         
         if self.angle % 10 == 0:
