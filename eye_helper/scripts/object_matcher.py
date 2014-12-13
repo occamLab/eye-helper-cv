@@ -50,7 +50,7 @@ class ObjectMatcher():
     def matching(self):
         # matching happens
         # nearest neighbor tests
-
+        self.matches = []
         try: 
             #match list of object keypoints to query image, not other way around
             all_matches = self.matcher.knnMatch(np.array(self.t_d), self.q_d, k =2)
@@ -121,7 +121,7 @@ class ObjectMatcher():
                 cv2.circle(frame, (k[0], k[1]), 1, [255, 0, 0], 2)
         if self.center != None:
             cv2.circle(frame, self.center, 6, [0,0,255], 6)
-        cv2.imshow('frame with center', frame)
+        # cv2.imshow('frame with center', frame)
         # cv2.waitKey(0)
 
     def run(self, frame, t_img, t_corners):

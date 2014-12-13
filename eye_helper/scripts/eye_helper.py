@@ -17,7 +17,7 @@ class EyeHelper():
     def __init__(self):
         # yaaay class variables
         self.center = ()
-        self.state = 'selecting'
+        self.state = 'no_grocery'
 
         self.ims = ImageSelector()       
         self.om = ObjectMatcher() 
@@ -33,39 +33,47 @@ class EyeHelper():
         """
         callback for camera stuff
         """
-        print 'processing'
         frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
-
+        print self.state
+        self.key = cv2.waitKey(5)
         ### continuous stuff happens here ###
         if self.state == 'grocery':
-            print('grocery')
-            if 0xFF == ord('d'):
-                # all other windows except for the raw stream should be closed
+            # print('grocery')
+            # if 0xFF == ord('d'):
+            #     # all other windows except for the raw stream should be closed
+            #     self.state = 'no_grocery'
+
+            # elif 0xFF == ord('q'):
+            #     # TODO: byebye
+            #     # "quit" the rosrun ; what do people usually do with keyboard quitting in ROS setups?? (probably an odd situation to begin with)
+            #     print 'byebye'
+            #     return
+
+            # else:
+
+            # TODO: fix this transition so it goes back to no grocery after it finishes
+
+            # runs the object matching and displays the matches/center
+            self.om.run(frame, self.ims.frozen_img, self.ims.t_img_corners)
+            cv2.imshow('Running', frame)
+            if self.key == ord('d'):
                 self.state = 'no_grocery'
+            elif self.key == ord('q'):
+                print 'exit'
 
-            elif 0xFF == ord('q'):
-                # TODO: byebye
-                # "quit" the rosrun ; what do people usually do with keyboard quitting in ROS setups?? (probably an odd situation to begin with)
-                print 'byebye'
-                return
-
-            else:
-                # runs the object matching and displays the matches/center
-                self.om.run(frame, self.ims.frozen_img, self.ims.t_img_corners)
 
         elif self.state == 'no_grocery':
-            if 0xFF == ord('s'):
+            print('no_grocery')
+            # continue showing the raw stream
+            cv2.imshow('Running', frame)
+            if self.key == ord('s'):
                 # just a transition state
-                
                 self.state = 'selecting'
-            elif 0xFF == ord('q'):
+                return
+            elif self.key == ord('q'):
                 # TODO: byebye
                 print 'byebye'
                 return
-            else:
-                # continue showing the raw stream
-                cv2.imshow('No Grocery', frame)
-                print 'no_grocery else' # for debugging
 
         elif self.state == 'selecting':
             # TODO: ... check: Will process_frame happen over and over again while the image selection thing is frozen?
@@ -75,6 +83,7 @@ class EyeHelper():
             print self.ims.t_img_corners
             self.ims.run(frame)
             # after we finish selecting, we have a grocerey, so change states
+            # cv2.destroyAllWindows()
             self.state = 'grocery'
             print 'selecting else' # for debugging
             return

@@ -50,11 +50,11 @@ class ImageSelector():
         self.selecting = True
         self.current_frame = np.copy(frame)
         self.frozen_img = np.copy(frame)
-        cv2.namedWindow('selection_window')
-        cv2.setMouseCallback('selection_window', self.draw_rectangle)
+        cv2.namedWindow('Running')
+        cv2.setMouseCallback('Running', self.draw_rectangle)
         # while loop for the selection things
         while(1):
-            cv2.imshow('selection_window',self.current_frame)
+            cv2.imshow('Running',self.current_frame)
             if cv2.waitKey(20) & 0xFF == 32: #hit spacebar when done 
                 break
 
