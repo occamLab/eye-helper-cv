@@ -7,8 +7,8 @@ import numpy as np
 
 class ImageSelector():
     def __init__(self):
-        t_img = []
-        t_img_corners = [] 
+        self.t_img = []
+        self.t_img_corners = [] 
 
         # mouse callback/draw_rectangle things
         self.ix = -1
@@ -18,6 +18,7 @@ class ImageSelector():
         self.r = None
         self.frozen_img = [] 
         self.current_frame = []
+        self.selecting = False
 
         self.is_drawing = False # is there currently a frozen frame/drawing window?
 
@@ -41,11 +42,12 @@ class ImageSelector():
             self.drawing = False
             if self.mode == True:
                 cv2.rectangle(self.current_frame,(self.ix,self.iy),(x,y),(0,255,0))
-                self.r = [x, y, self.ix, self.iy]  
+                self.t_img_corners = [self.ix, self.iy,x, y]  
 
     def run(self, frame):
         # Obtain a copy of the current frame (so there's only one rectangle 
         # seen at a time), a window and bind the function to window
+        self.selecting = True
         self.current_frame = np.copy(frame)
         self.frozen_img = np.copy(frame)
         cv2.namedWindow('selection_window')

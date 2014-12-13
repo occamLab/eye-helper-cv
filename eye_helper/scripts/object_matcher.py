@@ -122,9 +122,9 @@ class ObjectMatcher():
         if self.center != None:
             cv2.circle(frame, self.center, 6, [0,0,255], 6)
         cv2.imshow('frame with center', frame)
-        cv2.waitKey(0)
+        # cv2.waitKey(0)
 
-    def run_match(self, frame):
+    def run(self, frame, t_img, t_corners):
         """
         execute find_kpd(), matching(), and mean_shift()
 
@@ -132,7 +132,7 @@ class ObjectMatcher():
             center
         """
 
-        self.find_kpd(frame)
+        self.find_kpd(frame, t_img, t_corners)
         self.matching()
         self.mean_shift()
         self.draw_circles(5, frame)
