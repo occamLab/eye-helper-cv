@@ -1,11 +1,8 @@
 ### one terminal per robot
 ```
-$ roscore
-multicamera_eye_helper.launch host:=<IP address> robotname:=usercam
-$ roscore
-multicamera_eye_helper.launch host:=<IP address> robotname:=sidecam
-$ roscore
-multicamera_eye_helper.launch host:=<IP address> robotname:=frontcam
+roslaunch eye_helper multicamera_eye_helper.launch host:=192.168.17.206 robotname:=usercam
+roslaunch eye_helper multicamera_eye_helper.launch host:=192.168.17.202 robotname:=sidecam
+roslaunch eye_helper multicamera_eye_helper.launch host:=192.168.17.209 robotname:=frontcam
 ```
 
 IP addresses:
@@ -16,8 +13,7 @@ usercam
 sidecam
 frontcam
 
-eye_helper.py should be subscribed to the proper topic
-
+eye_helper.py should be subscribed to the proper topic (usercam)
 
 ```
 $ roscore # restart roscore right before you start doing things
