@@ -29,7 +29,7 @@ class EyeHelper():
         threading.Thread(target=self.ap.audio_loop).start()
         # Camera via the comprobo raspberry pi setup
         rospy.init_node('eyehelper')
-        rospy.Subscriber('/camera/image_raw', Image, self.process_frame)
+        rospy.Subscriber('/usercam/camera/image_raw', Image, self.process_frame)
         self.bridge = CvBridge()
 
     def process_frame(self, msg):
