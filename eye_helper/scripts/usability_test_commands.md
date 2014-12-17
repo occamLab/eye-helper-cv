@@ -16,7 +16,14 @@ frontcam
 eye_helper.py should be subscribed to the proper topic (usercam)
 
 ```
-$ roscore # restart roscore right before you start doing things
-$ rosrun eye_helper eye_helper.py
-$ rosbag record /<usercam>/camera/image_raw/compressed /<sidecam>/camera/image_raw/compressed /<frontcam>/camera/image_raw/compsideed 
+roscore # restart roscore right before you start doing things
+rosrun eye_helper eye_helper.py
+rosbag record /usercam/camera/image_raw/compressed /sidecam/camera/image_raw/compressed /frontcam/camera/image_raw/compressed 
 ```
+
+alternatively, rosbag only the usercam
+```
+rosbag record /usercam/camera/image_raw/compressed  
+```
+
+TODO: put the rosbags somewhere

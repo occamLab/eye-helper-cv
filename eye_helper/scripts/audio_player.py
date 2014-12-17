@@ -10,7 +10,7 @@ class AudioPlayer():
     def __init__(self, om):
         self.angle = 85
         self.height = 4
-        self.path = "../GeneratedSoundFiles/"
+        self.path = "../GeneratedSoundFiles/" # TODO: fix this so it doesn't use '..'
         self.filename = "{}height{}angle{}.wav".format(self.path, self.height, self.angle)
         self.player = 'aplay'
         self.om = om
@@ -48,14 +48,16 @@ class AudioPlayer():
         max_angle = np.pi / 2
         min_angle = -max_angle
         self.angle = int(self.myround((self.om.center[0]/640.0) * 170.0 - 85.0))
-        self.height = 4 # hard-coded at 4 for current testing
-        
+        # self.height = 4  # hard-coded at 4 for current testing
+        self.height = 7 - int(self.om.center[1]/512.0 * 7.0)
+        print self.om.center[1], "om.center"
+
         if self.angle > 0:
             self.filename = "{}height{}angle{}.wav".format(self.path, self.height, self.angle)
         else:
             self.filename = "{}height{}angle_{}.wav".format(self.path, self.height, abs(self.angle))
-        print self.angle
-        print self.height
+        # print self.angle
+        # print self.height
         self.play_wave()
 
 if __name__ == '__main__':

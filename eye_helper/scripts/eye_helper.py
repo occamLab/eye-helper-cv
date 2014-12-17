@@ -8,7 +8,7 @@ from image_selector import *
 from object_matcher import *
 from audio_player import *
 from sensor_msgs.msg import Image
-import threading
+import threading 
 import time
 
 class EyeHelper():
@@ -20,6 +20,8 @@ class EyeHelper():
         # yaaay class variables
         self.center = ()
         self.state = 'no_grocery'
+        self.frame_n = 0 # counter for how many frames have been taken so far
+        self.nth = 5 # we want to process every nth frame
 
         self.ims = ImageSelector()       
         self.om = ObjectMatcher() 
@@ -33,14 +35,18 @@ class EyeHelper():
         self.bridge = CvBridge()
 
     def process_frame(self, msg):
-        # TODO: make sure the callback works
         """
         callback for camera stuff
         """
+        self.frame_n +=1
+
         frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
         self.key = cv2.waitKey(5)
         ### continuous stuff happens here ###
         if self.state == 'grocery':
+            if self.frame_n % self.nth != 0:
+                return
+
             # runs the object matching and displays the matches/center
             self.om.run(frame, self.ims.frozen_img, self.ims.t_img_corners)
             cv2.imshow('Running', frame)
