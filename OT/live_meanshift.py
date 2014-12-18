@@ -95,14 +95,14 @@ while True:
     frame = 0
 
     # Now that we have the training image keypoints, commence object tracking on the video stream!
-    center, current = om.match_object(previous, 
-                                            current, 
-                                            train_img, 
-                                            pos, 
-                                            frame, 
-                                            show = True, 
-                                            live = True,
-                                            t = t)
+    center, current = om.match_object(previous,
+                                      current, 
+                                      train_img, 
+                                      pos, 
+                                      frame, 
+                                      show = True, 
+                                      live = True,
+                                      t = t)
     #Show image
     cv2.imshow('OT demo', current)
     if cv2.waitKey(1) & 0xFF == ord('q'):

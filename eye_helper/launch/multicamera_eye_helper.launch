@@ -1,0 +1,10 @@
+<launch>
+  <arg name="use_sim_time" value="false"/>
+  <arg name="host"/>
+  <arg name="robotname"/>
+  <group ns="$(arg robotname)">
+    <include file="$(find gscam)/examples/raspi_nodelet.launch">
+    <arg name="host" value="$(arg host)"/>
+    </include>
+  </group>
+</launch>

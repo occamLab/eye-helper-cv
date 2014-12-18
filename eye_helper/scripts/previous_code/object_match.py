@@ -230,7 +230,7 @@ def play_audio(center, previous_file):
     """
     w = 512 # TODO: put in width of image
     max_height = 512 # TODO: height of the image
-    path = "../GeneratedSoundFiles/"
+    path = "../../GeneratedSoundFiles/"
     max_angle = np.pi / 2
     min_angle = -max_angle
     # angle = np.arctan(center[0])
@@ -268,7 +268,7 @@ if __name__ == '__main__':
     # with open('../gstore_csv/cookie.csv', 'r') as csvfile:
     #     reader = csv.reader(csvfile)
 
-    data = np.loadtxt('../gstore_csv/cookie.csv', dtype=int, delimiter=',')
+    data = np.loadtxt('../../gstore_csv/cookie.csv', dtype=int, delimiter=',')
     data_dict = dictionify(data)
 
     it_works = 0
