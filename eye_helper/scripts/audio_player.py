@@ -4,19 +4,23 @@ import cv2
 import numpy as np
 import subprocess
 import time
+import rospkg
 
 class AudioPlayer():
 
     def __init__(self, om):
         self.angle = 85
         self.height = 4
-        self.path = "../GeneratedSoundFiles/" # TODO: fix this so it doesn't use '..'
+        self.rospack = rospkg.RosPack();
+        self.path = self.rospack.get_path('eye_helper') + '/../GeneratedSoundFiles/'
+#        self.path = "../GeneratedSoundFiles/" # TODO: fix this so it doesn't use '..'
         self.filename = "{}height{}angle{}.wav".format(self.path, self.height, self.angle)
         self.player = 'aplay'
         self.om = om
+        self.play_loop = True
 
     def audio_loop(self):
-        while True:
+        while self.play_loop:
             time.sleep(0.5)
             center = self.om.center
             if center != None:

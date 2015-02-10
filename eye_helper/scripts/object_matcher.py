@@ -13,7 +13,7 @@ class ObjectMatcher():
 
         self.center = None
 
-        self.detector = cv2.SIFT()
+        self.detector = cv2.ORB()
         self.matcher = cv2.BFMatcher()
         self.matches = []
 

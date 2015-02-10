@@ -26,6 +26,7 @@ class EyeHelper():
         self.ims = ImageSelector()       
         self.om = ObjectMatcher() 
         self.ap = AudioPlayer(self.om)
+        self.do_shutdown = False
 
         # TODO: Figure out how to stop the thread when q is pushed
         threading.Thread(target=self.ap.audio_loop).start()
@@ -55,7 +56,9 @@ class EyeHelper():
                 self.state = 'no_grocery'
                 self.om.center = None
             elif self.key == ord('q'):
-                print 'exit'
+                self.ap.play_loop = False
+                self.do_shutdown = True
+                return
 
 
         elif self.state == 'no_grocery':
@@ -68,7 +71,8 @@ class EyeHelper():
                 return
             elif self.key == ord('q'):
                 # TODO: byebye
-                threading.threa
+                self.ap.play_loop = False
+                self.do_shutdown = True;
                 print 'byebye'
                 return
 
@@ -85,5 +89,5 @@ if __name__ == "__main__":
     eh = EyeHelper()
     r = rospy.Rate(5) # 5hz
 
-    while not rospy.is_shutdown():
+    while not rospy.is_shutdown() and not eh.do_shutdown:
         r.sleep()
