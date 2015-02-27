@@ -3,6 +3,7 @@
 import cv2
 import numpy as np
 import rospy
+import math
 from cv_bridge import CvBridge, CvBridgeError
 from image_selector import *
 from object_matcher import *
@@ -12,6 +13,7 @@ from geometry_msgs.msg import PoseStamped
 import threading 
 import time
 from tf.transformations import euler_from_quaternion, rotation_matrix, quaternion_from_matrix
+from std_msgs.msg import Float64
 
 class TangoPoseCalc():
     """
@@ -21,6 +23,7 @@ class TangoPoseCalc():
     def __init__(self):
         rospy.init_node('tangoposecalc')
         rospy.Subscriber('/tango_pose', PoseStamped, self.process_pose)
+        self.pub = rospy.Publisher('/yaw', Float64)
         # Stuff for Tango coord use:
         self.starting_x = None
         self.starting_y = None
@@ -40,11 +43,25 @@ class TangoPoseCalc():
         self.quat_w = None # Tango's quaternion values, to get the user's current angle in its coordinate system. This angle plus the need_to_go values then gets turned into the angle from the user's current location & direction to the target coords.
 
 
+    def quat_to_euler(self, quat_tuple):
+        """
+        different conversion method. Tuple of the form (x, y, z, w); returns tuple of the form (phi, theta, psi).
+        """
+        x = quat_tuple[0]
+        y = quat_tuple[1]
+        z = quat_tuple[2]
+        w = quat_tuple[3]
+        yaw = math.atan2(2.0 * (y*z + 2*x),w**2 - x**2 - y**2 + z**2)
+        pitch = math.asin(-2.0 * (x*z - w*y))
+        roll = math.atan2(2.0*(x*y + w*z),w**2 + x**2 - y**2 - z**2)
+        return (yaw, pitch, roll)
+
+
     def process_pose(self, msg):
-        print euler_from_quaternion([msg.pose.orientation.x,
-                                     msg.pose.orientation.y,
-                                     msg.pose.orientation.z,
-                                     msg.pose.orientation.w]);
+        # # print euler_from_quaternion([msg.pose.orientation.x,
+        #                              msg.pose.orientation.y,
+        #                              msg.pose.orientation.z,
+        #                              msg.pose.orientation.w]);
         if self.starting_x == None:
             self.starting_x = msg.pose.position.x
             self.starting_y = msg.pose.position.y
@@ -57,8 +74,13 @@ class TangoPoseCalc():
         self.quat_z = msg.pose.orientation.z
         self.quat_w = msg.pose.orientation.w
         orientation_tuple = (self.quat_x,self.quat_y,self.quat_z,self.quat_w)
+        # angles = self.quat_to_euler(orientation_tuple)
         angles = euler_from_quaternion(orientation_tuple)
-        print "angles ", angles #still ain't quite working--not getting useful "real" angles from the quaternion values...
+        print("I currently think the x-y angle is: " + str(int(math.degrees(angles[1]))))
+        #angles[2] is actually different!!! when it's flat down it's +/- 180; flat up, 0. That partly explains it.
+        msg = Float64(data=angles[2])
+        self.pub.publish(msg)
+        # print "angles ", angles #still ain't quite working--not getting useful "real" angles from the quaternion values...
 
     def update_need_to_go(self):
         """
@@ -79,6 +101,7 @@ class TangoPoseCalc():
         orientation_tuple = (self.quat_x,self.quat_y,self.quat_z,self.quat_w)
         angles = euler_from_quaternion(orientation_tuple)
         self.theta = angles[2]
+        print("I currently think the x-y angle is: " + str(math.degrees(self.theta)))
 
     def tango_get_angle_to_go(self):
         """
