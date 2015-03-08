@@ -11,7 +11,7 @@ import rospkg
 # from object_matcher import *
 import audio_player
 from sensor_msgs.msg import Image
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, PointStamped
 import threading 
 import time
 from tf.transformations import euler_from_quaternion#, rotation_matrix, quaternion_from_matrix
@@ -26,6 +26,7 @@ class TangoPoseCalc():
         rospy.init_node('tangoposecalc')
         rospy.Subscriber('/tango_pose', PoseStamped, self.process_pose)
         rospy.Subscriber('/tango_angles', Float64MultiArray, self.process_angle)
+        rospy.Subscriber('/clicked_point', PointStamped, self.set_target)
         self.rospack = rospkg.RosPack();
         self.path = self.rospack.get_path('eye_helper') + '/../GeneratedSoundFiles/'
         # Stuff for Tango coord use:
@@ -63,12 +64,21 @@ class TangoPoseCalc():
         self.roll = msg.data[0]
 
 
-    def tango_get_angle_to_go(self):
+    def set_target(self, msg):
         """
-            takes self.theta (user's xy-angle) and self.need_to_go_y and x; uses atan2.
-            Writes to self.need_to_go_angle (now in DEGREES).
+        writes the message info to the target.
         """
-        self.angle_to_go = math.degrees(math.atan2(self.target_y - self.y, self.target_x - self.x) - self.theta)
+        self.target_x = msg.point.x - self.starting_x
+        self.target_y = msg.point.y - self.starting_y
+        self.target_z = msg.point.z - self.starting_z
+
+
+    # def tango_get_angle_to_go(self):
+    #     """
+    #         takes self.theta (user's xy-angle) and self.need_to_go_y and x; uses atan2.
+    #         Writes to self.need_to_go_angle (now in DEGREES).
+    #     """
+    #     self.angle_to_go = math.degrees(math.atan2(self.target_y - self.y, self.target_x - self.x) - self.theta)
 
 
     def play_wave(self):
@@ -76,7 +86,7 @@ class TangoPoseCalc():
         plays an inputted wav file
         """
         
-        print self.filename
+        # print self.filename
         cmd = '{} {}'.format(self.player, self.filename)
         popen = subprocess.Popen(cmd, shell=True)
         popen.communicate()
@@ -87,21 +97,22 @@ class TangoPoseCalc():
             Uses class variables; plays the corresponding sound file.
             Right now, to test it out, it's just using the tango's absolute direction--rather than the direction to an as-of-yet-unknown target.
         """
-        max_angle = np.pi / 2
-        min_angle = -max_angle
-        if self.yaw >= max_angle:
-            self.test_theta = max_angle
-        elif self.yaw <= min_angle:
-            self.test_theta = min_angle
-        else:
-            self.test_theta = self.yaw
-        self.test_play = int(5 * round(float(math.degrees(self.test_theta))/5))
-        if self.test_play >= 0:
-            self.filename = "{}height{}angle{}.wav".format(self.path, 4, self.test_play)
-        else:
-            self.filename = "{}height{}angle_{}.wav".format(self.path, 4, abs(self.test_play))
-        #in the future, this should be switched to play from self.theta. Self.yaw is the angle from the tango; self.theta will be the relative angle to the object.
-        self.play_wave()
+        if self.target_z != None:
+            max_angle = math.degrees(np.pi / 2)
+            min_angle = -max_angle
+            self.angle_to_go = math.degrees(math.atan2(self.target_y - self.y, self.target_x - self.x) - self.yaw)
+            # print self.angle_to_go
+            if self.angle_to_go >= max_angle:
+                self.angle_to_go = max_angle
+            elif self.angle_to_go <= min_angle:
+                self.angle_to_go = min_angle
+            self.angle_to_play = int(5 * round(float(self.angle_to_go)/5))
+            # print self.angle_to_play
+            if self.angle_to_play >= 0:
+                self.filename = "{}height{}angle{}.wav".format(self.path, 4, self.angle_to_play)
+            else:
+                self.filename = "{}height{}angle_{}.wav".format(self.path, 4, abs(self.angle_to_play))
+            self.play_wave()
 
 
 if __name__ == "__main__":
