@@ -27,12 +27,14 @@ class AudioPlayer():
                 self.filename = self.play_audio()
                 print self.filename
 
-    def play_wave(self):
+    def play_wave(self, volume):
         """
         plays an inputted wav file
         """
-        
-        print self.filename
+        cmd = '{amixer set Master} {}'.format(volume)
+        popen = subprocess.Popen(cmd, shell=True)
+        popen.communicate()
+        print volume, self.filename
         cmd = '{} {}'.format(self.player, self.filename)
         popen = subprocess.Popen(cmd, shell=True)
         popen.communicate()
