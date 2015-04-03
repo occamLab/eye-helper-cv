@@ -9,7 +9,7 @@ import rospkg
 # from cv_bridge import CvBridge, CvBridgeError
 # from image_selector import *
 # from object_matcher import *
-import audio_player
+# import audio_player
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import PoseStamped, PointStamped
 import threading 
@@ -92,6 +92,18 @@ class TangoPoseCalc():
     #     """
     #     self.angle_to_go = math.degrees(math.atan2(self.target_y - self.y, self.target_x - self.x) - self.theta)
 
+    def update_angle_to_go(self):
+        """
+        updates self.angle_to_go, keeping it in the permitted "range."
+        """
+        max_angle = math.degreess(np.pi / 2)
+        min_angle = -max_angle
+        atg = math.degrees(math.atan2(self.target_y - self.y, self.target_x - self.x) - self.yaw)
+        if atg < min_angle:
+            atg = min_angle
+        elif atg > max_angle:
+            atg = max_angle
+        self.angle_to_go = atg
 
     def play_wave(self, volume):
         """
@@ -113,37 +125,64 @@ class TangoPoseCalc():
         if d != None:
             self.playback_interval = rospy.Duration(d/2.0)
 
+
+    def get_h_to_play(self, rz):
+        """
+        returns the h-value to play. Currently the numbers are more-or-less arbitrary; TODO: test/figure out what works well. rz = relative_z of the target compared to the tango.
+        """
+        if rz <= -0.6:
+            return 1
+        elif rz <= -0.2:
+            return 2
+        elif rz <= 0.2:
+            return 3
+        elif rz <=0.6:
+            return 4
+        else:
+            return 6
+
+
     def play_audio(self):
         """
             Uses class variables; plays the corresponding sound file.
-            Right now, to test it out, it's just using the tango's absolute direction--rather than the direction to an as-of-yet-unknown target.
         """
-        eh.adjust_playback_interval()
-        print self.playback_interval
-        if rospy.Time.now() - self.last_tone < self.playback_interval:
+        d = self.get_distance_to_target()
+        if d == None:
             return
-        self.last_tone = rospy.Time.now()
+        elif d >= 1:
+            eh.adjust_playback_interval()
+            # print self.playback_interval
+            if rospy.Time.now() - self.last_tone < self.playback_interval:
+                return
+            self.last_tone = rospy.Time.now()
 
-        if self.target_z != None:
-            max_angle = math.degrees(np.pi / 2)
-            min_angle = -max_angle
-            self.angle_to_go = math.degrees(math.atan2(self.target_y - self.y, self.target_x - self.x) - self.yaw)
-            # print self.angle_to_go
-            if self.angle_to_go >= max_angle:
-                self.angle_to_go = max_angle
-            elif self.angle_to_go <= min_angle:
-                self.angle_to_go = min_angle
+            if self.target_z != None: # This check is probably now unnecessary.
+                self.update_angle_to_go()
+                self.angle_to_play = int(5 * round(float(self.angle_to_go)/5))
+                angle_to_volume = {0: 21, 5: 22, 10: 23, 15: 24, 20: 25, 25: 26, 30: 27, 35: 28, 40: 29, 45: 30, 50: 31, 55:31, 60:31, 65:31, 70:31, 75 : 31, 80 : 31, 85 : 31, 90: 31}
+                desired_volume = angle_to_volume[abs(self.angle_to_play)]
+                # print self.angle_to_play
+                if self.angle_to_play >= 0:
+                    self.filename = "{}height{}angle{}.wav".format(self.path, 4, 90)
+                    #self.filename = "{}height{}angle{}.wav".format(self.path, 4, self.angle_to_play)
+                else:
+                    self.filename = "{}height{}angle_{}.wav".format(self.path, 4, 90)
+                    #                self.filename = "{}height{}angle_{}.wav".format(self.path, 4, abs(self.angle_to_play))
+                self.play_wave(desired_volume)
+        else:
+            relative_z = self.target_z - self.z
+            self.update_angle_to_go()
             self.angle_to_play = int(5 * round(float(self.angle_to_go)/5))
             angle_to_volume = {0: 21, 5: 22, 10: 23, 15: 24, 20: 25, 25: 26, 30: 27, 35: 28, 40: 29, 45: 30, 50: 31, 55:31, 60:31, 65:31, 70:31, 75 : 31, 80 : 31, 85 : 31, 90: 31}
             desired_volume = angle_to_volume[abs(self.angle_to_play)]
-            # print self.angle_to_play
+            h_to_play = self.get_h_to_play(relative_z)
+
             if self.angle_to_play >= 0:
-                self.filename = "{}height{}angle{}.wav".format(self.path, 4, 90)
-                #self.filename = "{}height{}angle{}.wav".format(self.path, 4, self.angle_to_play)
+                self.filename = "{}height{}angle{}.wav".format(self.path, h_to_play, 90)
             else:
-                self.filename = "{}height{}angle_{}.wav".format(self.path, 4, 90)
-                #                self.filename = "{}height{}angle_{}.wav".format(self.path, 4, abs(self.angle_to_play))
+                self.filename = "{}height{}angle_{}.wav".format(self.path, h_to_play, 90)
             self.play_wave(desired_volume)
+
 
 
 if __name__ == "__main__":
