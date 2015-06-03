@@ -96,7 +96,7 @@ class TangoPoseCalc():
         """
         updates self.angle_to_go, keeping it in the permitted "range."
         """
-        max_angle = math.degreess(np.pi / 2)
+        max_angle = math.degrees(np.pi / 2)
         min_angle = -max_angle
         atg = math.degrees(math.atan2(self.target_y - self.y, self.target_x - self.x) - self.yaw)
         if atg < min_angle:
@@ -114,11 +114,11 @@ class TangoPoseCalc():
         print cmd
         popen = subprocess.Popen(cmd, shell=True)
         popen.communicate()
-        #if mix != None:
+        if mix != None:
             # need to scale this by volume as a percentage.... TODO
-           # cmd = 'amixer sset Master {}%,{}%'.format(mix[0],mix[1])
-        #    popen = subprocess.Popen(cmd, shell=True)
-        #    popen.communicate()
+            cmd = 'amixer sset Headphone {}%,{}%'.format(mix[0],mix[1])
+            popen = subprocess.Popen(cmd, shell=True)
+            popen.communicate()
         # print self.filename
         cmd = '{} {}'.format(self.player, self.filename)
         popen = subprocess.Popen(cmd, shell=True)
@@ -152,34 +152,37 @@ class TangoPoseCalc():
             Uses class variables; plays the corresponding sound file.
         """
         d = self.get_distance_to_target()
+        eh.adjust_playback_interval()
+        # print self.playback_interval
+        if rospy.Time.now() - self.last_tone < self.playback_interval:
+            return
+        self.last_tone = rospy.Time.now()
+
         if d == None:
             return
-        elif d >= 1:
-            eh.adjust_playback_interval()
-            # print self.playback_interval
-            if rospy.Time.now() - self.last_tone < self.playback_interval:
-                return
-            self.last_tone = rospy.Time.now()
+        # elif d >= 1:
 
-            if self.target_z != None: # This check is probably now unnecessary.
-                self.update_angle_to_go()
-                self.angle_to_play = int(5 * round(float(self.angle_to_go)/5))
-                angle_to_volume = {0: 21, 5: 22, 10: 23, 15: 24, 20: 25, 25: 26, 30: 27, 35: 28, 40: 29, 45: 30, 50: 31, 55:31, 60:31, 65:31, 70:31, 75 : 31, 80 : 31, 85 : 31, 90: 31}
-                desired_volume = angle_to_volume[abs(self.angle_to_play)]
-                # print self.angle_to_play
-                if self.angle_to_play >= 0:
-                    self.filename = "{}height{}angle{}.wav".format(self.path, 4, 90)
-                    #self.filename = "{}height{}angle{}.wav".format(self.path, 4, self.angle_to_play)
-                else:
-                    self.filename = "{}height{}angle_{}.wav".format(self.path, 4, 90)
-                    #                self.filename = "{}height{}angle_{}.wav".format(self.path, 4, abs(self.angle_to_play))
-                self.play_wave(desired_volume)
+
+        #     if self.target_z != None: # This check is probably now unnecessary.
+        #         self.update_angle_to_go()
+        #         self.angle_to_play = int(5 * round(float(self.angle_to_go)/5))
+        #         angle_to_volume = {0: 21, 5: 22, 10: 23, 15: 24, 20: 25, 25: 26, 30: 27, 35: 28, 40: 29, 45: 30, 50: 31, 55:31, 60:31, 65:31, 70:31, 75 : 31, 80 : 31, 85 : 31, 90: 31}
+        #         desired_volume = angle_to_volume[abs(self.angle_to_play)]
+        #         # print self.angle_to_play
+        #         if self.angle_to_play >= 0:
+        #             self.filename = "{}height{}angle{}.wav".format(self.path, 4, 90)
+        #             #self.filename = "{}height{}angle{}.wav".format(self.path, 4, self.angle_to_play)
+        #         else:
+        #             self.filename = "{}height{}angle_{}.wav".format(self.path, 4, 90)
+        #             #                self.filename = "{}height{}angle_{}.wav".format(self.path, 4, abs(self.angle_to_play))
+        #         self.play_wave(desired_volume)
         else:
             relative_z = self.target_z - self.z
             self.update_angle_to_go()
             self.angle_to_play = int(5 * round(float(self.angle_to_go)/5))
             angle_to_volume = {0: 21, 5: 22, 10: 23, 15: 24, 20: 25, 25: 26, 30: 27, 35: 28, 40: 29, 45: 30, 50: 31, 55:31, 60:31, 65:31, 70:31, 75 : 31, 80 : 31, 85 : 31, 90: 31}
             desired_volume = angle_to_volume[abs(self.angle_to_play)]
+            desired_volume *= 4
             h_to_play = self.get_h_to_play(relative_z)
 
             if self.angle_to_play >= 0:
@@ -192,6 +195,9 @@ class TangoPoseCalc():
                 desired_mix = ['0','100']
 
                 #                self.filename = "{}height{}angle_{}.wav".format(self.path, 4, abs(self.angle_to_play))
+            print "volume is", desired_volume
+            print "desired mix", desired_mix
+            #desired_mix = None
             self.play_wave(desired_volume,desired_mix)
 
 

@@ -35,6 +35,7 @@ class AudioPlayer():
         popen.communicate()
         if mix != None:
             cmd = '{amixer set Master} {}%,{}%'.format(mix[0],mix[1])
+            print "mycmd", cmd
             popen = subprocess.Popen(cmd, shell=True)
             popen.communicate()
         print volume, self.filename
