@@ -20,6 +20,7 @@ class Tango_tracker():
     def __init__(self):
 
 #-----------------PARAMETERS-----------------------
+# This section just initializes the parameters to None.
         self.starting_x = None
         self.starting_y = None
         self.starting_z = None
@@ -37,6 +38,7 @@ class Tango_tracker():
         self.angle_to_go = None
 
 #----------------------ROS------------------------
+# This sets the tango tracker to subscribe to the relevant topics, and process them properly.
         rospy.init_node('tangoposecalc')
         rospy.Subscriber('/tango_pose', PoseStamped, self.process_pose)
         rospy.Subscriber('/tango_angles', Float64MultiArray, self.process_angle)
@@ -45,13 +47,8 @@ class Tango_tracker():
         self.rospack = rospkg.RosPack();
         self.path = self.rospack.get_path('eye_helper') + '/../GeneratedSoundFiles/'
 
-#-------------------PLAYBACK----------------------
-        self.player = 'aplay'
-        self.playback_interval = rospy.Duration(0.2)
-        self.last_tone = rospy.Time.now()
-        self.angle_to_volume_dictionary = {0: 21, 5: 22, 10: 23, 15: 24, 20: 25, 25: 26, 30: 27, 35: 28, 40: 29, 45: 30, 50: 31, 55:31, 60:31, 65:31, 70:31, 75 : 31, 80 : 31, 85 : 31, 90: 31}
-
 #---------------PROCESS-INPUTS--------------------
+# Converts tango messages into things like x position, yaw, etc.
     def process_pose(self, msg):
         """
         zeroes position data, then writes it to class varirables.
@@ -81,6 +78,7 @@ class Tango_tracker():
         self.target_z = msg.point.z - self.starting_z
 
 #--------------GENERATE-OUTPUTS---------------------
+# Updates output variables, like self.xy_distance.
     def refresh_xy_distance(self):
         self.xy_distance = math.sqrt((self.target_x - self.x)**2 + (self.target_y - self.y)**2)
 
