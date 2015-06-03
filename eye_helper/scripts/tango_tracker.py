@@ -5,9 +5,7 @@ import rospy
 import math
 import subprocess
 import rospkg
-#from sensor_msgs.msg import Image
 from geometry_msgs.msg import PoseStamped, PointStamped
-#import threading 
 import time
 from tf.transformations import euler_from_quaternion
 from std_msgs.msg import Float64, Float64MultiArray, String
@@ -29,17 +27,25 @@ class Tango_tracker():
         self.y = None
         self.z = None
 
+        self.yaw = None
+        self.pitch = None
+        self.roll = None
+
         self.target_x = None
         self.target_y = None
         self.target_z = None
 
+#---------above is input; below is "output"---------
         self.xy_distance = None
         self.z_distance = None
         self.angle_to_go = None
 
+        self.forward_distance = None
+        self.right_distance = None
+
 #----------------------ROS------------------------
 # This sets the tango tracker to subscribe to the relevant topics, and process them properly.
-        rospy.init_node('tangoposecalc')
+        rospy.init_node('tango_tracker')
         rospy.Subscriber('/tango_pose', PoseStamped, self.process_pose)
         rospy.Subscriber('/tango_angles', Float64MultiArray, self.process_angle)
         rospy.Subscriber('/clicked_point', PointStamped, self.set_target)
@@ -76,6 +82,7 @@ class Tango_tracker():
         self.target_x = msg.point.x - self.starting_x
         self.target_y = msg.point.y - self.starting_y
         self.target_z = msg.point.z - self.starting_z
+        print "target set"
 
 #--------------GENERATE-OUTPUTS---------------------
 # Updates output variables, like self.xy_distance.
@@ -85,7 +92,7 @@ class Tango_tracker():
     def refresh_z_distance(self):
         self.z_distance = self.target_z - self.z
 
-    def refresh_angle():
+    def refresh_angle(self):
         max_angle = math.degrees(np.pi / 2)
         min_angle = -max_angle
         atg = math.degrees(math.atan2(self.target_y-self.y, self.target_x-self.x) - self.yaw)
@@ -95,17 +102,29 @@ class Tango_tracker():
             atg = max_angle
         self.angle_to_go = atg
 
+    def refresh_orthogonal_distances(self):
+        dx = self.target_x - self.x
+        dy = self.target_y - self.y
+        self.forward_distance = dx*math.cos(self.yaw) + dy*math.sin(self.yaw)
+        self.right_distance = dx*math.cos(self.yaw-(np.pi/2)) + dy*math.sin(self.yaw-(np.pi/2))
+
+
     def refresh_all(self):
+        if self.z == None or self.target_z == None or self.yaw == None:
+            return
         self.refresh_xy_distance()
         self.refresh_z_distance()
         self.refresh_angle()
+        self.refresh_orthogonal_distances()
 
 
 
 if __name__ == "__main__":
-    eh = TangoPoseCalc()
+    eh = Tango_tracker()
     r = rospy.Rate(5) # 5hz
     while not rospy.is_shutdown():
         r.sleep()
         eh.refresh_all()
-        print "xy distance: " + str(eh.xy_distance) + "\tz distance: " + str(eh.z_distance) + "\tangle: " + str(eh.angle_to_go)
+        print "xy distance: {:.3} \t z distance: {:.3} \t angle: {:.3} \t fwd: {:.3} \t right: {:.3}".format(eh.xy_distance, eh.z_distance, eh.angle_to_go, eh.forward_distance, eh.right_distance)
+        # print ("xy distance: %.2f" % eh.xy_distance) + "\tz distance: " + str(eh.z_distance) + "\tangle: " + str(eh.angle_to_go) + "\tfwd: " + str(eh.forward_distance) + "\tright: " + str(eh.right_distance)
+        # print str(eh.x) + '\t' + str(eh.z) + '\t' + str(eh.target_x) + '\t' + str(eh.target_z)
