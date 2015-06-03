@@ -93,7 +93,7 @@ class TangoPoseCalc():
     #     self.angle_to_go = math.degrees(math.atan2(self.target_y - self.y, self.target_x - self.x) - self.theta)
 
 
-    def play_wave(self, volume):
+    def play_wave(self, volume, mix=None):
         """
         plays an inputted wav file
         """
@@ -102,6 +102,11 @@ class TangoPoseCalc():
         print cmd
         popen = subprocess.Popen(cmd, shell=True)
         popen.communicate()
+        #if mix != None:
+            # need to scale this by volume as a percentage.... TODO
+           # cmd = 'amixer sset Master {}%,{}%'.format(mix[0],mix[1])
+        #    popen = subprocess.Popen(cmd, shell=True)
+        #    popen.communicate()
         # print self.filename
         cmd = '{} {}'.format(self.player, self.filename)
         popen = subprocess.Popen(cmd, shell=True)
@@ -139,11 +144,15 @@ class TangoPoseCalc():
             # print self.angle_to_play
             if self.angle_to_play >= 0:
                 self.filename = "{}height{}angle{}.wav".format(self.path, 4, 90)
+                desired_mix = ['100','0']
+
                 #self.filename = "{}height{}angle{}.wav".format(self.path, 4, self.angle_to_play)
             else:
                 self.filename = "{}height{}angle_{}.wav".format(self.path, 4, 90)
+                desired_mix = ['0','100']
+
                 #                self.filename = "{}height{}angle_{}.wav".format(self.path, 4, abs(self.angle_to_play))
-            self.play_wave(desired_volume)
+            self.play_wave(desired_volume,desired_mix)
 
 
 if __name__ == "__main__":

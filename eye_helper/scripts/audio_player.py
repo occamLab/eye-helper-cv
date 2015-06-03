@@ -13,7 +13,6 @@ class AudioPlayer():
         self.height = 4
         self.rospack = rospkg.RosPack();
         self.path = self.rospack.get_path('eye_helper') + '/../GeneratedSoundFiles/'
-#        self.path = "../GeneratedSoundFiles/" # TODO: fix this so it doesn't use '..'
         self.filename = "{}height{}angle{}.wav".format(self.path, self.height, self.angle)
         self.player = 'aplay'
         self.om = om
@@ -27,13 +26,17 @@ class AudioPlayer():
                 self.filename = self.play_audio()
                 print self.filename
 
-    def play_wave(self, volume):
+    def play_wave(self, volume, mix=None):
         """
         plays an inputted wav file
         """
         cmd = '{amixer set Master} {}'.format(volume)
         popen = subprocess.Popen(cmd, shell=True)
         popen.communicate()
+        if mix != None:
+            cmd = '{amixer set Master} {}%,{}%'.format(mix[0],mix[1])
+            popen = subprocess.Popen(cmd, shell=True)
+            popen.communicate()
         print volume, self.filename
         cmd = '{} {}'.format(self.player, self.filename)
         popen = subprocess.Popen(cmd, shell=True)
