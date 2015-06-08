@@ -27,9 +27,10 @@ class Controller(tk.Frame):
     def call_all(self):
         v1.delay_coefficient = self.v1_dc.get()
         v1.call()
+        v2.call()
         self.after(10, self.call_all)
 
-class version_one():
+class Version_one():
     """
     maps volume to amount that the angle is off, side to angle, and distance to frequency.
     """
@@ -41,6 +42,7 @@ class version_one():
         self.last_tone = rospy.Time.now()
         self.player = "aplay"
         self.path = "../../GeneratedSoundFiles/"
+        self.base_filename = "height{}angle{}.wav"
         self.filename = ""
 
     def toggle(self):
@@ -53,12 +55,7 @@ class version_one():
                 self.run()
 
     def run(self):
-        delay = rospy.Duration(self.dist_to_freq(self.tracker, self.delay_coefficient))
-        print '======================='
-        print delay
-        print self.last_tone
-        print rospy.Time.now()
-        print '-----------------------'
+        delay = rospy.Duration(self.dist_to_delay(self.tracker, self.delay_coefficient))
         if rospy.Time.now() - self.last_tone < delay:
             return
         self.last_tone = rospy.Time.now()
@@ -70,7 +67,7 @@ class version_one():
             self.filename = "{}height{}angle_{}.wav".format(self.path, 4, 90)
         self.play_audio(vol)
 
-    def dist_to_freq(self, tracker, coefficient, cutoff=4, reverse=False):
+    def dist_to_delay(self, tracker, coefficient, cutoff=4, reverse=False):
         """input the tracker and the coefficient. Takes the xy distance from the tracker, multiplies it by the coefficient, and returns the value - basically, the time to wait. For example, 2m -> 1m with coeff = 2 means 4s -> 2s delay."""
         xy_distance = tracker.xy_distance
         if xy_distance > cutoff:
@@ -103,10 +100,68 @@ class version_one():
         popen = subprocess.Popen(cmd, shell=True)
         popen.communicate()
 
+class Version_two():
+    """
+    Forward and sideways distances. Not really sure how to communicate this, but anyways.
+    Right this moment, left/right distance and side is communicated by frequency.
+    """
+    def __init__(self, tracker):
+        self.tracker = tracker
+        self.isOn = False
+        self.volume_coefficient = 1.0 #thing to change.
+        self.delay_coefficient = 0.5 #thing to change.
+        self.last_played = rospy.Time.now()
+        self.player = "aplay"
+        self.path = "../../GeneratedSoundFiles/computer_speech/"
+        self.base_filename = "{}.wav"
+        self.filename = ""
+
+    def toggle(self):
+        self.isOn = not self.isOn
+
+    def call(self):
+        if self.isOn:
+            self.tracker.refresh_all()
+            if self.tracker.forward_distance != None and self.tracker.right_distance != None:
+                self.run()
+
+    def run(self):
+        if (rospy.Time.now() - self.last_played) < rospy.Duration(8):
+            return
+        fd_signed = self.tracker.forward_distance
+        fd = abs(fd_signed)
+        rd_signed = self.tracker.right_distance
+        rd = abs(rd_signed)
+        values_to_play = [str(int(fd)), 'pt', str(int(10*((fd - int(fd)) - (fd - int(fd))%0.1)))]
+        if fd_signed > 0:
+            values_to_play.append('forward')
+        else:
+            values_to_play.append('back')
+        values_to_play.append('and')
+        values_to_play.extend([str(int(rd)),'pt',str(int(10*((rd-int(rd))-(rd-int(rd))%.1)))])
+        if rd_signed > 0:
+            values_to_play.append('right')
+        else:
+            values_to_play.append('left')
+        # print '============================='
+        # print values_to_play
+        # print '-----------------------------'
+        for i in values_to_play:
+            popen = subprocess.Popen('aplay {}{}.wav'.format(self.path,i), shell=True)
+            popen.communicate()
+
+
+
+
+
+
+
 if __name__ == "__main__":
     tt = Tango_tracker()
-    v1 = version_one(tt)
-    v1.isOn = True
+    v1 = Version_one(tt)
+    # v1.isOn = True
+    v2 = Version_two(tt)
+    v2.isOn = True
     control = Controller()
     control.master.title("Testing GUI")
     control.after(100, control.call_all)
@@ -138,7 +193,7 @@ if __name__ == "__main__":
 
 # # tt = Tango_tracker()
 
-# def dist_to_freq(tracker, coefficient, cutoff=4, reverse=False):
+# def dist_to_delay(tracker, coefficient, cutoff=4, reverse=False):
 #     """input the tracker and the coefficient. Takes the xy distance from the tracker, multiplies it by the coefficient, and returns the value - basically, the time to wait. For example, 2m -> 1m with coeff = 2 means 4s -> 2s delay."""
 #     xy_distance = tracker.xy_distance
 #     if xy_distance > cutoff:
