@@ -3,33 +3,39 @@ rough draft of a gui for rapidly switching between possible versions while codes
 """
 
 import rospy
-# import Tkinter as tk
+import Tkinter as tk
 import subprocess
 from tango_tracker import Tango_tracker
 from computer_speech import Speak_3d_coords
 
-# class Controller(tk.Frame):
-#     def __init__(self, master=None):
-#         tk.Frame.__init__(self, master)
-#         self.grid()
-#         self.createWidgets()
+class Controller(tk.Frame):
+    def __init__(self, module1, module2, master=None):
+        tk.Frame.__init__(self, master)
+        self.m1 = module1
+        self.m2 = module2
+        self.grid()
+        self.createWidgets()
 
-#     def createWidgets(self):
-#         dc = 1.00
-#         self.v1_dc = tk.Scale(self, variable=dc, from_=0.1, to=1.0, resolution=0.1)
-#         self.v1_dc.grid()
-#         self.toggle_v1 = tk.Button(self, text="v1", command=v1.toggle)
-#         self.toggle_v1.grid()
-#         self.toggle_v2 = tk.Button(self, text='v2 (speech)', command=v2.toggle)
-#         self.toggle_v2.grid()
-#         self.quit_button = tk.Button(self, text="Quit",command=self.quit)
-#         self.quit_button.grid()
+    def createWidgets(self):
+        dc = 1.00
+        self.m1_dc = tk.Scale(self, label="beep frequency coefficient", variable=dc, from_=0.1, to=1.0, resolution=0.1)
+        self.m1_dc.grid()
+        self.on_m1 = tk.Button(self, text="angle beeps on", command=self.m1.turn_on)
+        self.on_m1.grid()
+        self.off_m1 = tk.Button(self, text="angle beeps off", command=self.m1.turn_off)
+        self.off_m1.grid()
+        self.on_m2 = tk.Button(self, text='3d speech on', command=self.m2.turn_on)
+        self.on_m2.grid()
+        self.off_m2 = tk.Button(self, text='3d speech off', command=self.m2.turn_off)
+        self.off_m2.grid()
+        self.quit_button = tk.Button(self, text="Quit",command=self.quit)
+        self.quit_button.grid()
 
-#     def call_all(self):
-#         v1.delay_coefficient = self.v1_dc.get()
-#         v1.call()
-#         v2.call()
-#         self.after(10, self.call_all)
+    def call_all(self):
+        self.m1.delay_coefficient = self.m1_dc.get()
+        self.m1.call()
+        self.m2.call()
+        self.after(10, self.call_all)
 
 class Version_one():
     """
@@ -48,6 +54,12 @@ class Version_one():
 
     def toggle(self):
         self.isOn = not self.isOn
+
+    def turn_on(self):
+        self.isOn = True
+
+    def turn_off(self):
+        self.isOn = False
 
     def call(self):
         if self.isOn:
@@ -166,19 +178,23 @@ if __name__ == "__main__":
     tt = Tango_tracker()
     v1 = Version_one(tt)
     v2 = Speak_3d_coords(tt)
-    while True:
-        tt.refresh_all()
-        print tt.xy_distance
-        if tt.xy_distance < 0.1 and tt.xy_distance != None:
-            exit()
-        if tt.xy_distance < 1:
-            v1.isOn = False
-            v2.isOn = True
-        else:
-            v1.isOn = True
-            v2.isOn = False
-        v1.call()
-        v2.call()
+    control = Controller(v1, v2)
+    control.master.title("Testing GUI")
+    control.after(100, control.call_all)
+    control.mainloop()
+    # while True:
+    #     tt.refresh_all()
+    #     print tt.xy_distance
+    #     if tt.xy_distance < 0.1 and tt.xy_distance != None:
+    #         exit()
+    #     if tt.xy_distance < 1:
+    #         v1.isOn = False
+    #         v2.isOn = True
+    #     else:
+    #         v1.isOn = True
+    #         v2.isOn = False
+    #     v1.call()
+    #     v2.call()
 
 
 
