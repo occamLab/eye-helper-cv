@@ -126,5 +126,3 @@ if __name__ == "__main__":
         r.sleep()
         eh.refresh_all()
         print "xy distance: {:.3} \t z distance: {:.3} \t angle: {:.3} \t fwd: {:.3} \t right: {:.3}".format(eh.xy_distance, eh.z_distance, eh.angle_to_go, eh.forward_distance, eh.right_distance)
-        # print ("xy distance: %.2f" % eh.xy_distance) + "\tz distance: " + str(eh.z_distance) + "\tangle: " + str(eh.angle_to_go) + "\tfwd: " + str(eh.forward_distance) + "\tright: " + str(eh.right_distance)
-        # print str(eh.x) + '\t' + str(eh.z) + '\t' + str(eh.target_x) + '\t' + str(eh.target_z)
