@@ -24,8 +24,7 @@ class Angle_and_distance():
         self.last_tone = rospy.Time.now()
         self.player = "aplay"
         self.path = "../../GeneratedSoundFiles/"
-        self.base_filename = "height{}angle{}.wav"
-        self.filename = ""
+        self.filename = "height4angle5.wav"
 
     def toggle(self):
         self.isOn = not self.isOn
@@ -84,7 +83,7 @@ class Angle_and_distance():
         cmd = 'amixer -D pulse sset Master {}%{}%'.format(volume*ratio[0], volume*ratio[1])
         popen = subprocess.Popen(cmd, shell=True)
         popen.communicate()
-        cmd = "{} {}".format(self.player, self.filename)
+        cmd = "{} {}{}".format(self.player, self.path, self.filename)
         popen = subprocess.Popen(cmd, shell=True)
         popen.communicate()
 
@@ -104,8 +103,7 @@ class Offset_angle_and_distance():
         self.last_tone = rospy.Time.now()
         self.player = "aplay"
         self.path = "../../GeneratedSoundFiles/"
-        self.base_filename = "height{}angle{}.wav"
-        self.filename = ""
+        self.filename = "height4angle5.wav"
         self.offset_target_pub = rospy.Publisher("/offset_point", PointStamped, queue_size=10)
 
     def toggle(self):
@@ -164,7 +162,7 @@ class Offset_angle_and_distance():
         cmd = 'amixer -D pulse sset Master {}%{}%'.format(volume*ratio[0], volume*ratio[1])
         popen = subprocess.Popen(cmd, shell=True)
         popen.communicate()
-        cmd = "{} {}".format(self.player, self.filename)
+        cmd = "{} {}{}".format(self.player, self.path, self.filename)
         popen = subprocess.Popen(cmd, shell=True)
         popen.communicate()
 
