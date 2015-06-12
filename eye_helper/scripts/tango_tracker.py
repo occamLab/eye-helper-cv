@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 
 import numpy as np
+from scipy.stats import linregress
 import rospy
 import math
 import subprocess
 import rospkg
-from geometry_msgs.msg import PoseStamped, PointStamped
+from geometry_msgs.msg import PoseStamped, PointStamped, Point32
+from sensor_msgs.msg import PointCloud
 import time
 from tf.transformations import euler_from_quaternion
 from std_msgs.msg import Float64, Float64MultiArray, String
@@ -35,6 +37,8 @@ class Tango_tracker():
         self.target_y = None
         self.target_z = None
 
+        self.target_surface_slope = None
+
 #---------above is input; below is "output"---------
         self.xy_distance = None
         self.z_distance = None
@@ -49,6 +53,7 @@ class Tango_tracker():
         rospy.Subscriber('/tango_pose', PoseStamped, self.process_pose)
         rospy.Subscriber('/tango_angles', Float64MultiArray, self.process_angle)
         rospy.Subscriber('/clicked_point', PointStamped, self.set_target)
+        rospy.Subscriber('/nearby_cloud', PointCloud, self.process_points_near_target)
         self.logger = rospy.Publisher('/log', String, queue_size=10)
         self.rospack = rospkg.RosPack();
         self.path = self.rospack.get_path('eye_helper') + '/../GeneratedSoundFiles/'
@@ -74,6 +79,14 @@ class Tango_tracker():
         self.yaw = msg.data[2]
         self.pitch = msg.data[1]
         self.roll = msg.data[0]
+
+    def process_points_near_target(self, msg):
+        points = msg.points
+        xvals = [i.x for i in points]
+        yvals = [i.y for i in points]
+        zvals = [i.z for z in points]
+        slope, intercept, r, p, err = linregress(xvals, yvals)
+        self.target_surface_slope = slope
 
     def set_target(self, msg):
         """
