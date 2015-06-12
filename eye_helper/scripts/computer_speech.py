@@ -52,9 +52,12 @@ class Orthogonal_distances():
             values_to_play.append('right')
         else:
             values_to_play.append('left')
+
         for i in values_to_play:
+            self.filename= '{} {}{}.wav'.format(self.player, self.path,i)
             popen = subprocess.Popen('{} {}{}.wav'.format(self.player, self.path,i), shell=True)
             popen.communicate()
+
 
 class Speak_3d_coords():
     """
@@ -126,9 +129,12 @@ class Speak_3d_coords():
         p.communicate()
 
         for i in cmds:
+            self.filename = '{} {}{}.wav'.format(self.player, self.path, i)
             p = subprocess.Popen('{} {}{}.wav'.format(self.player, self.path, i), shell=True)
             p.communicate()
 
+            self.speech_info= Speech(file_path=self.filename, speech=str(i))
+            self.speech_pub.publish(self.speech_info)
 
 
     # def run(self):

@@ -25,6 +25,7 @@ class Angle_and_distance():
         self.player = "aplay"
         self.path = "../../GeneratedSoundFiles/"
         self.filename = "height4angle5.wav"
+        self.sound_pub=rospy.Publisher('/sound_info', Sound, queue_size=10)
 
     def toggle(self):
         self.isOn = not self.isOn
@@ -156,7 +157,11 @@ class Offset_angle_and_distance():
             ratio=[0,1]
         else:
             ratio=[1,0] #setting the left/right balance.
-        self.play_audio(vol, side)
+        self.play_audio(vol, ratio)
+
+        self.sound_info= Sound(file_path=self.filename,volume=float(vol),mix_left=float(ratio[0]),mix_right=float(ratio[1]) )
+        self.sound_pub.publish(self.sound_info)
+
 
     def play_audio(self, volume, ratio):
         cmd = 'amixer -D pulse sset Master {}%{}%'.format(volume*ratio[0], volume*ratio[1])
