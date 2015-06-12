@@ -1,0 +1,3 @@
+float64 volume
+String speech
+String file_path
