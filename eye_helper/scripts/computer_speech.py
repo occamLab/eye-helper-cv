@@ -1,12 +1,16 @@
+#!/usr/bin/env python
+
 """
 Modules/versions which provide information by playing computer speech files.
 
 """
 
 import rospy
+import rospkg
 import subprocess
 from tango_tracker import Tango_tracker
 import string
+#from eye_helper.msg import Speech
 #import Tkinter as tk
 
 class Orthogonal_distances():
@@ -20,7 +24,8 @@ class Orthogonal_distances():
         self.delay_coefficient = 0.5 #thing to change.
         self.last_played = rospy.Time.now()
         self.player = "aplay"
-        self.path = "../../GeneratedSoundFiles/computer_speech/"
+        self.rospack = rospkg.RosPack();
+        self.path = self.rospack.get_path('eye_helper') + "../GeneratedSoundFiles/computer_speech/"
         self.base_filename = "{}.wav"
         self.filename = ""
 
@@ -69,9 +74,11 @@ class Speak_3d_coords():
         self.isOn = False
         self.last_played = rospy.Time.now()
         self.player = "aplay"
-        self.path = "../../GeneratedSoundFiles/wavs/"
+        self.rospack = rospkg.RosPack();
+        self.path = self.rospack.get_path('eye_helper') + "/../GeneratedSoundFiles/wavs/"
         self.base_filename = "{}.wav"
         self.filename = ""
+
 
     def toggle(self):
         self.isOn = not self.isOn
@@ -133,8 +140,8 @@ class Speak_3d_coords():
             p = subprocess.Popen('{} {}{}.wav'.format(self.player, self.path, i), shell=True)
             p.communicate()
 
-            self.speech_info= Speech(file_path=self.filename, speech=str(i))
-            self.speech_pub.publish(self.speech_info)
+            #self.speech_info= Speech(file_path=self.filename, speech=str(i))
+            #self.speech_pub.publish(self.speech_info)
 
 
     # def run(self):
@@ -173,4 +180,9 @@ class Speak_3d_coords():
     #         popen.communicate()
 
 
-
+if __name__ == "__main__":
+    tt = Tango_tracker()
+    offset = Speak_3d_coords(tt)
+    offset.turn_on()
+    while not rospy.is_shutdown():
+        offset.call()

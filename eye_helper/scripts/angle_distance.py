@@ -1,8 +1,11 @@
+#!/usr/bin/env python
+
 """
 Contains a "version 1" eye-helper, which connects distance to frequency and angle to volume/side.
 
 """
 import rospy
+import rospkg
 import subprocess
 from tango_tracker import Tango_tracker
 from geometry_msgs.msg import PointStamped, Point
@@ -10,6 +13,7 @@ import math
 import numpy as np
 import time
 from std_msgs.msg import Header
+from eye_helper.msg import Sound
 #import Tkinter as tk
 
 class Angle_and_distance():
@@ -23,7 +27,8 @@ class Angle_and_distance():
         self.delay_coefficient = 0.5 #thing to change.
         self.last_tone = rospy.Time.now()
         self.player = "aplay"
-        self.path = "../../GeneratedSoundFiles/"
+        self.rospack = rospkg.RosPack();
+        self.path = self.rospack.get_path('eye_helper') + '/../GeneratedSoundFiles/'
         self.filename = "height4angle5.wav"
         self.sound_pub=rospy.Publisher('/sound_info', Sound, queue_size=10)
 
@@ -53,7 +58,10 @@ class Angle_and_distance():
             ratio=[0,1]
         else:
             ratio = [1,0]
-        self.play_audio(vol, ratio)
+        #self.play_audio(vol, ratio)
+
+        self.sound_info= Sound(file_path=self.path + self.filename,volume=float(vol),mix_left=float(ratio[0]),mix_right=float(ratio[1]) )
+        self.sound_pub.publish(self.sound_info)
 
     def dist_to_delay(self, tracker, coefficient, cutoff=4, reverse=False):
         """input the tracker and the coefficient. Takes the xy distance from the tracker, multiplies it by the coefficient, and returns the value - basically, the time to wait. For example, 2m -> 1m with coeff = 2 means 4s -> 2s delay."""
@@ -103,9 +111,10 @@ class Offset_angle_and_distance():
         self.right_offset = 0.0 #thing to change.
         self.last_tone = rospy.Time.now()
         self.player = "aplay"
-        self.path = "../../GeneratedSoundFiles/"
+        self.path = self.rospack.get_path('eye_helper') + '/../GeneratedSoundFiles/'
         self.filename = "height4angle5.wav"
         self.offset_target_pub = rospy.Publisher("/offset_point", PointStamped, queue_size=10)
+        self.sound_pub=rospy.Publisher('/sound_info', Sound, queue_size=10)
 
     def toggle(self):
         self.isOn = not self.isOn
@@ -180,9 +189,9 @@ class Offset_angle_and_distance():
 
 if __name__ == "__main__":
     tt = Tango_tracker()
-    offset = Offset_angle_and_distance(tt)
+    offset = Angle_and_distance(tt)
     offset.turn_on()
-    while True:
+    while not rospy.is_shutdown():
         offset.call()
 
 #hough line transform
