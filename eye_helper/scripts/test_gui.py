@@ -1,7 +1,6 @@
 """
 rough draft of a gui for rapidly switching between possible versions while codesigning.
 """
-
 import rospy
 import Tkinter as tk
 import subprocess
@@ -51,6 +50,8 @@ class Version_one():
         self.path = "../../GeneratedSoundFiles/"
         self.base_filename = "height{}angle{}.wav"
         self.filename = ""
+        self.sound_pub=rospy.Publisher('/sound_info', Sound, queue_size=10)
+        self.mix=None
 
     def toggle(self):
         self.isOn = not self.isOn
@@ -76,9 +77,15 @@ class Version_one():
         atg = self.tracker.angle_to_go
         if atg >= 0:
             self.filename = "{}height{}angle{}.wav".format(self.path, 4, 90)
+            self.mix=[100,0]
         else:
             self.filename = "{}height{}angle_{}.wav".format(self.path, 4, 90)
+            self.mix=[0,100]
+
+        self.sound_info= Sound(file_path=self.filename,volume=float(vol),mix_left=self.mix[0],mix_right=self.mix[1])
+        self.sound_pub.publish(self.sound_info)
         self.play_audio(vol)
+        
 
     def dist_to_delay(self, tracker, coefficient, cutoff=4, reverse=False):
         """input the tracker and the coefficient. Takes the xy distance from the tracker, multiplies it by the coefficient, and returns the value - basically, the time to wait. For example, 2m -> 1m with coeff = 2 means 4s -> 2s delay."""
@@ -159,12 +166,7 @@ class Version_two():
         for i in values_to_play:
             popen = subprocess.Popen('aplay {}{}.wav'.format(self.path,i), shell=True)
             popen.communicate()
-
-
-
-
-
-
+            
 
 if __name__ == "__main__":
     # tt = Tango_tracker()
