@@ -11,6 +11,7 @@ import collections
 # from image_selector import *
 # from object_matcher import *
 # import audio_player
+from eye_helper.msg import Sound
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import PoseStamped, PointStamped
 import threading 
@@ -33,7 +34,7 @@ class TangoPoseCalc():
         self.right_distance_pub = rospy.Publisher('/right_distance', Float64, queue_size=10)
 
         # New topics for Tango to publish sound info to:
-        self.sound_pub=rospy.Publisher('/sound_info', String,queue_size=10)
+        self.sound_pub=rospy.Publisher('/sound_info', Sound, queue_size=10)
 
         self.rospack = rospkg.RosPack();
         self.path = self.rospack.get_path('eye_helper') + '/../GeneratedSoundFiles/'
@@ -45,33 +46,24 @@ class TangoPoseCalc():
 
         # All initialized as None but defined in play_audio():
         self.sound_info = None
-
-    def sound_publish(self):
-        rospy.init_node('sound_played', anonymous=True)
-        rate = rospy.Rate(self.playback_interval)
-        while not rospy.is_shutdown():
-            rospy.loginfo(self.sound_info)
-            self.sound_pub.publish(self.sound_info)
-            rate.sleep()
-
-    def play_wave(self, volume, mix):
-        """
-        plays an inputted wav file
-        """
-        self.logger.publish(String(data="played audio file %s at volume %f" % (self.filename, volume)))
-        cmd = 'amixer set Master {}'.format(volume)
-        print cmd
-        popen = subprocess.Popen(cmd, shell=True)
-        popen.communicate()
-        if mix != None:
-            # need to scale this by volume as a percentage.... TODO
-            cmd = 'amixer sset Headphone {}%,{}%'.format(mix[0],mix[1])
-            popen = subprocess.Popen(cmd, shell=True)
-            popen.communicate()
-        # print self.filename
-        cmd = '{} {}'.format(self.player, self.filename)
-        popen = subprocess.Popen(cmd, shell=True)
-        popen.communicate()
+    # def play_wave(self, volume, mix):
+    #     """
+    #     plays an inputted wav file
+    #     """
+    #     self.logger.publish(String(data="played audio file %s at volume %f" % (self.filename, volume)))
+    #     cmd = 'amixer set Master {}'.format(volume)
+    #     print cmd
+    #     popen = subprocess.Popen(cmd, shell=True)
+    #     popen.communicate()
+    #     if mix != None:
+    #         # need to scale this by volume as a percentage.... TODO
+    #         cmd = 'amixer sset Headphone {}%,{}%'.format(mix[0],mix[1])
+    #         popen = subprocess.Popen(cmd, shell=True)
+    #         popen.communicate()
+    #     # print self.filename
+    #     cmd = '{} {}'.format(self.player, self.filename)
+    #     popen = subprocess.Popen(cmd, shell=True)
+    #     popen.communicate()
 
 
     def adjust_playback_interval(self,d):
@@ -92,6 +84,8 @@ class TangoPoseCalc():
         #print self.tracker.xy_distance
         print self.tracker.yaw, self.tracker.forward_distance, self.tracker.right_distance
         # print self.playback_interval
+        print rospy.Time.now(), self.last_tone, self.playback_interval
+
         if rospy.Time.now() - self.last_tone < self.playback_interval:
             return
         self.last_tone = rospy.Time.now()
@@ -145,12 +139,13 @@ class TangoPoseCalc():
                 y_to_volume[possible_y[i]]=possible_volume[i]
             desired_volume=y_to_volume[relative_y]
 
-            filename="{}height4angle15.wav".format(self.path)
-            desired_volume*=4 % rospy.get_time()
-            print "desired volume", desired_volume
-            self.play_wave(desired_volume, desired_mix)
-            self.sound_info= 'mix: ' + str(desired_mix) + ' volume: ' + str(desired_volume) + " sound path: " +str(filename) +' %s' %rospy.get_time()
-            
+            self.filename="{}height4angle15.wav".format(self.path)
+            desired_volume*=4 
+            print "desired volume", type(desired_volume)
+            # self.play_wave(desired_volume, desired_mix)
+            self.sound_info= Sound(file_path=self.filename,volume=float(desired_volume),mix_left=float(desired_mix[0]),mix_right=float(desired_mix[1]) )
+            self.sound_pub.publish(self.sound_info)
+
 if __name__ == "__main__":
     eh = TangoPoseCalc()
     r = rospy.Rate(5) # 5hz
@@ -159,8 +154,3 @@ if __name__ == "__main__":
         # eh.tango_get_angle_to_go()
         # Needs to get its targets chosen before this will work yet :P.
         eh.play_audio()
-        try:
-            eh.sound_publish()
-        except rospy.ROSInterruptException:
-            pass
-
