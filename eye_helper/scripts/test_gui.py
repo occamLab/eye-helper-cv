@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 rough draft of a gui for rapidly switching between possible versions while codesigning.
 Currently imports the classes it uses from computer_speech.py and angle_distance.py.

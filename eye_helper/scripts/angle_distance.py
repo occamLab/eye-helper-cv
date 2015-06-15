@@ -59,10 +59,10 @@ class Angle_and_distance():
             ratio=[0,1]
         else:
             ratio = [1,0]
-        #self.play_audio(vol, ratio)
+        self.play_audio(vol, ratio)
 
-        self.sound_info= Sound(file_path=self.path + self.filename,volume=float(vol),mix_left=float(ratio[0]),mix_right=float(ratio[1]) )
-        self.sound_pub.publish(self.sound_info)
+        # self.sound_info= Sound(file_path=self.path + self.filename,volume=float(vol),mix_left=float(ratio[0]),mix_right=float(ratio[1]) )
+        # self.sound_pub.publish(self.sound_info)
 
     def dist_to_delay(self, tracker, coefficient, cutoff=4, reverse=False):
         """input the tracker and the coefficient. Takes the xy distance from the tracker, multiplies it by the coefficient, and returns the value - basically, the time to wait. For example, 2m -> 1m with coeff = 2 means 4s -> 2s delay."""
