@@ -1,2 +1,2 @@
-String speech
-String file_path
+string speech
+string file_path
