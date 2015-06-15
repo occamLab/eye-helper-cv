@@ -9,6 +9,7 @@ import rospkg
 from geometry_msgs.msg import PoseStamped, PointStamped, Point32
 from sensor_msgs.msg import PointCloud
 import time
+from tf import TransformListener
 from tf.transformations import euler_from_quaternion
 from std_msgs.msg import Float64, Float64MultiArray, String
 
@@ -38,6 +39,7 @@ class Tango_tracker():
         self.target_z = None
 
         self.target_surface_slope = None
+        self.pose_timestamp = None
 
 #---------above is input; below is "output"---------
         self.xy_distance = None
@@ -71,6 +73,7 @@ class Tango_tracker():
         self.x = msg.pose.position.x - self.starting_x
         self.y = msg.pose.position.y - self.starting_y
         self.z = msg.pose.position.z - self.starting_z
+        self.pose_timestamp = msg.header.stamp
 
     def process_angle(self, msg):
         """

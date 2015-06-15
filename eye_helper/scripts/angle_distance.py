@@ -13,6 +13,7 @@ import math
 import numpy as np
 import time
 from std_msgs.msg import Header
+from tf import TransformListener
 from eye_helper.msg import Sound
 #import Tkinter as tk
 
@@ -115,6 +116,7 @@ class Offset_angle_and_distance():
         self.filename = "height4angle5.wav"
         self.offset_target_pub = rospy.Publisher("/offset_point", PointStamped, queue_size=10)
         self.sound_pub=rospy.Publisher('/sound_info', Sound, queue_size=10)
+        self.tf = TransformListener()
 
     def toggle(self):
         self.isOn = not self.isOn
@@ -154,8 +156,10 @@ class Offset_angle_and_distance():
 
         vol = min(abs(atg)*self.volume_coefficient, 40)
 
-        point_msg = PointStamped(header=Header(frame_id="depth_camera"), point=Point(y=new_target_y, z=self.tracker.target_z, x=new_target_x))
-        self.offset_target_pub.publish(point_msg)
+        point_msg = PointStamped(header=Header(stamp=self.tracker.pose_timestamp, frame_id="depth_camera"), point=Point(y=new_target_y, z=self.tracker.target_z, x=new_target_x))
+        self.tf.waitForTransform("depth_camera", "odom", self.tracker.pose_timestamp, rospy.Duration(1.0))
+        tc = self.tf.transformPoint('odom', point_msg)
+        self.offset_target_pub.publish(tc)
 
         delay = rospy.Duration(min(distance_to_target*self.delay_coefficient, 4*self.delay_coefficient))
         if rospy.Time.now() - self.last_tone < delay:
@@ -182,14 +186,9 @@ class Offset_angle_and_distance():
 
 
 
-
-
-
-        #slope is "rise over run", or "dy / dx " So, the slope points in the direction/vector of <1, slope value>  Since orthogonal is the negative reciprocal slope, that means that a vector orthogonal to the target surface is: <1, -(1/slopeval)>. Norm this, then multiply said norm vector by the offset_distance. Add/subtract/etcf that from the original x and y.
-
 if __name__ == "__main__":
     tt = Tango_tracker()
-    offset = Angle_and_distance(tt)
+    offset = Offset_angle_and_distance(tt)
     offset.turn_on()
     while not rospy.is_shutdown():
         offset.call()
