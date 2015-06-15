@@ -10,7 +10,7 @@ import rospkg
 import subprocess
 from tango_tracker import Tango_tracker
 import string
-#from eye_helper.msg import Speech
+from eye_helper.msg import Speech
 #import Tkinter as tk
 
 class Orthogonal_distances():
@@ -78,6 +78,7 @@ class Speak_3d_coords():
         self.path = self.rospack.get_path('eye_helper') + "/../GeneratedSoundFiles/wavs/"
         self.base_filename = "{}.wav"
         self.filename = ""
+        self.speech_pub=rospy.Publisher('/speech_info', Speech, queue_size=10)
 
 
     def toggle(self):
@@ -140,8 +141,8 @@ class Speak_3d_coords():
             p = subprocess.Popen('{} {}{}.wav'.format(self.player, self.path, i), shell=True)
             p.communicate()
 
-            #self.speech_info= Speech(file_path=self.filename, speech=str(i))
-            #self.speech_pub.publish(self.speech_info)
+            self.speech_info= Speech(file_path=self.path + self.filename, speech=str(i))
+            self.speech_pub.publish(self.speech_info)
 
 
     # def run(self):
