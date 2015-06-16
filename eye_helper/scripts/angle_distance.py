@@ -15,7 +15,6 @@ import time
 from std_msgs.msg import Header
 from tf import TransformListener
 from eye_helper.msg import Sound
-#import Tkinter as tk
 
 class Angle_and_distance():
     """
@@ -24,7 +23,7 @@ class Angle_and_distance():
     def __init__(self, tracker):
         self.tracker = tracker
         self.isOn = False
-        self.volume_coefficient = 1.0 #thing to change.
+        self.volume_coefficient = 3.5 #thing to change.
         self.delay_coefficient = 0.5 #thing to change.
         self.last_tone = rospy.Time.now()
         self.player = "aplay"
@@ -56,9 +55,9 @@ class Angle_and_distance():
         vol = self.angle_to_volume(self.tracker, self.volume_coefficient)
         atg = self.tracker.angle_to_go
         if atg >= 0:
-            ratio=[0,1]
+            ratio=[1,0]
         else:
-            ratio = [1,0]
+            ratio = [0,1]
         self.play_audio(vol, ratio)
 
         # self.sound_info= Sound(file_path=self.path + self.filename,volume=float(vol),mix_left=float(ratio[0]),mix_right=float(ratio[1]) )
@@ -74,7 +73,7 @@ class Angle_and_distance():
         else:
             return (cutoff * coefficient) - (xy_distance * coefficient)
 
-    def angle_to_volume(self, tracker, coefficient, max_volume=40, reverse=False):
+    def angle_to_volume(self, tracker, coefficient, max_volume=50, reverse=False):
         atg = tracker.angle_to_go
         if not reverse:
             v = abs(atg*coefficient)
@@ -89,8 +88,11 @@ class Angle_and_distance():
                 v = max_volume
             return v
 
-    def play_audio(self, volume, ratio):
-        cmd = 'amixer -D pulse sset Master {}%{}%'.format(volume*ratio[0], volume*ratio[1])
+    def play_audio(self, volume, ratio, minvol=25):
+        if volume<minvol:
+            cmd = 'amixer -D pulse sset Master {}%,{}%'.format(minvol,minvol)
+        else:
+            cmd = 'amixer -D pulse sset Master {}%,{}%'.format(volume*ratio[0], volume*ratio[1])
         popen = subprocess.Popen(cmd, shell=True)
         popen.communicate()
         cmd = "{} {}{}".format(self.player, self.path, self.filename)
@@ -112,6 +114,7 @@ class Offset_angle_and_distance():
         self.right_offset = 0.0 #thing to change.
         self.last_tone = rospy.Time.now()
         self.player = "aplay"
+        self.rospack = rospkg.RosPack()
         self.path = self.rospack.get_path('eye_helper') + '/../GeneratedSoundFiles/'
         self.filename = "height4angle5.wav"
         self.offset_target_pub = rospy.Publisher("/offset_point", PointStamped, queue_size=10)
