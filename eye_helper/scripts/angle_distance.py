@@ -119,7 +119,7 @@ class Offset_angle_and_distance():
         self.filename = "height4angle5.wav"
         self.offset_target_pub = rospy.Publisher("/offset_point", PointStamped, queue_size=10)
         self.sound_pub=rospy.Publisher('/sound_info', Sound, queue_size=10)
-        self.tf = TransformListener()
+        # self.tf = TransformListener()
 
     def toggle(self):
         self.isOn = not self.isOn
@@ -139,27 +139,32 @@ class Offset_angle_and_distance():
     def run(self):
 
         orthogonal_vector = (1.0, -(1.0/self.tracker.target_surface_slope))
+        # print orthogonal_vector
         magnitude = math.sqrt(orthogonal_vector[0]**2 + orthogonal_vector[1]**2)
         unit_v = (orthogonal_vector[0]/magnitude, orthogonal_vector[1]/magnitude)
         forward_offset_amount = (unit_v[0]*self.forward_offset, unit_v[1]*self.forward_offset)
         new_target_x = self.tracker.target_x + forward_offset_amount[0]
         new_target_y = self.tracker.target_y + forward_offset_amount[1]
-        dx = self.tracker.x - new_target_x
-        dy = self.tracker.y - new_target_y
+        # print "i think the new target is: " + str(forward_offset_amount[0])[:5] + ' x and ' + str(forward_offset_amount[1])[:5] + ' y away from the old target.'
+        xtg = new_target_x - self.tracker.x
+        ytg = new_target_y - self.tracker.y # tg = to-go.
+        # print str(xtg)[:5], str(ytg)[:5]
 
-        distance_to_target = math.sqrt(dy**2 + dy**2)
+        distance_to_target = math.sqrt(xtg**2 + ytg**2)
+        # print str(distance_to_target)[:6]
 
-        atg = math.degrees(math.atan2(dy, dx) - self.tracker.yaw)
+        atg = math.degrees(math.atan2(ytg, xtg) - self.tracker.yaw)
         max_angle = math.degrees(np.pi/2)
         if atg > max_angle:
             atg = max_angle
         elif atg < -max_angle:
             atg = -max_angle
+        print str(atg)[:6] + " degrees"
 
         vol = min(abs(atg)*self.volume_coefficient, 40)
         # point_msg_2 = PointStamped(header=Header(stamp=self.tracker.pose_timestamp, frame_id="depth_camera"), point=Point(y=new_target_y, z=self.tracker.target_z, x=new_target_x))
        
-        point_msg = PointStamped(header=Header(stamp=self.tracker.pose_timestamp, frame_id="odom"), point=Point(y=new_target_y, z=self.tracker.target_z, x=new_target_x))
+        point_msg = PointStamped(header=Header(stamp=self.tracker.pose_timestamp, frame_id="odom"), point=Point(y=new_target_y + self.tracker.starting_y, z=self.tracker.target_z, x=new_target_x + self.tracker.starting_x))
         # self.tf.waitForTransform("depth_camera", "odom", self.tracker.pose_timestamp, rospy.Duration(1.0))
         # tc = self.tf.transformPoint('odom', point_msg)
         # print tc
@@ -174,6 +179,7 @@ class Offset_angle_and_distance():
             ratio=[0,1]
         else:
             ratio=[1,0] #setting the left/right balance.
+        
         self.play_audio(vol, ratio)
 
         self.sound_info= Sound(file_path=self.filename,volume=float(vol),mix_left=float(ratio[0]),mix_right=float(ratio[1]) )
@@ -197,4 +203,4 @@ if __name__ == "__main__":
     while not rospy.is_shutdown():
         offset.call()
 
-#hough line transform
+#todo: look into hough line transform
