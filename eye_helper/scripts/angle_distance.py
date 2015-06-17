@@ -110,7 +110,7 @@ class Offset_angle_and_distance():
         self.isOn = False
         self.volume_coefficient = 1.0 #thing to change.
         self.delay_coefficient = 0.5 #thing to change.
-        self.forward_offset = 0.5 #thing to change.
+        self.forward_offset = -0.5 #thing to change.
         self.right_offset = 0.0 #thing to change.
         self.last_tone = rospy.Time.now()
         self.player = "aplay"
@@ -138,11 +138,10 @@ class Offset_angle_and_distance():
 
     def run(self):
 
-
         orthogonal_vector = (1.0, -(1.0/self.tracker.target_surface_slope))
         magnitude = math.sqrt(orthogonal_vector[0]**2 + orthogonal_vector[1]**2)
-        normal_orthogonal_vector = (orthogonal_vector[0]/magnitude, orthogonal_vector[1]/magnitude)
-        forward_offset_amount = (normal_orthogonal_vector[0]*self.forward_offset, normal_orthogonal_vector[1]*self.forward_offset)
+        unit_v = (orthogonal_vector[0]/magnitude, orthogonal_vector[1]/magnitude)
+        forward_offset_amount = (unit_v[0]*self.forward_offset, unit_v[1]*self.forward_offset)
         new_target_x = self.tracker.target_x + forward_offset_amount[0]
         new_target_y = self.tracker.target_y + forward_offset_amount[1]
         dx = self.tracker.x - new_target_x
@@ -158,11 +157,13 @@ class Offset_angle_and_distance():
             atg = -max_angle
 
         vol = min(abs(atg)*self.volume_coefficient, 40)
-
-        point_msg = PointStamped(header=Header(stamp=self.tracker.pose_timestamp, frame_id="depth_camera"), point=Point(y=new_target_y, z=self.tracker.target_z, x=new_target_x))
-        self.tf.waitForTransform("depth_camera", "odom", self.tracker.pose_timestamp, rospy.Duration(1.0))
-        tc = self.tf.transformPoint('odom', point_msg)
-        self.offset_target_pub.publish(tc)
+        # point_msg_2 = PointStamped(header=Header(stamp=self.tracker.pose_timestamp, frame_id="depth_camera"), point=Point(y=new_target_y, z=self.tracker.target_z, x=new_target_x))
+       
+        point_msg = PointStamped(header=Header(stamp=self.tracker.pose_timestamp, frame_id="odom"), point=Point(y=new_target_y, z=self.tracker.target_z, x=new_target_x))
+        # self.tf.waitForTransform("depth_camera", "odom", self.tracker.pose_timestamp, rospy.Duration(1.0))
+        # tc = self.tf.transformPoint('odom', point_msg)
+        # print tc
+        self.offset_target_pub.publish(point_msg)
 
         delay = rospy.Duration(min(distance_to_target*self.delay_coefficient, 4*self.delay_coefficient))
         if rospy.Time.now() - self.last_tone < delay:

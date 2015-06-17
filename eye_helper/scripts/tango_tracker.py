@@ -41,6 +41,7 @@ class Tango_tracker():
         self.target_surface_slope = None
         self.pose_timestamp = None
 
+
 #---------above is input; below is "output"---------
         self.xy_distance = None
         self.z_distance = None
@@ -58,6 +59,7 @@ class Tango_tracker():
         rospy.Subscriber('/nearby_cloud', PointCloud, self.process_points_near_target)
         self.logger = rospy.Publisher('/log', String, queue_size=10)
         self.rospack = rospkg.RosPack();
+        self.tf = TransformListener()
         self.path = self.rospack.get_path('eye_helper') + '/../GeneratedSoundFiles/'
 
 #---------------PROCESS-INPUTS--------------------
@@ -85,6 +87,8 @@ class Tango_tracker():
 
     def process_points_near_target(self, msg):
         points = msg.points
+        # self.tf.waitForTransform("depth_camera", "odom", self.pose_timestamp, rospy.Duration(1.0))
+        # transformed_points = [self.tf.transformPoint('odom', i) for i in points]
         xvals = [i.x for i in points]
         yvals = [i.y for i in points]
         zvals = [i.z for z in points]
