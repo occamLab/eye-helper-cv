@@ -110,8 +110,8 @@ class Offset_angle_and_distance():
         self.isOn = False
         self.volume_coefficient = 1.0 #thing to change.
         self.delay_coefficient = 0.5 #thing to change.
-        self.forward_offset = -0.5 #thing to change.
-        self.right_offset = 0.0 #thing to change.
+        self.forward_offset = -0.6 #thing to change.
+        self.right_offset = -0.3 #thing to change.
         self.last_tone = rospy.Time.now()
         self.player = "aplay"
         self.rospack = rospkg.RosPack()
@@ -137,21 +137,25 @@ class Offset_angle_and_distance():
                 self.run()
 
     def run(self):
-
-        orthogonal_vector = (1.0, -(1.0/self.tracker.target_surface_slope))
-        # print orthogonal_vector
-        magnitude = math.sqrt(orthogonal_vector[0]**2 + orthogonal_vector[1]**2)
-        unit_v = (orthogonal_vector[0]/magnitude, orthogonal_vector[1]/magnitude)
-        forward_offset_amount = (unit_v[0]*self.forward_offset, unit_v[1]*self.forward_offset)
-        new_target_x = self.tracker.target_x + forward_offset_amount[0]
-        new_target_y = self.tracker.target_y + forward_offset_amount[1]
-        # print "i think the new target is: " + str(forward_offset_amount[0])[:5] + ' x and ' + str(forward_offset_amount[1])[:5] + ' y away from the old target.'
+        parallel_v = (1.0, self.tracker.target_surface_slope)
+        ortho_v = (1.0, -(1.0/self.tracker.target_surface_slope)) 
+        parallel_mag = math.sqrt(parallel_v[0]**2 + parallel_v[1]**2)
+        ortho_mag = math.sqrt(ortho_v[0]**2 + ortho_v[1]**2)
+        unit_parallel = (parallel_v[0]/parallel_mag, parallel_v[1]/parallel_mag)
+        unit_ortho = (ortho_v[0]/ortho_mag, ortho_v[1]/ortho_mag)
+        forward_offset_amount = (unit_ortho[0]*self.forward_offset, unit_ortho[1]*self.forward_offset)
+        right_offset_amount = (unit_parallel[0]*self.right_offset, unit_parallel[1]*self.right_offset)
+        if self.tracker.target_x > self.tracker.x:
+            new_target_x = self.tracker.target_x - forward_offset_amount[0]
+        else:
+            new_target_x = self.tracker.target_x + forward_offset_amount[0]
+            
+        new_target_x = self.tracker.target_x + forward_offset_amount[0] + right_offset_amount[0]
+        new_target_y = self.tracker.target_y + forward_offset_amount[1] + right_offset_amount[1]
         xtg = new_target_x - self.tracker.x
         ytg = new_target_y - self.tracker.y # tg = to-go.
-        # print str(xtg)[:5], str(ytg)[:5]
 
         distance_to_target = math.sqrt(xtg**2 + ytg**2)
-        # print str(distance_to_target)[:6]
 
         atg = math.degrees(math.atan2(ytg, xtg) - self.tracker.yaw)
         max_angle = math.degrees(np.pi/2)
@@ -162,17 +166,14 @@ class Offset_angle_and_distance():
         print str(atg)[:6] + " degrees"
 
         vol = min(abs(atg)*self.volume_coefficient, 40)
-        # point_msg_2 = PointStamped(header=Header(stamp=self.tracker.pose_timestamp, frame_id="depth_camera"), point=Point(y=new_target_y, z=self.tracker.target_z, x=new_target_x))
        
         point_msg = PointStamped(header=Header(stamp=self.tracker.pose_timestamp, frame_id="odom"), point=Point(y=new_target_y + self.tracker.starting_y, z=self.tracker.target_z, x=new_target_x + self.tracker.starting_x))
-        # self.tf.waitForTransform("depth_camera", "odom", self.tracker.pose_timestamp, rospy.Duration(1.0))
-        # tc = self.tf.transformPoint('odom', point_msg)
-        # print tc
         self.offset_target_pub.publish(point_msg)
 
         delay = rospy.Duration(min(distance_to_target*self.delay_coefficient, 4*self.delay_coefficient))
         if rospy.Time.now() - self.last_tone < delay:
             return
+
         self.last_tone = rospy.Time.now()
 
         if atg >= 0:
@@ -187,7 +188,7 @@ class Offset_angle_and_distance():
 
 
     def play_audio(self, volume, ratio):
-        cmd = 'amixer -D pulse sset Master {}%{}%'.format(volume*ratio[0], volume*ratio[1])
+        cmd = 'amixer -D pulse sset Master {}%,{}%'.format(volume*ratio[0], volume*ratio[1])
         popen = subprocess.Popen(cmd, shell=True)
         popen.communicate()
         cmd = "{} {}{}".format(self.player, self.path, self.filename)

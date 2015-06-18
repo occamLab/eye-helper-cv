@@ -19,8 +19,9 @@ class Controller(tk.Frame):
 
     def createWidgets(self):
         dc = 1.00
-        self.m1_dc = tk.Scale(self, label="beep frequency coefficient", variable=dc, from_=0.1, to=1.0, resolution=0.1)
+        self.m1_dc = tk.Scale(self, label="beep frequency coefficient", variable=dc, from_=0.1, to=1.0, resolution=0.1, orient=tk.HORIZONTAL, )
         self.m1_dc.grid()
+        self.m1_dc.set(0.5)
         self.on_m1 = tk.Button(self, text="angle beeps on", command=self.m[0].turn_on)
         self.on_m1.grid()
         self.off_m1 = tk.Button(self, text="angle beeps off", command=self.m[0].turn_off)
