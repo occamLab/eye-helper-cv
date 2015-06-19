@@ -23,7 +23,8 @@ class Angle_and_distance():
     def __init__(self, tracker):
         self.tracker = tracker
         self.isOn = False
-        self.volume_coefficient = 3.5 #thing to change.
+        self.volume_coefficient = 2 #thing to change.
+        self.minimum_volume = 15 #thing to change.
         self.delay_coefficient = 0.5 #thing to change.
         self.last_tone = rospy.Time.now()
         self.player = "aplay"
@@ -54,14 +55,22 @@ class Angle_and_distance():
         self.last_tone = rospy.Time.now()
         vol = self.angle_to_volume(self.tracker, self.volume_coefficient)
         atg = self.tracker.angle_to_go
+        # print '============================\n==========================='
+        # print math.degrees(self.tracker.yaw)
+        # print '=============================\n=============================='
         if atg >= 0:
             ratio=[1,0]
         else:
             ratio = [0,1]
+        if abs(atg) * self.volume_coefficient < self.minimum_volume:
+            vol = self.minimum_volume
+            ratio = [1,1]
+
         self.play_audio(vol, ratio)
 
-        # self.sound_info= Sound(file_path=self.path + self.filename,volume=float(vol),mix_left=float(ratio[0]),mix_right=float(ratio[1]) )
-        # self.sound_pub.publish(self.sound_info)
+        self.sound_info= Sound(file_path=self.path + self.filename,volume=float(vol),mix_left=float(ratio[0]),mix_right=float(ratio[1]) )
+        self.sound_pub.publish(self.sound_info)
+
 
     def dist_to_delay(self, tracker, coefficient, cutoff=4, reverse=False):
         """input the tracker and the coefficient. Takes the xy distance from the tracker, multiplies it by the coefficient, and returns the value - basically, the time to wait. For example, 2m -> 1m with coeff = 2 means 4s -> 2s delay."""
@@ -73,7 +82,7 @@ class Angle_and_distance():
         else:
             return (cutoff * coefficient) - (xy_distance * coefficient)
 
-    def angle_to_volume(self, tracker, coefficient, max_volume=50, reverse=False):
+    def angle_to_volume(self, tracker, coefficient, max_volume=40, reverse=False):
         atg = tracker.angle_to_go
         if not reverse:
             v = abs(atg*coefficient)
@@ -88,11 +97,9 @@ class Angle_and_distance():
                 v = max_volume
             return v
 
-    def play_audio(self, volume, ratio, minvol=25):
-        if volume<minvol:
-            cmd = 'amixer -D pulse sset Master {}%,{}%'.format(minvol,minvol)
-        else:
-            cmd = 'amixer -D pulse sset Master {}%,{}%'.format(volume*ratio[0], volume*ratio[1])
+    def play_audio(self, volume, ratio):
+
+        cmd = 'amixer -D pulse sset Master {}%,{}%'.format(volume*ratio[0], volume*ratio[1])
         popen = subprocess.Popen(cmd, shell=True)
         popen.communicate()
         cmd = "{} {}{}".format(self.player, self.path, self.filename)

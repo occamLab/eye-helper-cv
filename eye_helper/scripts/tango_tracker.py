@@ -113,13 +113,24 @@ class Tango_tracker():
         self.z_distance = self.target_z - self.z
 
     def refresh_angle(self):
-        max_angle = math.degrees(np.pi / 2)
-        min_angle = -max_angle
+        max_angle = 90 #degrees
+        min_angle = -90 #degrees
+        # xy_angle_to_target = math.degrees(math.atan2(self.target_y - self.y, self.target_x - self.x)) #-180 to 180
+        # yaw_deg = math.degrees(self.yaw) #also -180 to 180
         atg = math.degrees(math.atan2(self.target_y-self.y, self.target_x-self.x) - self.yaw)
-        if atg < min_angle:
-            atg = min_angle
-        elif atg > max_angle:
-            atg = max_angle
+        if 90 < atg <= 180:
+            atg = 90
+        elif 180 < atg <= 270:
+            atg = -90
+        elif 270 < atg <= 360:
+            atg = 360 - atg
+        elif -360 < atg <= -270:
+            atg = atg + 360
+        elif -270 < atg <= -180:
+            atg = 90
+        elif -180 < atg <= -90:
+            atg = -90
+
         self.angle_to_go = atg
 
     def refresh_orthogonal_distances(self):
