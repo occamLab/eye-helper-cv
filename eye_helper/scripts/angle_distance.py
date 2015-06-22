@@ -162,7 +162,6 @@ class Offset_angle_and_distance():
             atg = max_angle
         elif atg < -max_angle:
             atg = -max_angle
-        print str(atg)[:6] + " degrees"
 
         vol = min(abs(atg)*self.volume_coefficient, 40)
        
