@@ -195,7 +195,6 @@ class Offset_angle_and_distance():
         self.sound_info= Sound(file_path=self.filename,volume=float(vol),mix_left=float(ratio[0]),mix_right=float(ratio[1]) )
         self.sound_pub.publish(self.sound_info)
 
-
     def play_audio(self, volume, ratio):
         cmd = 'amixer -D pulse sset Master {}%,{}%'.format(volume*ratio[0], volume*ratio[1])
         popen = subprocess.Popen(cmd, shell=True)
