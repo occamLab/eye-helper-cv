@@ -55,9 +55,6 @@ class Angle_and_distance():
         self.last_tone = rospy.Time.now()
         vol = self.angle_to_volume(self.tracker, self.volume_coefficient)
         atg = self.tracker.angle_to_go
-        # print '============================\n==========================='
-        # print math.degrees(self.tracker.yaw)
-        # print '=============================\n=============================='
         if atg >= 0:
             ratio=[1,0]
         else:
@@ -116,6 +113,8 @@ class Offset_angle_and_distance():
         self.tracker = tracker
         self.isOn = False
         self.volume_coefficient = 1.0 #thing to change.
+        self.max_volume = 40
+        self.min_volume = 15
         self.delay_coefficient = 0.5 #thing to change.
         self.forward_offset = -0.6 #thing to change.
         self.right_offset = -0.3 #thing to change.
@@ -184,10 +183,13 @@ class Offset_angle_and_distance():
         self.last_tone = rospy.Time.now()
 
         if atg >= 0:
-            ratio=[0,1]
+            ratio=[1,0]
         else:
-            ratio=[1,0] #setting the left/right balance.
-        
+            ratio = [0,1]
+        if abs(atg) * self.volume_coefficient < self.minimum_volume:
+            vol = self.minimum_volume
+            ratio = [1,1]
+
         self.play_audio(vol, ratio)
 
         self.sound_info= Sound(file_path=self.filename,volume=float(vol),mix_left=float(ratio[0]),mix_right=float(ratio[1]) )
