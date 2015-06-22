@@ -32,9 +32,11 @@ class Speak_3d_directions():
 
     def toggle(self):
         self.isOn = not self.isOn
+        print 'self is on'
 
     def turn_on(self):
         self.isOn = True
+        print 'self is on'
 
     def turn_off(self):
         self.isOn = False
@@ -49,6 +51,7 @@ class Speak_3d_directions():
     def run(self):
         # if rospy.Time.now() - self.last_played < rospy.Duration(10):
             # return
+        print 'running'
         self.last_played = rospy.Time.now()
         fd_signed = self.tracker.forward_distance
         fd = abs(fd_signed)
@@ -64,15 +67,17 @@ class Speak_3d_directions():
         print atg
 
 
-        if fd_signed> 0.6 and rd_signed> 0.4:
+        if fd_signed> 0.7 and rd_signed> 0.4:
             values_to_play.append('forward_right')
-        elif fd_signed> 0.6 and rd_signed< -0.4:
+        elif fd_signed> 0.7 and rd_signed< -0.4:
             values_to_play.append('forward_left')
-        elif fd_signed> 0.6 and rd < 0.4:
+        elif fd_signed> 0.7 and rd < 0.4:
             values_to_play.append('forward')
-        elif fd < 0.6 and rd_signed > 0.4:
+        # elif fd_signed<0.0:
+        #     values_to_play.append('turn_back')
+        elif fd < 0.7 and rd_signed > 0.4:
             values_to_play.append('right')
-        elif fd < 0.6 and rd_signed < -0.4:
+        elif fd < 0.7 and rd_signed < -0.4:
             values_to_play.append('left')
         elif fd_signed <= 0.6 and rd<= 0.4:
             if atg>-8 and atg<8:
@@ -83,16 +88,25 @@ class Speak_3d_directions():
                 values_to_play.append('20left')
             if atg>=25 and atg<35:
                 values_to_play.append('30left')
-            if atg>=35:
+            if atg>=35 and atg<45:
                 values_to_play.append('40left')
+            # if atg>=45 and atg<55:
+            #     values_to_play.append('50left')
+            # if atg>=55 and atg<65:
+            #     values_to_play.append('60left')
             if atg<=-8 and atg>-15:
                 values_to_play.append('10right')
             if atg<=-15 and atg>-25.:
                 values_to_play.append('20right')
             if atg<=-25 and atg>-35:
                 values_to_play.append('30right')
-            if atg<=-35:
+            if atg<=-35 and atg>-45:
                 values_to_play.append('40right')
+            # if atg<=-45 and atg>-55:
+            #     values_to_play.append('50right')
+            # if atg<=-55 and atg>-65:
+            #     values_to_play.append('60right')
+
 
 
 

@@ -31,7 +31,7 @@ class Controller(tk.Frame):
         self.on_m2.grid()
         self.off_m2 = tk.Button(self, text='3d speech off', command=self.m[1].turn_off)
         self.off_m2.grid()
-        self.off_m3= tk.Button(self, text='Directional speech on', command=self.m[2].turn_off)
+        self.off_m3= tk.Button(self, text='Directional speech on', command=self.m[2].turn_on)
         self.off_m3.grid()
         self.off_m3 = tk.Button(self, text='Directional speech off', command=self.m[2].turn_off)
         self.off_m3.grid()
