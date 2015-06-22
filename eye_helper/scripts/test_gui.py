@@ -8,6 +8,7 @@ import Tkinter as tk
 import subprocess
 from tango_tracker import Tango_tracker
 from computer_speech import Speak_3d_coords
+from computer_speech2 import Speak_3d_directions
 from angle_distance import Angle_and_distance, Offset_angle_and_distance
 
 class Controller(tk.Frame):
@@ -30,6 +31,10 @@ class Controller(tk.Frame):
         self.on_m2.grid()
         self.off_m2 = tk.Button(self, text='3d speech off', command=self.m[1].turn_off)
         self.off_m2.grid()
+        self.off_m3= tk.Button(self, text='Directional speech on', command=self.m[2].turn_off)
+        self.off_m3.grid()
+        self.off_m3 = tk.Button(self, text='Directional speech off', command=self.m[2].turn_off)
+        self.off_m3.grid()
         self.quit_button = tk.Button(self, text="Quit",command=self.quit)
         self.quit_button.grid()
 
@@ -46,7 +51,8 @@ if __name__ == "__main__":
     tt = Tango_tracker()
     v1 = Angle_and_distance(tt)
     v2 = Speak_3d_coords(tt)
-    control = Controller([v1, v2])
+    v3 = Speak_3d_directions(tt)
+    control = Controller([v1, v2, v3])
     control.master.title("Testing GUI")
     control.after(100, control.call_all)
     control.mainloop()
