@@ -25,7 +25,8 @@ class Angle_and_distance():
         self.isOn = False
         self.volume_coefficient = 2 #thing to change.
         self.minimum_volume = 15 #thing to change.
-        self.delay_coefficient = 0.5 #thing to change.
+        self.max_volume = 40 #thing to change.
+        self.delay_coefficient = 0.5 #thing to change
         self.last_tone = rospy.Time.now()
         self.player = "aplay"
         self.rospack = rospkg.RosPack();
@@ -62,6 +63,8 @@ class Angle_and_distance():
         if abs(atg) * self.volume_coefficient < self.minimum_volume:
             vol = self.minimum_volume
             ratio = [1,1]
+        elif abs(atg) * self.volume_coefficient > self.max_volume:
+            vol = self.max_volume
 
         self.play_audio(vol, ratio)
 
@@ -79,23 +82,13 @@ class Angle_and_distance():
         else:
             return (cutoff * coefficient) - (xy_distance * coefficient)
 
-    def angle_to_volume(self, tracker, coefficient, max_volume=40, reverse=False):
+    def angle_to_volume(self, tracker, coefficient):
         atg = tracker.angle_to_go
-        if not reverse:
-            v = abs(atg*coefficient)
-            if v > max_volume:
-                v = max_volume
-            return v
-        else:
-            v = max_volume - (coefficient*atg)
-            if v < 0:
-                v = 0
-            elif v > max_volume:
-                v = max_volume
-            return v
+        v = abs(atg*coefficient)
+        return v
+
 
     def play_audio(self, volume, ratio):
-
         cmd = 'amixer -D pulse sset Master {}%,{}%'.format(volume*ratio[0], volume*ratio[1])
         popen = subprocess.Popen(cmd, shell=True)
         popen.communicate()
