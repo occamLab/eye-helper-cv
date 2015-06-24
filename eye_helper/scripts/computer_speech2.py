@@ -46,8 +46,6 @@ class Speak_3d_directions():
 
 
     def run(self):
-        # if rospy.Time.now() - self.last_played < rospy.Duration(10):
-            # return
 
         self.last_played = rospy.Time.now()
         fd_signed = self.tracker.forward_distance
@@ -58,11 +56,10 @@ class Speak_3d_directions():
         zd = abs(zd_signed)
         height_signed = self.tracker.pitch * 57.2957795
         height= abs(height_signed)
-
+        atg = self.tracker.angle_to_go
         values_to_play = []
         cmds = []
-
-        atg = self.tracker.angle_to_go
+        
 
 #==================================================== FORWARD - BACK MAPPING ================================================================================
 
@@ -72,8 +69,6 @@ class Speak_3d_directions():
             values_to_play.append('forward_left')
         elif fd_signed> 0.7 and rd < 0.4:
             values_to_play.append('forward')
-        # elif fd_signed<0.0:
-        #     values_to_play.append('turn_back')
         elif fd < 0.7 and rd_signed > 0.4:
             values_to_play.append('right')
         elif fd < 0.7 and rd_signed < -0.4:
@@ -105,25 +100,6 @@ class Speak_3d_directions():
                 values_to_play.append('40'+s)
             if abs(atg)> 42.5 and abs(atg) <= 47.5:
                 values_to_play.append('45'+s)
-
-
-            # if atg>=8 and atg<15:
-            #     values_to_play.append('10left')
-            # if atg>=15 and atg<25.:
-            #     values_to_play.append('20left')
-            # if atg>=25 and atg<35:
-            #     values_to_play.append('30left')
-            # if atg>=35 and atg<45:
-            #     values_to_play.append('40left')
-            # if atg<=-8 and atg>-15:
-            #     values_to_play.append('10right')
-            # if atg<=-15 and atg>-25.:
-            #     values_to_play.append('20right')
-            # if atg<=-25 and atg>-35:
-            #     values_to_play.append('30right')
-            # if atg<=-35 and atg>-45:
-            #     values_to_play.append('40right')
-            # if 
 
 # ============================================== UP - DOWN MAPPING =============================================================================================
 
