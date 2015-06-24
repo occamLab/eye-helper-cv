@@ -132,8 +132,6 @@ class Speak_3d_directions():
                 values_to_play.append('60'+h)
 
 # ============================================= PLAYING SOUND FILES TO SPEAK ===================================================================================
-        cmds.append("".join(values_to_play))
-
         p = subprocess.Popen('amixer -D pulse sset Master 30%', shell=True)
         p.communicate()
 
