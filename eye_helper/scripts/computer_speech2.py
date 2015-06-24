@@ -2,7 +2,6 @@
 
 """
 Modules/versions which provide information by playing computer speech files.
-
 """
 
 import rospy
@@ -32,11 +31,9 @@ class Speak_3d_directions():
 
     def toggle(self):
         self.isOn = not self.isOn
-        print 'self is on'
 
     def turn_on(self):
         self.isOn = True
-        print 'self is on'
 
     def turn_off(self):
         self.isOn = False
@@ -51,7 +48,7 @@ class Speak_3d_directions():
     def run(self):
         # if rospy.Time.now() - self.last_played < rospy.Duration(10):
             # return
-        print 'running'
+
         self.last_played = rospy.Time.now()
         fd_signed = self.tracker.forward_distance
         fd = abs(fd_signed)
@@ -59,13 +56,15 @@ class Speak_3d_directions():
         rd = abs(rd_signed)
         zd_signed = self.tracker.z_distance
         zd = abs(zd_signed)
+        height_signed = self.tracker.pitch * 57.2957795
+        height= abs(height_signed)
 
         values_to_play = []
         cmds = []
 
         atg = self.tracker.angle_to_go
-        print atg
 
+#==================================================== FORWARD - BACK MAPPING ================================================================================
 
         if fd_signed> 0.7 and rd_signed> 0.4:
             values_to_play.append('forward_right')
@@ -80,37 +79,56 @@ class Speak_3d_directions():
         elif fd < 0.7 and rd_signed < -0.4:
             values_to_play.append('left')
         elif fd_signed <= 0.6 and rd<= 0.4:
-            if atg>-8 and atg<8:
+            if atg>-3 and atg<3:
                 values_to_play.append('reach_forward')
-            if atg>=8 and atg<15:
-                values_to_play.append('10left')
-            if atg>=15 and atg<25.:
-                values_to_play.append('20left')
-            if atg>=25 and atg<35:
-                values_to_play.append('30left')
-            if atg>=35 and atg<45:
-                values_to_play.append('40left')
-            # if atg>=45 and atg<55:
-            #     values_to_play.append('50left')
-            # if atg>=55 and atg<65:
-            #     values_to_play.append('60left')
-            if atg<=-8 and atg>-15:
-                values_to_play.append('10right')
-            if atg<=-15 and atg>-25.:
-                values_to_play.append('20right')
-            if atg<=-25 and atg>-35:
-                values_to_play.append('30right')
-            if atg<=-35 and atg>-45:
-                values_to_play.append('40right')
-            # if atg<=-45 and atg>-55:
-            #     values_to_play.append('50right')
-            # if atg<=-55 and atg>-65:
-            #     values_to_play.append('60right')
-        
+
+# ============================================== RIGHT - LEFT MAPPING =========================================================================================
+            if atg<0:
+                s='right'
+            if atg>0:
+                s='left'
+            if abs(atg)> 3 and abs(atg) <= 7.5:
+                values_to_play.append('5'+s)
+            if abs(atg)> 7.5 and abs(atg) <= 12.5:
+                values_to_play.append('10'+s)
+            if abs(atg)> 12.5 and abs(atg) <= 17.5:
+                values_to_play.append('15'+s)
+            if abs(atg)> 17.5 and abs(atg) <= 22.5:
+                values_to_play.append('20'+s)
+            if abs(atg)>22.5 and abs(atg) <= 27.5:
+                values_to_play.append('25'+s)
+            if abs(atg)> 27.5 and abs(atg) <= 32.5:
+                values_to_play.append('30'+s)
+            if abs(atg)> 32.5 and abs(atg) <= 37.5:
+                values_to_play.append('35'+s)
+            if abs(atg)> 37.5 and abs(atg) <= 42.5:
+                values_to_play.append('40'+s)
+            if abs(atg)> 42.5 and abs(atg) <= 47.5:
+                values_to_play.append('45'+s)
 
 
+            # if atg>=8 and atg<15:
+            #     values_to_play.append('10left')
+            # if atg>=15 and atg<25.:
+            #     values_to_play.append('20left')
+            # if atg>=25 and atg<35:
+            #     values_to_play.append('30left')
+            # if atg>=35 and atg<45:
+            #     values_to_play.append('40left')
+            # if atg<=-8 and atg>-15:
+            #     values_to_play.append('10right')
+            # if atg<=-15 and atg>-25.:
+            #     values_to_play.append('20right')
+            # if atg<=-25 and atg>-35:
+            #     values_to_play.append('30right')
+            # if atg<=-35 and atg>-45:
+            #     values_to_play.append('40right')
+            # if 
+
+# ============================================== UP - DOWN MAPPING =============================================================================================
 
 
+# ============================================= PLAYING SOUND FILES TO SPEAK ===================================================================================
         cmds.append("".join(values_to_play))
 
         p = subprocess.Popen('amixer -D pulse sset Master 30%', shell=True)
