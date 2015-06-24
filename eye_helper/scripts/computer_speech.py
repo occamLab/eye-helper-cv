@@ -103,10 +103,6 @@ class Speak_3d_coords():
         self.last_played = rospy.Time.now()
         fd_signed = self.tracker.forward_distance
         fd = abs(fd_signed)
-        rd_signed = self.tracker.right_distance
-        rd = abs(rd_signed)
-        zd_signed = self.tracker.z_distance
-        zd = abs(zd_signed)
 
         values_to_play = []
         cmds = []
@@ -116,22 +112,27 @@ class Speak_3d_coords():
         else:
             values_to_play.append('ba')
         cmds.append("".join(values_to_play))
+
         values_to_play = []
+        rd_signed = self.tracker.right_distance
+        rd = abs(rd_signed)
         values_to_play.append(str(rd)[0]+'p'+str(rd)[2]+'m')
         if rd_signed >= 0:
             values_to_play.append('ra')
         else:
             values_to_play.append('la')
         cmds.append("".join(values_to_play))
-        values_to_play = []
 
+        # values_to_play = []
+        # zd_signed = self.tracker.z_distance
+        # zd = abs(zd_signed)
         # values_to_play.append(str(zd)[0]+'p'+str(zd)[2]+'m')
         # if zd_signed >= 0:
         #     values_to_play.append('u')
         # else:
         #     values_to_play.append('d')
         # cmds.append("".join(values_to_play))
-        # values_to_play = []
+        
 
         p = subprocess.Popen('amixer -D pulse sset Master 30%', shell=True)
         p.communicate()

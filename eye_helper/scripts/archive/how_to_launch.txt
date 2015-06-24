@@ -1,0 +1,9 @@
+roscore
+roslaunch tango_streamer stream.launch
+cd catkin_ws/src/tango_ros_bridge
+rosparam set use_depth_only True
+rosrun tango_streamer make_depth_image.py
+
+[to test: rostopic echo /clicked_point]
+
+[after that, the eye-helper scripts thingie's tango_pose_calc.py can be used.]
