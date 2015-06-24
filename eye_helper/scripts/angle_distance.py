@@ -23,6 +23,7 @@ class Angle_and_distance():
     def __init__(self, tracker):
         self.tracker = tracker
         self.isOn = False
+        self.reverse = True #thing to change - changes whether sound-in-right-ear means move *to*, or *away from* the right.
         self.volume_coefficient = 2 #thing to change.
         self.minimum_volume = 15 #thing to change.
         self.max_volume = 40 #thing to change.
@@ -56,10 +57,16 @@ class Angle_and_distance():
         self.last_tone = rospy.Time.now()
         vol = self.angle_to_volume(self.tracker, self.volume_coefficient)
         atg = self.tracker.angle_to_go
-        if atg >= 0:
-            ratio=[1,0]
+        if self.reverse:
+            if atg >= 0:
+                ratio = [0,1]
+            else:
+                ratio = [1,0]
         else:
-            ratio = [0,1]
+            if atg >= 0:
+                ratio=[1,0]
+            else:
+                ratio = [0,1]
         if abs(atg) * self.volume_coefficient < self.minimum_volume:
             vol = self.minimum_volume
             ratio = [1,1]
@@ -105,9 +112,10 @@ class Offset_angle_and_distance():
     def __init__(self, tracker):
         self.tracker = tracker
         self.isOn = False
+        self.reverse = True
         self.volume_coefficient = 1.0 #thing to change.
         self.max_volume = 40
-        self.min_volume = 15
+        self.minimum_volume = 15
         self.delay_coefficient = 0.5 #thing to change.
         self.forward_offset = -0.6 #thing to change.
         self.right_offset = -0.3 #thing to change.
@@ -174,10 +182,16 @@ class Offset_angle_and_distance():
 
         self.last_tone = rospy.Time.now()
 
-        if atg >= 0:
-            ratio=[1,0]
+        if self.reverse:
+            if atg >= 0:
+                ratio = [0,1]
+            else:
+                ratio = [1,0]
         else:
-            ratio = [0,1]
+            if atg >= 0:
+                ratio=[1,0]
+            else:
+                ratio = [0,1]
         if abs(atg) * self.volume_coefficient < self.minimum_volume:
             vol = self.minimum_volume
             ratio = [1,1]
