@@ -21,6 +21,7 @@ class Speak_3d_directions():
         self.tracker = tracker
         self.isOn = False
         self.last_played = rospy.Time.now()
+        self.delay = rospy.Duration(0)
         self.player = "aplay"
         self.rospack = rospkg.RosPack();
         self.path = self.rospack.get_path('eye_helper') + "/../GeneratedSoundFiles/wavs/wavs2/"
@@ -47,7 +48,9 @@ class Speak_3d_directions():
 
     def run(self):
 
-        self.last_played = rospy.Time.now()
+        if rospy.Time.now() - self.last_played < self.delay:
+            return
+
         fd_signed = self.tracker.forward_distance
         fd = abs(fd_signed)
         rd_signed = self.tracker.right_distance
@@ -117,6 +120,13 @@ class Speak_3d_directions():
 
             self.speech_info= Speech(file_path=self.path + self.filename, speech=str(i))
             self.speech_pub.publish(self.speech_info)
+
+        self.last_played = rospy.Time.now()
+
+        if "reach_forward" in values_to_play:
+            self.delay = rospy.Duration(.4)
+        else:
+            self.delay = rospy.Duration(0)
 
 if __name__ == "__main__":
     tt = Tango_tracker()
