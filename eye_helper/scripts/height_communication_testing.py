@@ -55,19 +55,27 @@ class Body_mapping():
     """
     Tries to approximate the corresponding __-level.
     """
-    def __init__(self, tracker, height=1.69, parts=None):
+    def __init__(self, tracker, height=1.68, parts=None, proportion=None, tango_height=1):
         """
         height is in meters, for now. we could convert if that's easier though.
-        1.69 meters is average-ish for u.s. adult height.
-        parts is a list or tuple of the height of the knee, waist, chest, chin, and eyes. It defaults to none, in which case it uses the normal proportions for people times the selecteds height. 
+        1.68 meters is average-ish for u.s. adult height.
+        parts is a dict of the height of the knee, hip, elbow, shoulder, and eyes. It defaults to none, in which case it uses the normal proportions for people times the selecteds height. 
+        Parts takes precedence over proportion, but only one's really useful at once.
+        Tango height is what it sounds like.
         """
         self.tracker = tracker
         self.isOn = False
+
         self.height = height
-        if self.parts != None:
+        self.tango_height = tango_height
+        if parts != None:
             self.parts = parts
+        elif proportion != None:
+            self.parts = {i: self.height*proportion[i] for i in proportion}
         else:
-            self.parts = 
+            proportion = {"eye": 0.938, "shoulder": 0.825, "elbow": 0.63, "hip": 0.522, "knee": 0.336}
+            self.parts = {i: self.height*proportion[i] for i in proportion}
+
         self.last_played = rospy.Time.now()
         self.player = "aplay"
         self.rospack = rospkg.RosPack()
@@ -84,3 +92,19 @@ class Body_mapping():
 
     def call(self):
         if self.isOn:
+            self.tracker.refresh_all()
+            if self.tracker.z_distance != None:
+                self.run()
+
+    def run(self):
+        target_h = self.tango_height + self.tracker.z_distance
+        target_to_part_distance = {i: target_h - self.parts[i] for i in self.parts}
+        closest_part = min(target_to_part_distance, key = abs(target_to_part_distance.get))
+        d = target_to_part_distance[closest_part]
+        #once we figure out what the sound files are, they would be played here.
+        #I'm personally inclined to organizing them something like,
+        # [elevation relative to] [part], e.g.:
+        # "{} {}-level".format("at", "eye")
+        # "{} {}-level".format("slightly below", "shoulder")
+        # "{} {}-level".format("half a foot above", "knee")
+        # etc.
