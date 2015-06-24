@@ -106,6 +106,7 @@ class Speak_3d_directions():
             #     values_to_play.append('50right')
             # if atg<=-55 and atg>-65:
             #     values_to_play.append('60right')
+        
 
 
 
