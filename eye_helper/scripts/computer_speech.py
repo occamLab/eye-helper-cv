@@ -125,13 +125,13 @@ class Speak_3d_coords():
         cmds.append("".join(values_to_play))
         values_to_play = []
 
-        values_to_play.append(str(zd)[0]+'p'+str(zd)[2]+'m')
-        if zd_signed >= 0:
-            values_to_play.append('u')
-        else:
-            values_to_play.append('d')
-        cmds.append("".join(values_to_play))
-        values_to_play = []
+        # values_to_play.append(str(zd)[0]+'p'+str(zd)[2]+'m')
+        # if zd_signed >= 0:
+        #     values_to_play.append('u')
+        # else:
+        #     values_to_play.append('d')
+        # cmds.append("".join(values_to_play))
+        # values_to_play = []
 
         p = subprocess.Popen('amixer -D pulse sset Master 30%', shell=True)
         p.communicate()
