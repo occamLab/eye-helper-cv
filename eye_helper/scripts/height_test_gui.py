@@ -8,9 +8,7 @@ import Tkinter as tk
 import math
 import subprocess
 from tango_tracker import Tango_tracker
-from computer_speech import Speak_3d_coords
-from computer_speech2 import Speak_3d_directions
-from angle_distance import Angle_and_distance, Offset_angle_and_distance
+from height_communication_testing import Absolute_height, Angle_height, Body_mapping
 
 class Controller(tk.Frame):
     def __init__(self, module_list, mote=None, master=None):
@@ -49,9 +47,9 @@ class Controller(tk.Frame):
 if __name__ == "__main__":
 
     tt = Tango_tracker()
-    v1 = Angle_and_distance(tt)
-    v2 = Speak_3d_coords(tt)
-    v3 = Speak_3d_directions(tt)
+    v1 = Angle_height(tt)
+    v2 = Absolute_height(tt)
+    v3 = Body_mapping(tt)
 
     control = Controller([v1, v2, v3])
     control.master.title("Testing GUI")
