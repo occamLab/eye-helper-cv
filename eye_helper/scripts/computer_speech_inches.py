@@ -101,14 +101,20 @@ class Speak_3d_directions():
 
 # ============================================== UP - DOWN MAPPING =============================================================================================if atg<0:
             zd = self.tracker.z_distance #in meters
-            zd_inches=round(39.3701*zd,1)
+            zd_inches=round(39.3701*zd,1) #in inches
             if abs(zd_inches) == 0:
                 pass
             if abs(zd_inches)<0:
                 u='down'
             if abs(zd_inches)>0:
                 u='up'
-            values_to_play.append(str(zd)[0]+'point'+str(zd)[2]+'inches'+u)
+            values_to_play.append(str(zd_inches)[0:str(zd_inches).index('.')])
+            values_to_play.append('point')
+            values_to_play.append(str(zd_inches)[str(zd_inches).index('.')+1:len(str(zd))])
+            values_to_play.append('inches')
+            values_to_play.append(u)
+
+            
             
 
 # ============================================= PLAYING SOUND FILES TO SPEAK ===================================================================================
@@ -116,6 +122,7 @@ class Speak_3d_directions():
         p.communicate()
 
         for i in values_to_play:
+            print i
             self.filename = '{} {}{}.wav'.format(self.player, self.path, i)
             p = subprocess.Popen('{} {}{}.wav'.format(self.player, self.path, i), shell=True)
             p.communicate()
