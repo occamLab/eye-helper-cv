@@ -46,7 +46,7 @@ class Absolute_height():
 
     def run(self):
         zd = self.tracker.z_distance #in meters
-        zd_inches=round(39.3701*zd,1) #in inches
+        zd_inches=round(39.3701*zd,1) #converting to inches
         if abs(zd_inches) == 0:
             pass
         if abs(zd_inches)<0:
@@ -59,8 +59,8 @@ class Absolute_height():
         values_to_play.append('inches')
         values_to_play.append(u)
 
-####################################################### PLAYING SOUND FILES ##########################################################################
-
+        #----------PLAYING SOUND FILES------------------------------------------------
+        #-----------------------------------------------------------------------------
         p = subprocess.Popen('amixer -D pulse sset Master 30%', shell=True)
         p.communicate()
 
@@ -75,8 +75,7 @@ class Absolute_height():
 
 class Angle_height():
     """
-    Speaks the location of the object forward, right/left, and up/down from the tango.
-    Note that this is probably only useful really close to the object. Further away, most of the info isn't all that handy.
+    Speaks the vertical angle from the tango to the target, relative to the flat x-y plane of the floor.
     """
     def __init__(self, tracker):
         self.tracker = tracker
@@ -104,44 +103,21 @@ class Angle_height():
             if self.tracker.z_distance != None and self.tracker.right_distance != None and self.tracker.forward_distance != None:
                 self.run()
 
-
     def run(self):
 
         self.last_played = rospy.Time.now()
-        zd_signed = self.tracker.z_distance
+        vertical_angle_to_target = math.degrees(math.atan2(self.tracker.z_distance, self.tracker.xy_distance))
         zd = abs(zd_signed)
-        height= self.tracker.pitch * 57.2957795
         values_to_play = []
 
 # ============================================== UP - DOWN MAPPING =============================================================================================if atg<0:
-            if height<-3:
-                h='down'
-            if height>3:
-                h='up'
-            if abs(height)> 3 and abs(height) <= 7.5:
-                values_to_play.append('5'+h)
-            if abs(height)> 7.5 and abs(height) <= 12.5:
-                values_to_play.append('10'+h)
-            if abs(height)> 12.5 and abs(height) <= 17.5:
-                values_to_play.append('15'+h)
-            if abs(height)> 17.5 and abs(height) <= 22.5:
-                values_to_play.append('20'+h)
-            if abs(height)>22.5 and abs(height) <= 27.5:
-                values_to_play.append('25'+h)
-            if abs(height)> 27.5 and abs(height) <= 32.5:
-                values_to_play.append('30'+h)
-            if abs(height)> 32.5 and abs(height) <= 37.5:
-                values_to_play.append('35'+h)
-            if abs(height)> 37.5 and abs(height) <= 42.5:
-                values_to_play.append('40'+h)
-            if abs(height)> 42.5 and abs(height) <= 47.5:
-                values_to_play.append('45'+h)
-            if abs(height)> 47.5 and abs(height) <= 52.5:
-                values_to_play.append('50'+h)
-            if abs(height)> 52.5 and abs(height) <= 57.5:
-                values_to_play.append('55'+h)
-            if abs(height)> 57.5 and abs(height) <= 62.5:
-                values_to_play.append('60'+h)
+            if abs(vertical_angle_to_target) > 3:
+                if vertical_angle_to_target<-3:
+                    h='down'
+                else:
+                    h='up'
+                rounded_angle = int(5 * round(float(vertical_angle_to_target)/5)) # to the nearest 5.
+                values_to_play.append(str(rounded_angle) + h)
 
 # ============================================= PLAYING SOUND FILES TO SPEAK ===================================================================================
         p = subprocess.Popen('amixer -D pulse sset Master 30%', shell=True)
@@ -161,12 +137,12 @@ class Body_mapping():
     """
     Tries to approximate the corresponding __-level.
     """
-    def __init__(self, tracker, height=1.68, parts=None, proportion=None, tango_height=1):
+    def __init__(self, tracker, height=1.68, parts=None, proportion={"eye": 0.938, "shoulder": 0.825, "elbow": 0.63, "hip": 0.522, "knee": 0.336}, tango_height=1):
         """
         height is in meters, for now. we could convert if that's easier though.
         1.68 meters is average-ish for u.s. adult height.
         parts is a dict of the height of the knee, hip, elbow, shoulder, and eyes. It defaults to none, in which case it uses the normal proportions for people times the selecteds height. 
-        Parts takes precedence over proportion, but only one's really useful at once.
+        Parts takes precedence over proportion, but only one's really useful at a time.
         Tango height is what it sounds like.
         """
         self.tracker = tracker
@@ -176,10 +152,7 @@ class Body_mapping():
         self.tango_height = tango_height
         if parts != None:
             self.parts = parts
-        elif proportion != None:
-            self.parts = {i: self.height*proportion[i] for i in proportion}
         else:
-            proportion = {"eye": 0.938, "shoulder": 0.825, "elbow": 0.63, "hip": 0.522, "knee": 0.336}
             self.parts = {i: self.height*proportion[i] for i in proportion}
 
         self.last_played = rospy.Time.now()
