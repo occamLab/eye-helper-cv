@@ -25,7 +25,7 @@ class Absolute_height():
         self.last_played = rospy.Time.now()
         self.player = "aplay"
         self.rospack = rospkg.RosPack()
-        self.path = self.rospack.get_path('eye_helper') + "../GeneratedSoundFiles/wavs/wavs2/"
+        self.path = self.rospack.get_path('eye_helper') + "/../GeneratedSoundFiles/wavs/wavs2/"
         self.base_filename = "{}.wav"
         self.filename = ""
         self.speech_pub=rospy.Publisher('/speech_info', Speech, queue_size=10)
@@ -46,19 +46,32 @@ class Absolute_height():
                 self.run()
 
     def run(self):
+        values_to_play=[]
         zd = self.tracker.z_distance #in meters
         zd_inches=round(39.3701*zd,1) #converting to inches
-        if abs(zd_inches) == 0:
-            pass
+        atg = self.tracker.angle_to_go
+
+        # ============================================== RIGHT - LEFT MAPPING =========================================================================================
+        if atg<0:
+            s='right'
+        if atg>0:
+            s='left'
+        if abs(atg)> 3 and abs(atg) <= 7.5:
+            values_to_play.append('5'+s)
+        else:
+            rounded_atg = int(5 * round(float(atg)/5))
+            values_to_play.append(str(rounded_atg)+s)
+    # ============================================== UP - DOWN MAPPING =========================================================================================
+        if abs(zd_inches) == 0 and abs(atg)==0:
+            values_to_play.append('reach_forward')
         if abs(zd_inches)<0:
             u='down'
         if abs(zd_inches)>0:
             u='up'
-        values_to_play.append(str(zd_inches)[0:str(zd_inches).index('.')])
-        values_to_play.append('point')
-        values_to_play.append(str(zd_inches)[str(zd_inches).index('.')+1:len(str(zd))])
-        values_to_play.append('inches')
-        values_to_play.append(u)
+        values_to_play.append(str(zd_inches)[0:str(zd_inches).index('.')]+'point')
+        values_to_play.append(str(zd_inches)[str(zd_inches).index('.')+1:len(str(zd))]+'inches'+u)
+        # values_to_play.append('inches')
+        # values_to_play.append(u)
 
         #----------PLAYING SOUND FILES------------------------------------------------
         #-----------------------------------------------------------------------------
@@ -89,6 +102,7 @@ class Angle_height():
         self.base_filename = "{}.wav"
         self.filename = ""
         self.speech_pub=rospy.Publisher('/speech_info', Speech, queue_size=10)
+        self.delay=rospy.Duration(4)
 
     def toggle(self):
         self.isOn = not self.isOn
@@ -105,48 +119,35 @@ class Angle_height():
             if self.tracker.z_distance != None and self.tracker.right_distance != None and self.tracker.forward_distance != None:
                 self.run()
 
-
-    def run_metric(self):
-        z = self.tracker.z_distance
-        #once we have sound files, play them here.
     def run(self):
 
-        self.last_played = rospy.Time.now()
+        if rospy.Time.now() - self.last_played < self.delay:
+            return
+        
         zd_signed = self.tracker.z_distance
         zd = abs(zd_signed)
+        atg = self.tracker.angle_to_go
         height= math.degrees(math.atan2(self.tracker.z_distance, self.tracker.xy_distance))
         values_to_play = []
 
+# ============================================== RIGHT - LEFT MAPPING =========================================================================================
+        if atg<0:
+            s='right'
+        if atg>0:
+            s='left'
+        if abs(atg)> 3 and abs(atg) <= 7.5:
+            values_to_play.append('5'+s)
+        else:
+            rounded_atg = int(5 * round(float(atg)/5))
+            values_to_play.append(str(rounded_atg)+s)
 # ============================================== UP - DOWN MAPPING =============================================================================================if atg<0:
-        if height<-3:
-            h='down'
-        if height>3:
-            h='up'
-        if abs(height)> 3 and abs(height) <= 7.5:
-            values_to_play.append('5'+h)
-        if abs(height)> 7.5 and abs(height) <= 12.5:
-            values_to_play.append('10'+h)
-        if abs(height)> 12.5 and abs(height) <= 17.5:
-            values_to_play.append('15'+h)
-        if abs(height)> 17.5 and abs(height) <= 22.5:
-            values_to_play.append('20'+h)
-        if abs(height)>22.5 and abs(height) <= 27.5:
-            values_to_play.append('25'+h)
-        if abs(height)> 27.5 and abs(height) <= 32.5:
-            values_to_play.append('30'+h)
-        if abs(height)> 32.5 and abs(height) <= 37.5:
-            values_to_play.append('35'+h)
-        if abs(height)> 37.5 and abs(height) <= 42.5:
-            values_to_play.append('40'+h)
-        if abs(height)> 42.5 and abs(height) <= 47.5:
-            values_to_play.append('45'+h)
-        if abs(height)> 47.5 and abs(height) <= 52.5:
-            values_to_play.append('50'+h)
-        if abs(height)> 52.5 and abs(height) <= 57.5:
-            values_to_play.append('55'+h)
-        if abs(height)> 57.5 and abs(height) <= 62.5:
-            values_to_play.append('60'+h)
-
+        if abs(height) > 3:
+            if height<-3:
+                h='down'
+            else:
+                h='up'
+            rounded_angle = int(5 * round(float(vertical_angle_to_target)/5)) # to the nearest 5.
+            values_to_play.append(str(rounded_angle) + h)
 # ============================================= PLAYING SOUND FILES TO SPEAK ===================================================================================
         p = subprocess.Popen('amixer -D pulse sset Master 30%', shell=True)
         p.communicate()
