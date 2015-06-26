@@ -52,30 +52,30 @@ class Speak_3d_directions():
         fd = abs(fd_signed)
         rd_signed = self.tracker.right_distance
         rd = abs(rd_signed)
-        height= self.tracker.pitch * 57.2957795
+        height= self.tracker.pitch * 57.2957795 # Erm, isn't this the angle - not hte height? Also, the angle of the tango unit itself, not considering the direction to the target?
         atg = self.tracker.angle_to_go
         values_to_play = []
         cmds = []
         
 
-#==================================================== FORWARD - BACK MAPPING ================================================================================
+        #==================================================== FORWARD - BACK MAPPING ================================================================================
 
-        if fd_signed> 0.7 and rd_signed> 0.4:
+        if fd_signed > 0.7 and rd_signed > 0.4:
             values_to_play.append('forward_right')
-        elif fd_signed> 0.7 and rd_signed< -0.4:
+        elif fd_signed > 0.7 and rd_signed < -0.4:
             values_to_play.append('forward_left')
-        elif fd_signed> 0.7 and rd < 0.4:
+        elif fd_signed > 0.7 and rd < 0.4:
             values_to_play.append('forward')
         elif fd < 0.7 and rd_signed > 0.4:
             values_to_play.append('right')
         elif fd < 0.7 and rd_signed < -0.4:
             values_to_play.append('left')
-        elif fd_signed <= 0.6 and rd<= 0.4:
+        elif fd_signed <= 0.6 and rd <= 0.4:
             values_to_play.append('reach')
-            if atg>=-3 and atg<=3 and height>=-3 and height<=3:
-                values_to_play.append('forward')
+            if abs(atg) <= 3 and abs(height) <= 3:
+                values_to_play.append("forward")
 
-# ============================================== RIGHT - LEFT MAPPING =========================================================================================
+        # ============================================== RIGHT - LEFT MAPPING =========================================================================================
             if atg<0:
                 s='right'
             if atg>0:
@@ -99,7 +99,7 @@ class Speak_3d_directions():
             if abs(atg)> 42.5 and abs(atg) <= 47.5:
                 values_to_play.append('45'+s)
 
-# ============================================== UP - DOWN MAPPING =============================================================================================if atg<0:
+        # ============================================== UP - DOWN MAPPING =============================================================================================
             zd = self.tracker.z_distance #in meters
             zd_inches=round(39.3701*zd,1) #in inches
             if abs(zd_inches) == 0:
@@ -108,16 +108,16 @@ class Speak_3d_directions():
                 u='down'
             if abs(zd_inches)>0:
                 u='up'
-            values_to_play.append(str(zd_inches)[0:str(zd_inches).index('.')])
+            values_to_play.append(str(int(zd_inches)))
             values_to_play.append('point')
-            values_to_play.append(str(zd_inches)[str(zd_inches).index('.')+1:len(str(zd))])
+            values_to_play.append(str(int(10*(zd_inches - int(zd_inches)))))
             values_to_play.append('inches')
             values_to_play.append(u)
 
             
             
 
-# ============================================= PLAYING SOUND FILES TO SPEAK ===================================================================================
+        # ============================================= PLAYING SOUND FILES TO SPEAK ===================================================================================
         p = subprocess.Popen('amixer -D pulse sset Master 30%', shell=True)
         p.communicate()
 
