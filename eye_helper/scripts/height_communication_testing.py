@@ -12,6 +12,7 @@ import subprocess
 from tango_tracker import Tango_tracker
 import string
 from eye_helper.msg import Speech
+import math
 
 class Absolute_height():
     """
@@ -75,7 +76,8 @@ class Absolute_height():
 
 class Angle_height():
     """
-    Speaks the vertical angle from the tango to the target, relative to the flat x-y plane of the floor.
+    Speaks the location of the object forward, right/left, and up/down from the tango.
+    Note that this is probably only useful really close to the object. Further away, most of the info isn't all that handy.
     """
     def __init__(self, tracker):
         self.tracker = tracker
@@ -103,21 +105,47 @@ class Angle_height():
             if self.tracker.z_distance != None and self.tracker.right_distance != None and self.tracker.forward_distance != None:
                 self.run()
 
+
+    def run_metric(self):
+        z = self.tracker.z_distance
+        #once we have sound files, play them here.
     def run(self):
 
         self.last_played = rospy.Time.now()
-        vertical_angle_to_target = math.degrees(math.atan2(self.tracker.z_distance, self.tracker.xy_distance))
+        zd_signed = self.tracker.z_distance
         zd = abs(zd_signed)
+        height= math.degrees(math.atan2(self.tracker.z_distance, self.tracker.xy_distance))
         values_to_play = []
 
 # ============================================== UP - DOWN MAPPING =============================================================================================if atg<0:
-            if abs(vertical_angle_to_target) > 3:
-                if vertical_angle_to_target<-3:
-                    h='down'
-                else:
-                    h='up'
-                rounded_angle = int(5 * round(float(vertical_angle_to_target)/5)) # to the nearest 5.
-                values_to_play.append(str(rounded_angle) + h)
+        if height<-3:
+            h='down'
+        if height>3:
+            h='up'
+        if abs(height)> 3 and abs(height) <= 7.5:
+            values_to_play.append('5'+h)
+        if abs(height)> 7.5 and abs(height) <= 12.5:
+            values_to_play.append('10'+h)
+        if abs(height)> 12.5 and abs(height) <= 17.5:
+            values_to_play.append('15'+h)
+        if abs(height)> 17.5 and abs(height) <= 22.5:
+            values_to_play.append('20'+h)
+        if abs(height)>22.5 and abs(height) <= 27.5:
+            values_to_play.append('25'+h)
+        if abs(height)> 27.5 and abs(height) <= 32.5:
+            values_to_play.append('30'+h)
+        if abs(height)> 32.5 and abs(height) <= 37.5:
+            values_to_play.append('35'+h)
+        if abs(height)> 37.5 and abs(height) <= 42.5:
+            values_to_play.append('40'+h)
+        if abs(height)> 42.5 and abs(height) <= 47.5:
+            values_to_play.append('45'+h)
+        if abs(height)> 47.5 and abs(height) <= 52.5:
+            values_to_play.append('50'+h)
+        if abs(height)> 52.5 and abs(height) <= 57.5:
+            values_to_play.append('55'+h)
+        if abs(height)> 57.5 and abs(height) <= 62.5:
+            values_to_play.append('60'+h)
 
 # ============================================= PLAYING SOUND FILES TO SPEAK ===================================================================================
         p = subprocess.Popen('amixer -D pulse sset Master 30%', shell=True)
@@ -130,8 +158,6 @@ class Angle_height():
 
             self.speech_info= Speech(file_path=self.path + self.filename, speech=str(i))
             self.speech_pub.publish(self.speech_info)
-
-
 
 class Body_mapping():
     """
