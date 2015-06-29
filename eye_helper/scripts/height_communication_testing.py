@@ -185,7 +185,7 @@ class Body_mapping():
         self.last_played = rospy.Time.now()
         self.player = "aplay"
         self.rospack = rospkg.RosPack()
-        self.path = self.rospack.get_path('eye_helper') + "../GeneratedSoundFiles/height_speech"
+        self.path = self.rospack.get_path('eye_helper') + "../GeneratedSoundFiles/wavs/body_mapping/"
 
     def turn_on(self):
         self.isOn = True
@@ -228,7 +228,7 @@ class Body_mapping():
         popen = subprocess.Popen('amixer -D pulse sset Master 30%', shell=True)
         popen.communicate()
 
-        popen = subprocess.Popen("aplay {}".format(file_to_play), shell=True)
+        popen = subprocess.Popen("aplay {}{}".format(self.path, file_to_play), shell=True)
         popen.communicate()
 
 
