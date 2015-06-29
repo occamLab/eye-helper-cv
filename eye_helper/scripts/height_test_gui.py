@@ -35,7 +35,7 @@ class Controller(tk.Frame):
         self.quit_button.grid()
 
     def call_all(self):
-        self.m[0].delay_coefficient = self.m1_dc.get()
+        # self.m[0].delay_coefficient = self.m1_dc.get()
 
         for i in self.m:
             i.call()

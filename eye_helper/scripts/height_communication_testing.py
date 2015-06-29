@@ -31,6 +31,7 @@ class Absolute_height():
         self.speech_pub=rospy.Publisher('/speech_info', Speech, queue_size=10)
 
     def turn_on(self):
+        print 'Im on'
         self.isOn = True
 
     def turn_off(self):
@@ -42,24 +43,29 @@ class Absolute_height():
     def call(self):
         if self.isOn:
             self.tracker.refresh_all()
-            if self.tracker.z_distance != None and self.tracker.right_distance != None and self.tracker.forward_distance != None:
-                self.run()
+            # if self.tracker.z_distance != None and self.tracker.right_distance != None and self.tracker.forward_distance != None:
+            self.run()
 
     def run(self):
+        print 'I started running'
         values_to_play=[]
         zd = self.tracker.z_distance #in meters
         zd_inches=round(39.3701*zd,1) #converting to inches
         atg = self.tracker.angle_to_go
 
-        # ============================================== RIGHT - LEFT MAPPING =========================================================================================
+    # ============================================== RIGHT - LEFT MAPPING =========================================================================================
         if atg<0:
+            print 'right'
             s='right'
         if atg>0:
+            print 'left'
             s='left'
         if abs(atg)> 3 and abs(atg) <= 7.5:
+            print 'left-right1'
             values_to_play.append('5'+s)
         else:
             rounded_atg = int(5 * round(float(atg)/5))
+            print 'left-right'
             values_to_play.append(str(rounded_atg)+s)
     # ============================================== UP - DOWN MAPPING =========================================================================================
         if abs(zd_inches) == 0 and abs(atg)==0:
@@ -68,6 +74,8 @@ class Absolute_height():
             u='down'
         if abs(zd_inches)>0:
             u='up'
+
+        print 'up-down'
         values_to_play.append(str(zd_inches)[0:str(zd_inches).index('.')]+'point')
         values_to_play.append(str(zd_inches)[str(zd_inches).index('.')+1:len(str(zd))]+'inches'+u)
         # values_to_play.append('inches')
@@ -75,6 +83,7 @@ class Absolute_height():
 
         #----------PLAYING SOUND FILES------------------------------------------------
         #-----------------------------------------------------------------------------
+        print 'communication open'
         p = subprocess.Popen('amixer -D pulse sset Master 30%', shell=True)
         p.communicate()
 
@@ -83,6 +92,7 @@ class Absolute_height():
             self.filename = '{} {}{}.wav'.format(self.player, self.path, i)
             p = subprocess.Popen('{} {}{}.wav'.format(self.player, self.path, i), shell=True)
             p.communicate()
+            print 'playing'
 
             self.speech_info= Speech(file_path=self.path + self.filename, speech=str(i))
             self.speech_pub.publish(self.speech_info)
@@ -146,7 +156,7 @@ class Angle_height():
                 h='down'
             else:
                 h='up'
-            rounded_angle = int(5 * round(float(vertical_angle_to_target)/5)) # to the nearest 5.
+            rounded_angle = int(5 * round(float(height)/5)) # to the nearest 5.
             values_to_play.append(str(rounded_angle) + h)
 # ============================================= PLAYING SOUND FILES TO SPEAK ===================================================================================
         p = subprocess.Popen('amixer -D pulse sset Master 30%', shell=True)
