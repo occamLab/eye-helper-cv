@@ -185,7 +185,7 @@ class Body_mapping():
         self.last_played = rospy.Time.now()
         self.player = "aplay"
         self.rospack = rospkg.RosPack()
-        self.path = self.rospack.get_path('eye_helper') + "../GeneratedSoundFiles/wavs/body_mapping/"
+        self.path = self.rospack.get_path('eye_helper') + "/../GeneratedSoundFiles/wavs/body_mapping/"
 
     def turn_on(self):
         self.isOn = True
@@ -205,7 +205,9 @@ class Body_mapping():
     def run(self):
         target_h = self.tango_height + self.tracker.z_distance
         target_to_part_distance = {i: target_h - self.parts[i] for i in self.parts}
-        closest_part = min(target_to_part_distance, key = abs(target_to_part_distance.get))
+        keys = target_to_part_distance.keys()
+        keys.sort(key = lambda x: abs(target_to_part_distance[x]))
+        closest_part = keys[0]
         d = target_to_part_distance[closest_part]
         if d > 0.:
             direction = 'a'
@@ -222,7 +224,7 @@ class Body_mapping():
             location = "f" + direction
         file_to_play = "{}_{}.wav".format(location, closest_part[:3])
 
-        play_audio(file_to_play)
+        self.play_audio(file_to_play)
 
     def play_audio(self, file_to_play):
         popen = subprocess.Popen('amixer -D pulse sset Master 30%', shell=True)
@@ -239,3 +241,10 @@ class Body_mapping():
         # "{} {}-level".format("slightly below", "shoulder")
         # "{} {}-level".format("half a foot above", "knee")
         # etc.
+
+if __name__ == "__main__":
+    tt = Tango_tracker()
+    body_map = Body_mapping(tt, tango_height=0.5)
+    body_map.turn_on()
+    while not rospy.is_shutdown():
+        body_map.call()
