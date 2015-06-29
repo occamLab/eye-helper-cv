@@ -140,7 +140,7 @@ class Angle_height():
         height= math.degrees(math.atan2(self.tracker.z_distance, self.tracker.xy_distance))
         values_to_play = []
 
-# ============================================== RIGHT - LEFT MAPPING =========================================================================================
+    # ============================================== RIGHT - LEFT MAPPING =========================================================================================
         if atg<0:
             s='right'
         if atg>0:
@@ -150,7 +150,7 @@ class Angle_height():
         else:
             rounded_atg = int(5 * round(float(atg)/5))
             values_to_play.append(str(rounded_atg)+s)
-# ============================================== UP - DOWN MAPPING =============================================================================================if atg<0:
+    # ============================================== UP - DOWN MAPPING =============================================================================================if atg<0:
         if abs(height) > 3:
             if height<-3:
                 h='down'
@@ -158,7 +158,7 @@ class Angle_height():
                 h='up'
             rounded_angle = int(5 * round(float(height)/5)) # to the nearest 5.
             values_to_play.append(str(rounded_angle) + h)
-# ============================================= PLAYING SOUND FILES TO SPEAK ===================================================================================
+    # ============================================= PLAYING SOUND FILES TO SPEAK ===================================================================================
         p = subprocess.Popen('amixer -D pulse sset Master 30%', shell=True)
         p.communicate()
 
@@ -195,7 +195,7 @@ class Body_mapping():
         self.last_played = rospy.Time.now()
         self.player = "aplay"
         self.rospack = rospkg.RosPack()
-        self.path = self.rospack.get_path('eye_helper') + "../GeneratedSoundFiles/height_speech"
+        self.path = self.rospack.get_path('eye_helper') + "/../GeneratedSoundFiles/wavs/body_mapping/"
 
     def turn_on(self):
         self.isOn = True
@@ -215,8 +215,35 @@ class Body_mapping():
     def run(self):
         target_h = self.tango_height + self.tracker.z_distance
         target_to_part_distance = {i: target_h - self.parts[i] for i in self.parts}
-        closest_part = min(target_to_part_distance, key = abs(target_to_part_distance.get))
+        keys = target_to_part_distance.keys()
+        keys.sort(key = lambda x: abs(target_to_part_distance[x]))
+        closest_part = keys[0]
         d = target_to_part_distance[closest_part]
+        if d > 0.:
+            direction = 'a'
+        else:
+            direction = 'b'
+        feet = abs(d)/.3048
+        if feet < 0.1:
+            location = "at"
+        elif feet < 0.4:
+            location = "s" + direction
+        elif feet < 0.9:
+            location = "h" + direction
+        else:
+            location = "f" + direction
+        file_to_play = "{}_{}.wav".format(location, closest_part[:3])
+
+        self.play_audio(file_to_play)
+
+    def play_audio(self, file_to_play):
+        popen = subprocess.Popen('amixer -D pulse sset Master 30%', shell=True)
+        popen.communicate()
+
+        popen = subprocess.Popen("aplay {}{}".format(self.path, file_to_play), shell=True)
+        popen.communicate()
+
+
         #once we figure out what the sound files are, they would be played here.
         #I'm personally inclined to organizing them something like,
         # [elevation relative to] [part], e.g.:
@@ -224,3 +251,10 @@ class Body_mapping():
         # "{} {}-level".format("slightly below", "shoulder")
         # "{} {}-level".format("half a foot above", "knee")
         # etc.
+
+if __name__ == "__main__":
+    tt = Tango_tracker()
+    body_map = Body_mapping(tt, tango_height=0.5)
+    body_map.turn_on()
+    while not rospy.is_shutdown():
+        body_map.call()
