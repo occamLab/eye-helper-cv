@@ -166,7 +166,7 @@ class Body_mapping():
     """
     Tries to approximate the corresponding __-level.
     """
-    def __init__(self, tracker, height=1.68, parts=None, proportion={"eye": 0.938, "shoulder": 0.825, "elbow": 0.63, "hip": 0.522, "knee": 0.336}, tango_height=1):
+    def __init__(self, tracker, height=1.68, parts=None, proportion={"eye": 0.938, "shoulder": 0.825, "elbow": 0.63, "hip": 0.522, "knee": 0.336}, tango_height=1.02):
         """
         height is in meters, for now. we could convert if that's easier though.
         1.68 meters is average-ish for u.s. adult height.
@@ -219,6 +219,13 @@ class Body_mapping():
         self.tango_height = value
 
     def run(self):
+        if rospy.Time.now() - self.last_played < rospy.Duration(4):
+            return
+        print "==========================================\n==============================="
+        print self.tracker.z_distance
+        print self.tango_height
+        print "==========================================\n==============================="
+        self.last_played = rospy.Time.now()
         target_h = self.tango_height + self.tracker.z_distance
         target_to_part_distance = {i: target_h - self.parts[i] for i in self.parts}
         keys = target_to_part_distance.keys()
@@ -293,8 +300,7 @@ class Body_map_controller(tk.Frame):
 
 if __name__ == "__main__":
     tt = Tango_tracker()
-    body_map = Body_mapping(tt, tango_height=0.5)
-    body_map = Body_mapping(None)
+    body_map = Body_mapping(tt, tango_height=1.02)
     body_map.turn_on()
     control = Body_map_controller(body_map)
     control.master.title("body map height setting")
