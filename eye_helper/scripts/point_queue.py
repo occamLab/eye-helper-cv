@@ -21,7 +21,7 @@ class Point_queue():
     def __init__(self):
 #----------------------ROS------------------------
 # This sets the tango tracker to subscribe to the relevant topics, and process them properly.
-        rospy.init_node('tango_tracker')
+        rospy.init_node('point_queue')
         rospy.Subscriber('/point_queue', PointStamped, self.add_target)
         self.pub = rospy.Publisher('/clicked_point', PointStamped, queue_size=10)
         self.targets = []
