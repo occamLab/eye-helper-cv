@@ -13,6 +13,7 @@ from tango_tracker import Tango_tracker
 import string
 from eye_helper.msg import Speech
 import math
+import Tkinter as tk
 
 class Absolute_height():
     """
@@ -203,6 +204,20 @@ class Body_mapping():
             if self.tracker.z_distance != None:
                 self.run()
 
+    def set_part(self, part, value):
+        """
+        overrides / replaces whatever the current height is for the input part.
+        """
+        if part in self.parts:
+            self.parts[part] = value
+            print part, " set at ", value
+
+        else:
+            print "Please use only eye, shoulder, elbow, hip, or knee."
+
+    def set_height(self, value):
+        self.tango_height = value
+
     def run(self):
         target_h = self.tango_height + self.tracker.z_distance
         target_to_part_distance = {i: target_h - self.parts[i] for i in self.parts}
@@ -235,17 +250,53 @@ class Body_mapping():
         popen.communicate()
 
 
-        #once we figure out what the sound files are, they would be played here.
-        #I'm personally inclined to organizing them something like,
-        # [elevation relative to] [part], e.g.:
-        # "{} {}-level".format("at", "eye")
-        # "{} {}-level".format("slightly below", "shoulder")
-        # "{} {}-level".format("half a foot above", "knee")
-        # etc.
+
+class Body_map_controller(tk.Frame):
+    def __init__(self, module, master=None):
+        tk.Frame.__init__(self, master)
+        self.module = module
+        self.grid()
+        self.createWidgets()
+
+
+    def createWidgets(self):
+        #eye, shoulder, elbow, hip, knee
+        self.height_entry = tk.Entry(self)
+        self.height_entry.grid(column=0, row=0)
+        self.eye_entry = tk.Entry(self)
+        self.eye_entry.grid(column=0, row=1)
+        self.shoulder_entry = tk.Entry(self)
+        self.shoulder_entry.grid(column=0, row=2)
+        self.elbow_entry = tk.Entry(self)
+        self.elbow_entry.grid(column=0, row=3)
+        self.hip_entry = tk.Entry(self)
+        self.hip_entry.grid(column=0, row=4)
+        self.knee_entry = tk.Entry(self)
+        self.knee_entry.grid(column=0, row=5)
+
+        self.height_send = tk.Button(self, text = "send tango height", command = lambda: self.module.set_height(float(self.height_entry.get())))
+        self.height_send.grid(column=1, row=0)
+        self.eye_send = tk.Button(self, text = "send eye height", command = lambda: self.module.set_part("eye", float(self.eye_entry.get())))
+        self.eye_send.grid(column=1, row=1)
+        self.shoulder_send = tk.Button(self, text = "send shoulder height", command = lambda: self.module.set_part("shoulder", float(self.shoulder_entry.get())))
+        self.shoulder_send.grid(column=1, row=2)
+        self.elbow_send = tk.Button(self, text = "send elbow height", command = lambda: self.module.set_part("elbow", float(self.elbow_entry.get())))
+        self.elbow_send.grid(column=1, row=3)
+        self.hip_send = tk.Button(self, text = "send hip height", command = lambda: self.module.set_part("hip", float(self.hip_entry.get())))
+        self.hip_send.grid(column=1, row=4)
+        self.knee_send = tk.Button(self, text = "send knee height", command = lambda: self.module.set_part("knee", float(self.knee_entry.get())))
+        self.knee_send.grid(column=1, row=5)
+
+    def call_module(self):
+        self.module.call()
+        self.after(10, self.call_module)
 
 if __name__ == "__main__":
     tt = Tango_tracker()
     body_map = Body_mapping(tt, tango_height=0.5)
+    body_map = Body_mapping(None)
     body_map.turn_on()
-    while not rospy.is_shutdown():
-        body_map.call()
+    control = Body_map_controller(body_map)
+    control.master.title("body map height setting")
+    control.after(100, control.call_module)
+    control.mainloop()
