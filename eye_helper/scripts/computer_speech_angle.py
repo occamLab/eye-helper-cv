@@ -58,6 +58,7 @@ class Speak_3d_directions():
         atg = self.tracker.angle_to_go
         values_to_play = []
         cmds = []
+        position={'forward1':0, 'right1':0, 'forward2':0, 'right2':0}
         
 
 #==================================================== FORWARD - BACK MAPPING ================================================================================
@@ -76,6 +77,12 @@ class Speak_3d_directions():
             values_to_play.append('reach')
             if atg>=-3 and atg<=3 and height>=-3 and height<=3:
                 values_to_play.append('forward')
+        if position['forward1']==0 and position['right1']==0:
+            position['forward1']= fd_signed
+            position['right1'] = rd_signed
+        elif position['forward1']!=0 and position['right1']!=0:
+            position['forward2']= fd_signed
+            position['right2'] = rd_signed
 
 # ============================================== RIGHT - LEFT MAPPING =========================================================================================
             if atg<0:
@@ -142,7 +149,8 @@ class Speak_3d_directions():
 
             self.speech_info= Speech(file_path=self.path + self.filename, speech=str(i))
             self.speech_pub.publish(self.speech_info)
-
+        if abs(position['forward1']-position['forward2'])<= 0.2 or abs(position['right1']-position['right2'])<= 0.2:
+            rospy.sleep(5.)
 if __name__ == "__main__":
     tt = Tango_tracker()
     offset = Speak_3d_directions(tt)
