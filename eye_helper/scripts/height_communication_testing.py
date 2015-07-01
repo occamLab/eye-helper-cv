@@ -87,6 +87,7 @@ class Absolute_height():
 
             self.speech_info= Speech(file_path=self.path + self.filename, speech=str(i))
             self.speech_pub.publish(self.speech_info)
+        rospy.sleep(4.)
 
 class Angle_height():
     """
@@ -160,6 +161,7 @@ class Angle_height():
 
             self.speech_info= Speech(file_path=self.path + self.filename, speech=str(i))
             self.speech_pub.publish(self.speech_info)
+        rospy.sleep(4.)
 
 class Body_mapping():
     """
