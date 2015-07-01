@@ -52,7 +52,7 @@ class Absolute_height():
         zd_inches=round(39.3701*zd,1) #converting to inches
         atg = self.tracker.angle_to_go
 
-    # ============================================== RIGHT - LEFT MAPPING =========================================================================================
+    # ============================================== RIGHT - LEFT MAPPING ==============================================================================
         if atg<0:
             s='right'
         if atg>0:
@@ -62,7 +62,7 @@ class Absolute_height():
         else:
             rounded_atg = int(5 * round(float(atg)/5))
             values_to_play.append(str(rounded_atg)+s)
-    # ============================================== UP - DOWN MAPPING =========================================================================================
+    # ============================================== UP - DOWN MAPPING =================================================================================
         if abs(zd_inches) == 0 and abs(atg)==0:
             values_to_play.append('reach_forward')
         if abs(zd_inches)<0:
@@ -75,8 +75,8 @@ class Absolute_height():
         # values_to_play.append('inches')
         # values_to_play.append(u)
 
-        #----------PLAYING SOUND FILES------------------------------------------------
-        #-----------------------------------------------------------------------------
+        #----------PLAYING SOUND FILES----------------------------------------
+        #---------------------------------------------------------------------
         p = subprocess.Popen('amixer -D pulse sset Master 30%', shell=True)
         p.communicate()
 
@@ -179,6 +179,7 @@ class Body_mapping():
 
         self.height = height
         self.tango_height = tango_height
+        self.proportions = proportion
         if parts != None:
             self.parts = parts
         else:
@@ -215,16 +216,17 @@ class Body_mapping():
         else:
             print "Please use only eye, shoulder, elbow, hip, or knee."
 
-    def set_height(self, value):
+    def set_tango_height(self, value):
         self.tango_height = value
+
+    def set_person_height(self, value):
+        self.height = value
+        self.parts = {i: self.height*self.proportions[i] for i in proportion}
+
 
     def run(self):
         if rospy.Time.now() - self.last_played < rospy.Duration(4):
             return
-        print "==========================================\n==============================="
-        print self.tracker.z_distance
-        print self.tango_height
-        print "==========================================\n==============================="
         self.last_played = rospy.Time.now()
         target_h = self.tango_height + self.tracker.z_distance
         target_to_part_distance = {i: target_h - self.parts[i] for i in self.parts}
@@ -267,9 +269,11 @@ class Body_map_controller(tk.Frame):
 
 
     def createWidgets(self):
-        #eye, shoulder, elbow, hip, knee
-        self.height_entry = tk.Entry(self)
-        self.height_entry.grid(column=0, row=0)
+
+        self.tango_height_entry = tk.Entry(self)
+        self.tango_height_entry.grid(column=0, row=0)
+        self.person_height_entry = tk.Entry(self)
+        self.person_height_entry.grid(column=2, row=0)
         self.eye_entry = tk.Entry(self)
         self.eye_entry.grid(column=0, row=1)
         self.shoulder_entry = tk.Entry(self)
@@ -281,17 +285,19 @@ class Body_map_controller(tk.Frame):
         self.knee_entry = tk.Entry(self)
         self.knee_entry.grid(column=0, row=5)
 
-        self.height_send = tk.Button(self, text = "send tango height", command = lambda: self.module.set_height(float(self.height_entry.get())))
-        self.height_send.grid(column=1, row=0)
-        self.eye_send = tk.Button(self, text = "send eye height", command = lambda: self.module.set_part("eye", float(self.eye_entry.get())))
+        self.tango_height_send = tk.Button(self, text = "set tango height", command = lambda: self.module.set_tango_height(float(self.tango_height_entry.get())))
+        self.tango_height_send.grid(column=1, row=0)
+        self.person_height_send = tk.Button(self, text = "set person height", command = lambda: self.module.set_person_height(float(self.person_height_entry.get())))
+        self.person_height_send.grid(column=3, row=0)
+        self.eye_send = tk.Button(self, text = "set eye height", command = lambda: self.module.set_part("eye", float(self.eye_entry.get())))
         self.eye_send.grid(column=1, row=1)
-        self.shoulder_send = tk.Button(self, text = "send shoulder height", command = lambda: self.module.set_part("shoulder", float(self.shoulder_entry.get())))
+        self.shoulder_send = tk.Button(self, text = "set shoulder height", command = lambda: self.module.set_part("shoulder", float(self.shoulder_entry.get())))
         self.shoulder_send.grid(column=1, row=2)
-        self.elbow_send = tk.Button(self, text = "send elbow height", command = lambda: self.module.set_part("elbow", float(self.elbow_entry.get())))
+        self.elbow_send = tk.Button(self, text = "set elbow height", command = lambda: self.module.set_part("elbow", float(self.elbow_entry.get())))
         self.elbow_send.grid(column=1, row=3)
-        self.hip_send = tk.Button(self, text = "send hip height", command = lambda: self.module.set_part("hip", float(self.hip_entry.get())))
+        self.hip_send = tk.Button(self, text = "set hip height", command = lambda: self.module.set_part("hip", float(self.hip_entry.get())))
         self.hip_send.grid(column=1, row=4)
-        self.knee_send = tk.Button(self, text = "send knee height", command = lambda: self.module.set_part("knee", float(self.knee_entry.get())))
+        self.knee_send = tk.Button(self, text = "set knee height", command = lambda: self.module.set_part("knee", float(self.knee_entry.get())))
         self.knee_send.grid(column=1, row=5)
 
     def call_module(self):
