@@ -73,13 +73,13 @@ class Controller(tk.Frame):
 
 if __name__ == "__main__":
 
-    try:
-        print "Press 1+2 simultaneously on the wii remote if you wish to connect it."
-        mote = cwiid.Wiimote()
-        mote.rpt_mode = cwiid.RPT_BTN
-    except RuntimeError:
-        print "No wii remote detected."
-        mote = None
+    # try:
+    #     print "Press 1+2 simultaneously on the wii remote if you wish to connect it."
+    #     mote = cwiid.Wiimote()
+    #     mote.rpt_mode = cwiid.RPT_BTN
+    # except RuntimeError:
+    #     print "No wii remote detected."
+    #     mote = None
 
     tt = Tango_tracker()
     v1 = Angle_and_distance(tt)
