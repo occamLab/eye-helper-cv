@@ -32,10 +32,11 @@ class Straight_line():
         self.distance_threshold = 0.3048 # distance from line before the warning kicks in. .3048 m = 1 foot.
         self.angle_threshold = 60 # degrees before the warning kicks in. At present, no angle warnings are being used.
         self.last_played = rospy.Time.now()
-        self.delay_coefficient = 2
+        self.delay_coefficient = 1.5
         self.rospack = rospkg.RosPack()
         self.path = self.rospack.get_path('eye_helper') + '/../GeneratedSoundFiles/'
         self.filename = "height4angle5.wav"
+        self.volume = 40
 
     def toggle(self):
         self.isOn = not self.isOn
@@ -102,7 +103,7 @@ class Straight_line():
             self.play_audio(ratio)
 
     def play_audio(self, ratio):
-        cmd = 'amixer -D pulse sset Master {}%,{}%'.format(30*ratio[0], 30*ratio[1])
+        cmd = 'amixer -D pulse sset Master {}%,{}%'.format(self.volume*ratio[0], self.volume*ratio[1])
         popen = subprocess.Popen(cmd, shell=True)
         popen.communicate()
         cmd = "aplay {}{}".format(self.path, self.filename)
@@ -118,5 +119,6 @@ if __name__ == "__main__":
     sl.turn_on()
     rospy.sleep(5.0)
     sl.begin_line()
+    print "running"
     while not rospy.is_shutdown():
         sl.call()
