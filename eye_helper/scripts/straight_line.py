@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 p1 & p2s' suggestions about straight lines, adventitious blindness, etc.
 
@@ -31,7 +32,7 @@ class Straight_line():
         self.distance_threshold = 0.3048 # distance from line before the warning kicks in. .3048 m = 1 foot.
         self.angle_threshold = 60 # degrees before the warning kicks in. At present, no angle warnings are being used.
         self.last_played = rospy.Time.now()
-        self.delay_coefficient = 1
+        self.delay_coefficient = 2
         self.rospack = rospkg.RosPack()
         self.path = self.rospack.get_path('eye_helper') + '/../GeneratedSoundFiles/'
         self.filename = "height4angle5.wav"
@@ -58,9 +59,8 @@ class Straight_line():
         self.direction = None
 
     def get_distance_to_line(self):
-    """
-    it's probably easiest + most robust to just grab another arbitrary colinear point, with cos+sin and the yaw + starting point, and then calculate distance to that two-points-line?
-    """
+        """
+        it's probably easiest + most robust to just grab another arbitrary colinear point, with cos+sin and the yaw + starting point, and then calculate distance to that two-points-line? """
         # if self.point == None or self.direction == None:
             # return # already checked prior to this running.
         x = self.tracker.x
@@ -92,8 +92,9 @@ class Straight_line():
         if abs(d) > self.distance_threshold:
 
             delay = rospy.Duration(1.0 - min(1.0, self.delay_coefficient*(abs(d) - self.distance_threshold)))
-            if rospy.Time.now - self.last_played < delay:
+            if rospy.Time.now() - self.last_played < delay:
                 return
+            self.last_played = rospy.Time.now()
             if d>0:
                 ratio = [0,1]
             else:
@@ -104,7 +105,7 @@ class Straight_line():
         cmd = 'amixer -D pulse sset Master {}%,{}%'.format(30*ratio[0], 30*ratio[1])
         popen = subprocess.Popen(cmd, shell=True)
         popen.communicate()
-        cmd = "aplay{}{}".format(self.path, self.filename)
+        cmd = "aplay {}{}".format(self.path, self.filename)
         popen = subprocess.Popen(cmd, shell=True)
         popen.communicate()
 
