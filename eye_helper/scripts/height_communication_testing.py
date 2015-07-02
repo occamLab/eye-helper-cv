@@ -223,7 +223,7 @@ class Body_mapping():
 
     def set_person_height(self, value):
         self.height = value
-        self.parts = {i: self.height*self.proportions[i] for i in proportion}
+        self.parts = {i: self.height*self.proportions[i] for i in self.proportions}
 
 
     def run(self):
