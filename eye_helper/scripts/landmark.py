@@ -1,8 +1,14 @@
 #!/usr/bin/env python
 
 from tango_tracker import Tango_tracker
-import cv2
 import rospy
+import numpy as np
+from geometry_msgs.msg import PointStamped, Point, Pose
+from sensor_msgs.msg import CameraInfo, PointCloud, CompressedImage
+import cv2
+from std_msgs.msg import Header
+from tf import TransformListener
+from threading import Lock
 
 class Landmark(object):
 	"""
@@ -11,6 +17,7 @@ class Landmark(object):
 	def __init__(self,tracker):
 		self.tracker=tracker
 		self.landmarks=[]
+		self.pub = rospy.Publisher("/clicked_point",PointStamped,queue_size=10)
         # self.rospack = rospkg.RosPack() #May not need this?
 
 
@@ -19,7 +26,6 @@ class Landmark(object):
 		# rospy.init_node('landmark_position')
 		# rospy.Subscriber('/landmark_position', PointStamped, self.add_landmark)
 		# self.pub = rospy.Publisher('/set_landmark', PointStamped, queue_size=10)
-
 
 	def handle_button(self):
 		"""
@@ -43,13 +49,19 @@ class Landmark(object):
 		"""
 		blah blah
 		"""
-		self.landmarks.append((self.tracker.x,self.tracker.y,self.tracker.z))
+		self.landmarks.append((self.tracker.x, self.tracker.y, self.tracker.z))
+
+		point_msg = PointStamped(header=Header(frame_id="depth_camera"),point=Point(y=self.tracker.y,z=self.tracker.z,x=self.tracker.x))
+		self.pub.publish(point_msg)
+
+		# point_msg = PointStamped(header=Header(stamp=msg.header.stamp,frame_id="depth_camera"),point=Point(y=tracker.y, z=tracker.z, x=tracker.x))
+		# self.landmarks.append(point_msg)
 
 
 if __name__ == "__main__":
     tracker = Tango_tracker()
-    eh=Landmark(tracker)
+    lm=Landmark(tracker)
     r = rospy.Rate(5) # 5hz
     while not rospy.is_shutdown():
         tracker.refresh_all()
-        eh.handle_button()
+        lm.handle_button()
