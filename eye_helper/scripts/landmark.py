@@ -17,14 +17,13 @@ class Landmark(object):
 		self.landmarks=[]
 		self.pub = rospy.Publisher("/clicked_point",PointStamped,queue_size=10)
 
-		#----------Publishing and subscribing to topics/nodes----------
 		# rospy.init_node('landmark_position')
 		# rospy.Subscriber('/landmark_position', PointStamped, self.add_landmark)
-		# self.pub = rospy.Publisher('/set_landmark', PointStamped, queue_size=10)
+		# self.landpub = rospy.Publisher('/landmark_position', PointStamped, queue_size=10)
 
 	def handle_button(self):
 		"""
-		When spacebar is down, gets Tango's position
+		When spacebar is down, stores Tango's position. When hit a number key, releases that one in the landmarks list
 		"""
 
 		cv2.namedWindow("set_landmark")
@@ -32,25 +31,29 @@ class Landmark(object):
 		if ord(' ') == (k & 255):
 			self.add_landmark()
 		for i in range(0,10):
-			i=str(i)
-			if ord(i) == (k & 255):
+			if ord(str(i)) == (k & 255):
 				self.publish_landmark(int(i)-1)
 
 
 	def landmark_number(self):
 		"""
-		Returns the number of landmarks set
+		Returns the total number of landmarks and landmark positions
 		"""
 		return len(self.landmarks), self.landmarks
 
 	def add_landmark(self):
 		"""
-		Publishes Tango's position to the /clicked_point topic
+		Stores Tango's position in landmarks list
 		"""
 		self.landmarks.append((self.tracker.x, self.tracker.y, self.tracker.z))
+		# msg=PointStamped(header=Header(frame_id="depth_camera"), point=Point(y=self.tracker.y,z=self.tracker.z,x=self.tracker.x))
+		# self.landpub.publish(msg)
 		print self.landmarks
 		
 	def publish_landmark(self, i):
+		"""
+		Publishes selected landmark position to /clicked_point topic
+		"""
 		point_msg = PointStamped(header=Header(frame_id="depth_camera"),point=Point(y=self.landmarks[i][1],z=self.landmarks[i][2],x=self.landmarks[i][0]))
 		self.pub.publish(point_msg)
 
