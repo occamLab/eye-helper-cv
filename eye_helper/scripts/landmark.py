@@ -49,7 +49,8 @@ class Landmark(object):
 		# msg=PointStamped(header=Header(frame_id="depth_camera"), point=Point(y=self.tracker.y,z=self.tracker.z,x=self.tracker.x))
 		# self.landpub.publish(msg)
 		print self.landmarks
-		
+		print self.landmark_number
+
 	def publish_landmark(self, i):
 		"""
 		Publishes selected landmark position to /clicked_point topic
@@ -59,7 +60,7 @@ class Landmark(object):
 
 
 if __name__ == "__main__":
-    tracker = Tango_tracker()
+    tracker = Tango_tracker('tango_tracker2')
     lm=Landmark(tracker)
     r = rospy.Rate(5) # 5hz
     while not rospy.is_shutdown():

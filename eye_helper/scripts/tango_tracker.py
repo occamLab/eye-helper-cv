@@ -18,7 +18,7 @@ class Tango_tracker():
     """
     Calculate relative locations w/ Tango. Refreshes target info with self.refresh_all().
     """
-    def __init__(self):
+    def __init__(self, nodename='tango_tracker'):
 
 #-----------------PARAMETERS-----------------------
 # This section just initializes the parameters to None.
@@ -52,7 +52,7 @@ class Tango_tracker():
 
 #----------------------ROS------------------------
 # This sets the tango tracker to subscribe to the relevant topics, and process them properly.
-        rospy.init_node('tango_tracker')
+        rospy.init_node(nodename)
         rospy.Subscriber('/tango_pose', PoseStamped, self.process_pose)
         rospy.Subscriber('/tango_angles', Float64MultiArray, self.process_angle)
         rospy.Subscriber('/clicked_point', PointStamped, self.set_target)
