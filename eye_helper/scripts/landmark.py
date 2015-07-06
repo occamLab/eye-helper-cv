@@ -10,12 +10,12 @@ from std_msgs.msg import Header
 class Landmark(object):
 	"""
 	Draft for setting up landmarks.
-	Publishes Tango's position to /clicked_point topic as a target in order to save current location.
+	Publishes Tango's position to /landmark_point topic as a target in order to save current location.
 	"""
 	def __init__(self,tracker):
 		self.tracker=tracker
 		self.landmarks=[]
-		self.pub = rospy.Publisher("/clicked_point",PointStamped,queue_size=10)
+		self.pub = rospy.Publisher("/landmark_point",PointStamped,queue_size=10)
 
 		# rospy.init_node('landmark_position')
 		# rospy.Subscriber('/landmark_position', PointStamped, self.add_landmark)

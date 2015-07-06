@@ -56,6 +56,7 @@ class Tango_tracker():
         rospy.Subscriber('/tango_pose', PoseStamped, self.process_pose)
         rospy.Subscriber('/tango_angles', Float64MultiArray, self.process_angle)
         rospy.Subscriber('/clicked_point', PointStamped, self.set_target)
+        rospy.Subscriber('/landmark_point', PointStamped, self.set_target)
         rospy.Subscriber('/nearby_cloud', PointCloud, self.process_points_near_target)
         self.logger = rospy.Publisher('/log', String, queue_size=10)
         self.rospack = rospkg.RosPack();

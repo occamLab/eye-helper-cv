@@ -142,6 +142,8 @@ class Offset_angle_and_distance():
             self.tracker.refresh_all()
             if self.tracker.xy_distance != None and self.tracker.target_surface_slope != None:
                 self.run()
+            # else:
+            #     print self.tracker.xy_distance, self.tracker.target_surface_slope, self.tracker.x
 
     def run(self):
         parallel_v = (1.0, self.tracker.target_surface_slope)
@@ -152,13 +154,21 @@ class Offset_angle_and_distance():
         unit_ortho = (ortho_v[0]/ortho_mag, ortho_v[1]/ortho_mag)
         forward_offset_amount = (unit_ortho[0]*self.forward_offset, unit_ortho[1]*self.forward_offset)
         right_offset_amount = (unit_parallel[0]*self.right_offset, unit_parallel[1]*self.right_offset)
-        if self.tracker.target_x > self.tracker.x:
-            new_target_x = self.tracker.target_x - forward_offset_amount[0]
-        else:
+        # if self.tracker.target_x > self.tracker.x:
+        #     new_target_x = self.tracker.target_x - forward_offset_amount[0]
+        # else:
+        #     new_target_x = self.tracker.target_x + forward_offset_amount[0]
+        if math.sqrt((self.tracker.target_x + forward_offset_amount[0]-self.tracker.x)**2 + (self.tracker.target_y + forward_offset_amount[1] - self.tracker.y)**2) < math.sqrt((self.tracker.target_x - forward_offset_amount[0] - self.tracker.x)**2 + (self.tracker.target_y - forward_offset_amount[1] - self.tracker.y)**2):
             new_target_x = self.tracker.target_x + forward_offset_amount[0]
-            
-        new_target_x = self.tracker.target_x + forward_offset_amount[0] + right_offset_amount[0]
-        new_target_y = self.tracker.target_y + forward_offset_amount[1] + right_offset_amount[1]
+            new_target_y = self.tracker.target_y + forward_offset_amount[1]
+        #comparing which way reduces the distance to figure out forward/backwards
+        else:
+            new_target_x = self.tracker.target_x - forward_offset_amount[0]
+            new_target_y = self.tracker.target_y - forward_offset_amount[1]
+            #right now not using right/left until the forward/back thing is resolved.
+
+        # new_target_x = self.tracker.target_x + forward_offset_amount[0] + right_offset_amount[0]
+        # new_target_y = self.tracker.target_y + forward_offset_amount[1] + right_offset_amount[1]
         xtg = new_target_x - self.tracker.x
         ytg = new_target_y - self.tracker.y # tg = to-go.
 
