@@ -1,5 +1,6 @@
 """
 coordinate based ransac implementation, hopefully!
+uses absolute distance rather than y-distance because this is an arbitrary line thing, not for functions or models etc.
 www.cse.yorku.ca/~kosta/CompVis_Notes/ransac.pdf
 https://en.wikipedia.org/wiki/RANSAC
 """
@@ -7,7 +8,7 @@ import random
 import math
 
 
-def ransac_2d(points, tolerance=.02, threshold=0.5, max_tries=20):
+def ransac_2d(points, tolerance=.02, threshold=0.5, max_tries=20, verbose=False):
     """
     points: list of points of the form (x, y).
     tolerance: distance for a point to be considered "in" a model, e.g.02 m (aka 2 cm)
@@ -37,17 +38,20 @@ def ransac_2d(points, tolerance=.02, threshold=0.5, max_tries=20):
             if d(point, point_subset[0], point_subset[1]) <= tolerance:
                 close_points.append(point)
         if len(close_points)/float(input_length) >= threshold:
-            print "found a fit: ", point_subset[0], point_subset[1]
+            if verbose:
+                print "found a fit: ", point_subset[0], point_subset[1]
             return point_subset
         else:
-            print "tested: ", point_subset[0], point_subset[1]
+            if verbose:
+                print "tested: ", point_subset[0], point_subset[1]
         tries_so_far += 1
 
-    print "did not find a fit."
+    if verbose:
+        print "did not find a fit."
     return
 
 if __name__ == "__main__":
     test_points = [(float(i), 2*float(i)) for i in range(10)]
     test_points.extend([(float(i), 2*float(i) + i*random.random()) for i in range(10)])
-    r2 = ransac_2d(test_points)
+    r2 = ransac_2d(test_points, verbose=True)
     print r2
