@@ -12,6 +12,7 @@ import time
 from tf import TransformListener
 from tf.transformations import euler_from_quaternion
 from std_msgs.msg import Float64, Float64MultiArray, String
+import ransac
 
 
 class Tango_tracker():
@@ -40,6 +41,7 @@ class Tango_tracker():
 
 
         self.target_surface_points = None
+        self.ransac_points = None
         self.target_surface_slope = None
         self.pose_timestamp = None
 
@@ -100,6 +102,8 @@ class Tango_tracker():
         slope, intercept, r, p, err = linregress(xvals, yvals)
         
         self.target_surface_slope = slope
+
+        self.ransac_points = ransac.ransac_2d(self.target_surface_points, tolerance=0.01, threshold=0.4)
 
     def set_target(self, msg):
         """

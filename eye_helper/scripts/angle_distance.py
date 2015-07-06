@@ -9,6 +9,7 @@ import rospkg
 import subprocess
 from tango_tracker import Tango_tracker
 from geometry_msgs.msg import PointStamped, Point
+from visualization_msgs.msg import Marker
 import math
 import numpy as np
 import time
@@ -128,6 +129,7 @@ class Offset_angle_and_distance():
         self.offset_target_pub = rospy.Publisher("/offset_point", PointStamped, queue_size=10)
         self.sound_pub=rospy.Publisher('/sound_info', Sound, queue_size=10)
         # self.tf = TransformListener()
+        self.line_id_pub = rospy.Publisher("/target_line", Marker, queue_size=10)
 
     def toggle(self):
         self.isOn = not self.isOn
@@ -141,17 +143,25 @@ class Offset_angle_and_distance():
     def call(self):
         if self.isOn:
             self.tracker.refresh_all()
-            if self.tracker.xy_distance != None and self.tracker.target_surface_points != None:
+            if self.tracker.xy_distance != None and self.tracker.target_surface_points != None and self.tracker.target_surface_slope != None:
                 self.run()
             # else:
             #     print self.tracker.xy_distance, self.tracker.target_surface_slope, self.tracker.x
 
     def run(self):
-        good_points = ransac.ransac_2d(self.tracker.target_surface_points)
-        parallel_v = (good_points[1][0]-good_points[0][0], good_points[1][1]-good_points[0][1])
-        # parallel_v = (1.0, self.tracker.target_surface_slope)
-        ortho_v = (1.0, (good_points[0][0]-good_points[1][0])/(good_points[1][1] - good_points[0][1]))
-        # ortho_v = (1.0, -(1.0/self.tracker.target_surface_slope)) 
+        # good_points = ransac.ransac_2d(self.tracker.target_surface_points)
+        good_points = self.tracker.ransac_points
+        if good_points == None:
+            parallel_v = (1.0, self.tracker.target_surface_slope)
+            ortho_v = (1.0, -(1.0/self.tracker.target_surface_slope)) 
+        else:
+            parallel_v = (good_points[1][0]-good_points[0][0], good_points[1][1]-good_points[0][1])
+            ortho_v = (1.0, (good_points[0][0]-good_points[1][0])/(good_points[1][1] - good_points[0][1]))
+
+            line = Marker()
+            line.type = Marker.LINE_STRIP
+            line.points = [Point(z=self.tracker.target_z, x = good_points[0][0], y=good_points[0][1]), Point(z=self.tracker.target_z, x = good_points[1][0], y=good_points[1][1])]
+
         parallel_mag = math.sqrt(parallel_v[0]**2 + parallel_v[1]**2)
         ortho_mag = math.sqrt(ortho_v[0]**2 + ortho_v[1]**2)
         unit_parallel = (parallel_v[0]/parallel_mag, parallel_v[1]/parallel_mag)
@@ -207,10 +217,12 @@ class Offset_angle_and_distance():
             vol = self.minimum_volume
             ratio = [1,1]
 
-        self.play_audio(vol, ratio)
+        # self.play_audio(vol, ratio)
 
         self.sound_info= Sound(file_path=self.filename,volume=float(vol),mix_left=float(ratio[0]),mix_right=float(ratio[1]) )
         self.sound_pub.publish(self.sound_info)
+
+
 
     def play_audio(self, volume, ratio):
         cmd = 'amixer -D pulse sset Master {}%,{}%'.format(volume*ratio[0], volume*ratio[1])

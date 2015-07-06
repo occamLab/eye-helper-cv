@@ -8,7 +8,7 @@ import random
 import math
 
 
-def ransac_2d(points, tolerance=.02, threshold=0.5, max_tries=20, verbose=False):
+def ransac_2d(points, tolerance=.5, threshold=0.33, max_tries=50, verbose=False):
     """
     points: list of points of the form (x, y).
     tolerance: distance for a point to be considered "in" a model, e.g.02 m (aka 2 cm)
@@ -40,6 +40,7 @@ def ransac_2d(points, tolerance=.02, threshold=0.5, max_tries=20, verbose=False)
         if len(close_points)/float(input_length) >= threshold:
             if verbose:
                 print "found a fit: ", point_subset[0], point_subset[1]
+            print "============\nfound fit\n==============="
             return point_subset
         else:
             if verbose:
@@ -48,10 +49,15 @@ def ransac_2d(points, tolerance=.02, threshold=0.5, max_tries=20, verbose=False)
 
     if verbose:
         print "did not find a fit."
+    print "-----------------\nno fit found\n---------------------"
     return
 
 if __name__ == "__main__":
-    test_points = [(float(i), 2*float(i)) for i in range(10)]
-    test_points.extend([(float(i), 2*float(i) + i*random.random()) for i in range(10)])
+    # test_points = [(float(i), 2*float(i)) for i in range(10)]
+    # test_points.extend([(float(i), 2*float(i) + i*random.random()) for i in range(20)])
+
+    test_points = [(float(i) + .2*random.random(), 2*float(i)+.2*random.random()) for i in range(20)]
+
     r2 = ransac_2d(test_points, verbose=True)
     print r2
+
