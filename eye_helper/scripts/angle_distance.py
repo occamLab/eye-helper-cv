@@ -15,6 +15,7 @@ import time
 from std_msgs.msg import Header
 from tf import TransformListener
 from eye_helper.msg import Sound
+import ransac
 
 class Angle_and_distance():
     """
@@ -140,24 +141,24 @@ class Offset_angle_and_distance():
     def call(self):
         if self.isOn:
             self.tracker.refresh_all()
-            if self.tracker.xy_distance != None and self.tracker.target_surface_slope != None:
+            if self.tracker.xy_distance != None and self.tracker.target_surface_points != None:
                 self.run()
             # else:
             #     print self.tracker.xy_distance, self.tracker.target_surface_slope, self.tracker.x
 
     def run(self):
-        parallel_v = (1.0, self.tracker.target_surface_slope)
-        ortho_v = (1.0, -(1.0/self.tracker.target_surface_slope)) 
+        good_points = ransac.ransac_2d(self.tracker.target_surface_points)
+        parallel_v = (good_points[1][0]-good_points[0][0], good_points[1][1]-good_points[0][1])
+        # parallel_v = (1.0, self.tracker.target_surface_slope)
+        ortho_v = (1.0, (good_points[0][0]-good_points[1][0])/(good_points[1][1] - good_points[0][1]))
+        # ortho_v = (1.0, -(1.0/self.tracker.target_surface_slope)) 
         parallel_mag = math.sqrt(parallel_v[0]**2 + parallel_v[1]**2)
         ortho_mag = math.sqrt(ortho_v[0]**2 + ortho_v[1]**2)
         unit_parallel = (parallel_v[0]/parallel_mag, parallel_v[1]/parallel_mag)
         unit_ortho = (ortho_v[0]/ortho_mag, ortho_v[1]/ortho_mag)
         forward_offset_amount = (unit_ortho[0]*self.forward_offset, unit_ortho[1]*self.forward_offset)
         right_offset_amount = (unit_parallel[0]*self.right_offset, unit_parallel[1]*self.right_offset)
-        # if self.tracker.target_x > self.tracker.x:
-        #     new_target_x = self.tracker.target_x - forward_offset_amount[0]
-        # else:
-        #     new_target_x = self.tracker.target_x + forward_offset_amount[0]
+
         if math.sqrt((self.tracker.target_x + forward_offset_amount[0]-self.tracker.x)**2 + (self.tracker.target_y + forward_offset_amount[1] - self.tracker.y)**2) < math.sqrt((self.tracker.target_x - forward_offset_amount[0] - self.tracker.x)**2 + (self.tracker.target_y - forward_offset_amount[1] - self.tracker.y)**2):
             new_target_x = self.tracker.target_x + forward_offset_amount[0]
             new_target_y = self.tracker.target_y + forward_offset_amount[1]
