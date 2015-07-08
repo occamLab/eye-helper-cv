@@ -10,17 +10,15 @@ from std_msgs.msg import Header
 class Landmark():
 	"""
 	Draft for setting up landmarks.
-	Publishes Tango's position to /landmark_point topic as a target in order to save current location.
+	Space bar adds landmarks into queue. Publishes the last one added to "/last_landmark" which can be visualized on rviz.
+	Number keys (1, 2 etc) publishes the selected landmark's position to'/landmark_point topic as a target. Person can be guided back to that point using angle beeps.
+	1 means the first landmark saved in the queue, 2 means the second one saved etc.
 	"""
 	def __init__(self,tracker):
 		self.tracker=tracker
 		self.landmarks=[]
 		self.pub = rospy.Publisher("/landmark_point",PointStamped,queue_size=10)
 		self.last_added=rospy.Publisher("/last_landmark", PointStamped, queue_size=10)
-
-		# rospy.init_node('landmark_position')
-		# rospy.Subscriber('/landmark_position', PointStamped, self.add_landmark)
-		# self.landpub = rospy.Publisher('/landmark_position', PointStamped, queue_size=10)
 
 	def handle_button(self):
 		"""
