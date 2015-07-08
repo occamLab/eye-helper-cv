@@ -45,6 +45,11 @@ class Tango_tracker():
         self.target_surface_slope = None
         self.pose_timestamp = None
 
+# ---- these are solely for use in landmark code. -------------
+        self.pose_x = None
+        self.pose_y = None
+        self.pose_z = None
+
 
 #---------above is input; below is "output"---------
         self.xy_distance = None
@@ -80,6 +85,13 @@ class Tango_tracker():
         self.x = msg.pose.position.x - self.starting_x
         self.y = msg.pose.position.y - self.starting_y
         self.z = msg.pose.position.z - self.starting_z
+
+# ---- these are solely for use in landmark code. -------------
+        self.pose_x = msg.pose.position.x
+        self.pose_y = msg.pose.position.y
+        self.pose_z = msg.pose.position.z
+# -------------------------------------------------------------
+
         self.pose_timestamp = msg.header.stamp
 
     def process_angle(self, msg):
