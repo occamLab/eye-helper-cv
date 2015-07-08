@@ -7,7 +7,7 @@ from sensor_msgs.msg import CameraInfo, PointCloud, CompressedImage
 import cv2
 from std_msgs.msg import Header
 
-class Landmark(object):
+class Landmark():
 	"""
 	Draft for setting up landmarks.
 	Publishes Tango's position to /landmark_point topic as a target in order to save current location.
@@ -16,6 +16,7 @@ class Landmark(object):
 		self.tracker=tracker
 		self.landmarks=[]
 		self.pub = rospy.Publisher("/landmark_point",PointStamped,queue_size=10)
+		self.last_added=rospy.Publisher("/last_landmark", PointStamped, queue_size=10)
 
 		# rospy.init_node('landmark_position')
 		# rospy.Subscriber('/landmark_position', PointStamped, self.add_landmark)
@@ -32,22 +33,23 @@ class Landmark(object):
 			self.add_landmark()
 		for i in range(0,10):
 			if ord(str(i)) == (k & 255):
-				self.publish_landmark(int(i)-1)
+				print 'landmark published'
+				self.publish_landmark(i)
 
 
 	def landmark_number(self):
 		"""
 		Returns the total number of landmarks and landmark positions
 		"""
-		return len(self.landmarks), self.landmarks
+		return len(self.landmarks)
 
 	def add_landmark(self):
 		"""
 		Stores Tango's position in landmarks list
 		"""
-		self.landmarks.append((self.tracker.x, self.tracker.y, self.tracker.z))
-		# msg=PointStamped(header=Header(frame_id="depth_camera"), point=Point(y=self.tracker.y,z=self.tracker.z,x=self.tracker.x))
-		# self.landpub.publish(msg)
+		self.landmarks.append((self.tracker.pose_x, self.tracker.pose_y, self.tracker.pose_z))
+		msg=PointStamped(header=Header(frame_id="odom", stamp=self.tracker.pose_timestamp), point=Point(y=self.tracker.pose_y,z=self.tracker.pose_z,x=self.tracker.pose_x))
+		self.last_added.publish(msg)
 		print self.landmarks
 		print self.landmark_number
 
@@ -55,7 +57,7 @@ class Landmark(object):
 		"""
 		Publishes selected landmark position to /clicked_point topic
 		"""
-		point_msg = PointStamped(header=Header(frame_id="depth_camera"),point=Point(y=self.landmarks[i][1],z=self.landmarks[i][2],x=self.landmarks[i][0]))
+		point_msg = PointStamped(header=Header(frame_id="odom", stamp=self.tracker.pose_timestamp), point=Point(y=self.landmarks[i-1][1],z=self.landmarks[i-1][2],x=self.landmarks[i-1][0]))
 		self.pub.publish(point_msg)
 
 
