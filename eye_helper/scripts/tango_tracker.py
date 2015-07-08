@@ -103,7 +103,7 @@ class Tango_tracker():
         
         self.target_surface_slope = slope
 
-        self.ransac_points = ransac.ransac_2d(self.target_surface_points, tolerance=0.01, threshold=0.4)
+        self.ransac_points = ransac.ransac_2d(self.target_surface_points, tolerance=0.01, threshold=0.4, verbose=True)
 
     def set_target(self, msg):
         """

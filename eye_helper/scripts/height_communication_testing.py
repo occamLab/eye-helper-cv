@@ -302,6 +302,11 @@ class Body_map_controller(tk.Frame):
         self.knee_send = tk.Button(self, text = "set knee height", command = lambda: self.module.set_part("knee", float(self.knee_entry.get())))
         self.knee_send.grid(column=1, row=5)
 
+        self.turn_on = tk.Button(self, text = "turn on", command = self.module.turn_on)
+        self.turn_off = tk.Button(self, text = "turn off", command = self.module.turn_off)
+        self.turn_off.grid(column=0, row=6)
+        self.turn_on.grid(column=1, row=6)
+
     def call_module(self):
         self.module.call()
         self.after(10, self.call_module)
