@@ -86,7 +86,7 @@ class Reach():
         if (rospy.Time.now() - self.last_played) < self.delay:
             return
         self.last_played = rospy.Time.now()
-        self.run_height()
+        # self.run_height()
         self.run_angle()
 
     def run_height(self):
@@ -141,6 +141,7 @@ class Reach():
         elif fd < 0.7 and rd_signed < -0.4:
             values_to_play.append('left')
         elif fd_signed <= 0.6 and rd<= 0.4:
+            self.run_height()
             if atg>-3 and atg<3:
                 values_to_play.append('reach_forward')
 
@@ -178,7 +179,7 @@ class Reach():
         p.communicate()
 
         for i in cmds:
-            print "=============== \n", i, "\n ==============="
+            # print "=============== \n", i, "\n ==============="
             self.filename = '{} {}{}.wav'.format(self.player, self.angle_path, i)
             p = subprocess.Popen('{} {}{}.wav'.format(self.player, self.angle_path, i), shell=True)
             p.communicate()
