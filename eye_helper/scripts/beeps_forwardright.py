@@ -76,6 +76,8 @@ class Forward_right_angle_beep():
         elif -180 < self.angle <= -90:
             self.angle = -90
 
+        #Pretty sure that this gets taken care of on the tracker side / might not be necessary...?
+
         #-----------------------------------------------------------------------------------------------------------
 
         delay = rospy.Duration(self.dist_to_delay(self.tracker, self.delay_coefficient))

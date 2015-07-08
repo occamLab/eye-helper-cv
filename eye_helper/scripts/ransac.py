@@ -40,16 +40,17 @@ def ransac_2d(points, tolerance=.5, threshold=0.33, max_tries=50, verbose=False)
         if len(close_points)/float(input_length) >= threshold:
             if verbose:
                 print "found a fit: ", point_subset[0], point_subset[1]
-            print "============\nfound fit\n==============="
+            # print "============\nfound fit\n==============="
             return point_subset
         else:
             if verbose:
-                print "tested: ", point_subset[0], point_subset[1]
+                pass
+                # print "tested: ", point_subset[0], point_subset[1]
         tries_so_far += 1
 
     if verbose:
         print "did not find a fit."
-    print "-----------------\nno fit found\n---------------------"
+    # print "-----------------\nno fit found\n---------------------"
     return
 
 if __name__ == "__main__":
