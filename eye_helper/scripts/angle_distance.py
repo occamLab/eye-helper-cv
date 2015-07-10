@@ -25,7 +25,7 @@ class Angle_and_distance():
     def __init__(self, tracker):
         self.tracker = tracker
         self.isOn = False
-        self.reverse = True #thing to change - changes whether sound-in-right-ear means move *to*, or *away from* the right.
+        self.reverse = False #thing to change - changes whether sound-in-right-ear means move *to*, or *away from* the right.
         self.volume_coefficient = 2 #thing to change.
         self.minimum_volume = 15 #thing to change.
         self.max_volume = 40 #thing to change.
@@ -34,7 +34,7 @@ class Angle_and_distance():
         self.player = "aplay"
         self.rospack = rospkg.RosPack();
         self.path = self.rospack.get_path('eye_helper') + '/../GeneratedSoundFiles/'
-        self.filename = "height4angle5.wav"
+        self.filename = None 
         self.sound_pub=rospy.Publisher('/sound_info', Sound, queue_size=10)
 
     def toggle(self):
@@ -52,29 +52,38 @@ class Angle_and_distance():
             if self.tracker.xy_distance != None and self.tracker.angle_to_go != None:
                 self.run()
 
-    def run(self):
+    def run(self): 
         delay = rospy.Duration(self.dist_to_delay(self.tracker, self.delay_coefficient))
         if rospy.Time.now() - self.last_tone < delay:
             return
         self.last_tone = rospy.Time.now()
-        vol = self.angle_to_volume(self.tracker, self.volume_coefficient)
-        atg = self.tracker.angle_to_go
-        if self.reverse:
-            if atg >= 0:
-                ratio = [0,1]
-            else:
-                ratio = [1,0]
-        else:
-            if atg >= 0:
-                ratio=[1,0]
-            else:
-                ratio = [0,1]
-        if abs(atg) * self.volume_coefficient < self.minimum_volume:
-            vol = self.minimum_volume
-            ratio = [1,1]
-        elif abs(atg) * self.volume_coefficient > self.max_volume:
-            vol = self.max_volume
 
+        if self.tracker.forward_distance>0.1 or self.tracker.right_distance > 0.1:
+            self.filename= "height4angle5.wav"
+            vol = self.angle_to_volume(self.tracker, self.volume_coefficient)
+            atg = self.tracker.angle_to_go
+            if self.reverse:
+                if atg >= 0:
+                    ratio = [0,1]
+                else:
+                    ratio = [1,0]
+            else:
+                if atg >= 0:
+                    ratio=[1,0]
+                else:
+                    ratio = [0,1]
+            if abs(atg) * self.volume_coefficient < self.minimum_volume:
+                vol = self.minimum_volume
+                ratio = [1,1]
+            elif abs(atg) * self.volume_coefficient > self.max_volume:
+                vol = self.max_volume
+
+        else: 
+            vol=30
+            ratio=[1,1]
+            self.filename='You_arrived.wav'
+
+        
         self.play_audio(vol, ratio)
 
         self.sound_info= Sound(file_path=self.path + self.filename,volume=float(vol),mix_left=float(ratio[0]),mix_right=float(ratio[1]) )
@@ -104,6 +113,8 @@ class Angle_and_distance():
         cmd = "{} {}{}".format(self.player, self.path, self.filename)
         popen = subprocess.Popen(cmd, shell=True)
         popen.communicate()
+        if self.filename == 'You_arrived.wav':
+            rospy.sleep(10.)
 
 
 class Offset_angle_and_distance():
@@ -236,7 +247,7 @@ class Offset_angle_and_distance():
 
 if __name__ == "__main__":
     tt = Tango_tracker()
-    offset = Offset_angle_and_distance(tt)
+    offset = Angle_and_distance(tt)
     offset.turn_on()
     while not rospy.is_shutdown():
         offset.call()
