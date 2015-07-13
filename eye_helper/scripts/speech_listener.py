@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 
 import rospy
-from eye_helper.msg import Sound
+from eye_helper.msg import Speech
 import subprocess
-
 
 def callback(data):
     player = 'aplay'
@@ -12,11 +11,11 @@ def callback(data):
     popen.communicate()
     print data
 
-def sound_listener():
+def speech_listener():
 	rospy.init_node('speech_listener', anonymous=True)
 	rospy.Subscriber('/speech_info', Speech, callback)
 	rospy.spin()
 
 
 if __name__ == '__main__':
-	sound_listener()
+	speech_listener()
