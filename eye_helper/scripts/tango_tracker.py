@@ -23,10 +23,6 @@ class Tango_tracker():
 
 #-----------------PARAMETERS-----------------------
 # This section just initializes the parameters to None.
-        self.starting_x = None
-        self.starting_y = None
-        self.starting_z = None
-
         self.x = None
         self.y = None
         self.z = None
@@ -76,23 +72,39 @@ class Tango_tracker():
 # Converts tango messages into things like x position, yaw, etc.
     def process_pose(self, msg):
         """
-        zeroes position data, then writes it to class varirables.
+        zeroes position data, then writes it to class variables.
         """
-        if self.starting_x == None:
-            self.starting_x = msg.pose.position.x
-            self.starting_y = msg.pose.position.y
-            self.starting_z = msg.pose.position.z
-        self.x = msg.pose.position.x - self.starting_x
-        self.y = msg.pose.position.y - self.starting_y
-        self.z = msg.pose.position.z - self.starting_z
+        # x = msg.pose.position.x
+        # y = msg.pose.position.y
+        # z = msg.pose.position.z
+        self.pose_timestamp = msg.header.stamp
 
+        try:
+            self.tf.lookupTransform('odom', 'area_learning', rospy.Time(0))
+            new_pose = self.tf.transformPose('area_learning', msg)
+            self.x = new_pose.pose.position.x
+            self.y = new_pose.pose.position.y
+            self.z = new_pose.pose.position.z
+
+        except: #if can't find it yet?
+            print "transform failed"
+
+        #-------------------------- angles now ----------
+        (translation, rotation) = self.tf.lookupTransform('area_learning', 'odom') #maybe. might be 'depth_camera' or something else; order is uncertain too. Will try out later.
+        rpy = euler_from_quaternion(rotation)
+        self.yaw = rpy[2]
+        self.pitch = rpy[1]
+        self.roll = rpy[0]
+
+        #---------------------
 # ---- these are solely for use in landmark code. -------------
         self.pose_x = msg.pose.position.x
         self.pose_y = msg.pose.position.y
-        self.pose_z = msg.pose.position.z
+        self.pose_z = msg.pose.position.z #should these also be moved to the area_learning frame? My guess would be yes, but I'll check w/ pinar before changing anything -- I'd rather not accidentally break her code :P.
 # -------------------------------------------------------------
 
-        self.pose_timestamp = msg.header.stamp
+
+
 
     def process_angle(self, msg):
         """
@@ -101,6 +113,7 @@ class Tango_tracker():
         self.yaw = msg.data[2]
         self.pitch = msg.data[1]
         self.roll = msg.data[0]
+        #Wait - this is just a float array/list-thingie. What ought to be done to transform it? Relatedly - is 
 
     def process_points_near_target(self, msg):
         points = msg.points
@@ -121,9 +134,10 @@ class Tango_tracker():
         """
         writes the message info to the target.
         """
-        self.target_x = msg.point.x - self.starting_x
-        self.target_y = msg.point.y - self.starting_y
-        self.target_z = msg.point.z - self.starting_z
+        self.target_x = msg.point.x
+        self.target_y = msg.point.y
+        self.target_z = msg.point.z
+
         print "target set"
 
 #--------------GENERATE-OUTPUTS---------------------

@@ -72,7 +72,7 @@ class Wii_pointer():
         self.mote = xwiimote.iface(self.mote)
 
         self.mote.open(self.mote.available() | xwiimote.IFACE_WRITABLE)
-        # self.mote.open(self.mote.available() | xwiimote.IFACE_ACCEL)
+        self.mote.open(self.mote.available() | xwiimote.IFACE_ACCEL)
         self.mote.open(self.mote.available() | xwiimote.IFACE_MOTION_PLUS)
         self.poller = poll()
         self.poller.register(self.mote.get_fd(), POLLIN)
@@ -81,9 +81,8 @@ class Wii_pointer():
         self.last_reading = rospy.Time.now()
         self.maybe_angle = [0,0,0]
         self.resting = [0,0,0]
-        self.target = [-1000000, 0, 0]
+        self.target = [-700, 0, 100]
         self.index = 0
-        # self.zero = [0,0,0]
 
 
     def run(self):
@@ -91,34 +90,29 @@ class Wii_pointer():
         self.mote.dispatch(self.event)
         if self.event.type == xwiimote.EVENT_MOTION_PLUS:
             change = self.event.get_abs(0)
-            # if self.resting[0] == 0:
-                # self.resting = change
-                # print "calibrated"
-                # print self.resting
-                # print "=============="
-            # print change
+            now = rospy.Time.now()
+            dt = now - self.last_reading
+            self.last_reading = now
             for i in range(3):
-                self.current[i] += (change[i] - self.resting[i])
+                self.current[i] += (change[i] - self.resting[i])*(dt.nsecs/1000000000.0)*(1.45/20.0)**2 #mucking around to degrees
             self.index += 1
             if self.index%100 == 0:
-                # print self.current, '\t \t || \t \t', change, "\t \t || \t \t", self.resting
+                print [int(i) for i in self.current], '\t \t || \t \t', change, "\t \t || \t \t", dt.nsecs/1000000000.0
                 pass
-            self.check_if_close()
+            # self.check_if_close()
 
     def check_if_close(self):
         """
         if within some [pretty much arbitrary right now] distance of the target, rumbles. else, no rumble.
         """    
-        # self.poller.poll()
-        # self.mote.dispatch(self.event)
-        distance = math.sqrt((self.target[0]-self.current[0])**2 + (self.target[1]-self.current[1])**2 + (self.target[2]-self.current[2]))
-        print distance
-        rospy.sleep(.01)
-        if distance < 200000:
+        # distance = math.sqrt((self.target[0]-self.current[0])**2 + (self.target[1]-self.current[1])**2 + (self.target[2]-self.current[2])**2)
+        distance = math.sqrt((self.target[0]-self.current[0])**2 + (self.target[2]-self.current[2])**2)
+        # print distance
+        rospy.sleep(.01) # frees up the wm again. can probably be a lot less time.
+        if distance < 100:
             self.mote.rumble(True)
         else:
             self.mote.rumble(False)
-        # pass
 
 
     def set_zero(self):
@@ -139,24 +133,10 @@ class Wii_pointer():
             reading = self.event.get_abs(0)
             if self.event.type == xwiimote.EVENT_MOTION_PLUS:
                 drifts.append(reading)
-                # print "reading: \t", reading
                 self.index += 1
         avg_reading = [(sum(i[j] for i in drifts)/len(drifts)) for j in range(3)]
         self.resting = avg_reading
         print "resting: \t", self.resting
-        # yet = False
-        # while yet == False:
-        #     if self.event.type == xwiimote.EVENT_MOTION_PLUS:
-        #         print self.event.get_abs(0)
-        #         yet = True
-
-
-
-# if __name__ == "__main__":
-#     wm = Wii_pointer("tracker goes here")
-#     wm.mote.rumble(True)
-#     time.sleep(2)
-#     wm.mote.rumble(False)
 
 
 if __name__ == "__main__":
