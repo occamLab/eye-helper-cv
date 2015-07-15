@@ -205,7 +205,7 @@ class Offset_angle_and_distance():
 
         vol = min(abs(atg)*self.volume_coefficient, 40)
        
-        point_msg = PointStamped(header=Header(stamp=self.tracker.pose_timestamp, frame_id="odom"), point=Point(y=new_target_y + self.tracker.starting_y, z=self.tracker.target_z, x=new_target_x + self.tracker.starting_x))
+        point_msg = PointStamped(header=Header(stamp=self.tracker.pose_timestamp, frame_id="odom"), point=Point(y=new_target_y + self.tracker.y, z=self.tracker.target_z, x=new_target_x + self.tracker.x))
         self.offset_target_pub.publish(point_msg)
 
         delay = rospy.Duration(min(distance_to_target*self.delay_coefficient, 4*self.delay_coefficient))
