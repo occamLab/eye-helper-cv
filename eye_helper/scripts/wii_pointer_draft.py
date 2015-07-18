@@ -11,78 +11,42 @@ from select import poll, POLLIN
 import math
 import xwiimote
 import time
-# from tango_tracker import Tango_tracker
-
-
-'''
-class Wii_pointer():
-    def __init__(self, tracker, address=None):
-        self.tracker = tracker
-        self.zeros = None
-        self.shoulder_right_offset = 0 #for left, make negative.
-        self.shoulder_up_offset = 0 
-        # self.pair()
-        if address == None: # for some reason, the wm+ doesn't like auto-connecting. can use hcitools to scan for the wm, then get its bluetooth address directly.
-            print "press and hold 1 and 2."
-            try:
-                wm = cwiid.Wiimote()
-            except RuntimeError:
-                print "connection failed, try again."
-                try:
-                    wm = cwiid.Wiimote()
-                except RuntimeError:
-                    print "connection failed, terminating."
-                    return
-            self.wm = wm
-        self.wm.rpt_mode = cwiid.RPT_ACC
-        self.isZeroed = False
-
-
-    def pair(self):
-        print "press and hold 1 and 2."
-        try:
-            wm = cwiid.Wiimote()
-        except RuntimeError:
-            print "connection failed, try again."
-            try:
-                wm = cwiid.Wiimote()
-            except RuntimeError:
-                print "connection failed, terminating."
-                return
-        self.wm = wm
-
-
-    def set_zero(self):
-        "set current orientation to straight up"
-        curr = self.wm.state['acc'] # (a, b, c) tuple; ints. a is the x-axis? I think? NTS: Try out just printing them out while connected.
-
-        self.isZeroed = True
-        pass
-'''
+from std_msgs.msg import Int32, Int32MultiArray, Bool, Header #might not use header or the floats actually, we'll see.
+from tango_tracker import Tango_tracker
+import numpy as np
 
 
 class Wii_pointer():
     def __init__(self, tracker):
+        # ------------ Connecting to wii remote.
         self.mote = None
         self.tracker = tracker
         self.monitor = xwiimote.monitor(True, True)
         while self.mote == None:
             self.mote = self.monitor.poll()
             rospy.sleep(1)
-        self.mote = xwiimote.iface(self.mote)
 
+
+        # ------------ Setting up wii remote.
+        self.mote = xwiimote.iface(self.mote)
         self.mote.open(self.mote.available() | xwiimote.IFACE_WRITABLE)
         self.mote.open(self.mote.available() | xwiimote.IFACE_ACCEL)
         self.mote.open(self.mote.available() | xwiimote.IFACE_MOTION_PLUS)
         self.poller = poll()
         self.poller.register(self.mote.get_fd(), POLLIN)
         self.event = xwiimote.event()
+
+        # ------------ Parameters, data, etc.
         self.current = [0,0,0]
-        self.last_reading = rospy.Time.now()
-        self.maybe_angle = [0,0,0]
         self.resting = [0,0,0]
-        self.target = [-70, 0, 10]
-        self.index = 0
+        self.last_reading = rospy.Time.now()
+        self.target = [-70, 0, 10] # just for testing purposes
+        self.index = 0 # ditto
+
+        # ----------- ROS Publishers/subscribers.
+        self.button_pub = rospy.Publisher("/wii_buttons", Int32, queue_size=10)
+        self.orientation_pub = rospy.Publisher("/wii_orientation", )
+        rospy.Subscriber("/wii_rumble", Bool, self.set_rumble)
 
 
     def run(self):
@@ -92,27 +56,53 @@ class Wii_pointer():
         except IOError:
             # print "IOError in run dispatch"
             pass
+
         if self.event.type == xwiimote.EVENT_MOTION_PLUS:
-            change = self.event.get_abs(0)
-            now = rospy.Time.now()
-            dt = now - self.last_reading
-            self.last_reading = now
-            for i in range(3):
-                self.current[i] += (change[i] - self.resting[i])*(dt.nsecs/1000000000.0)*(1.492/20.0)**2 #mucking around to degrees
-            self.index += 1
-            if self.index%100 == 0:
-                print [int(i) for i in self.current], '\t \t || \t \t', change, "\t \t || \t \t", dt.nsecs/1000000000.0
-                pass
+            self.handle_motion()
             self.check_if_close()
+
         elif self.event.type == xwiimote.EVENT_KEY:
+            self.handle_buttons()
             (code, state) = self.event.get_key()
-            if state == 1 or True:
+            if True: # right now using A and B buttons as a control thingie.
                 if code == 4:
                     self.set_resting()
                 elif code == 5:
                     self.set_zero()
             #Keys: 0 = left, 1: right, 2: up, 3 = down, 4 = A, 5 = B, 6 = +, 7 = -, 8 = home, 9 = 1, 10 = 2.
-            print code, '\t || \t', state
+
+
+
+
+    def handle_motion(self):
+        """
+        handles motion plus events. basically, integrates the angular velocities into a current pose.
+        then, publishes to the motion topic.
+        still working on the roll thingie, the ros transforms I tried earlier didn't work quite right. probably gonna muck around with cosines &c tomorrow.
+        """
+        change = self.event.get_abs(0)
+        now = rospy.Time.now()
+        dt = now - self.last_reading
+        self.last_reading = now
+
+        self.current[0] += (change[0] * math.cos(math.radians(self.current[1])) + change[2] * math.sin(math.radians(self.current[1])))*(dt.nsecs/1000000000.0)*(1.492/20.0)**2
+        self.current[2] += (change[2] * math.cos(math.radians(self.current[1])) + change[0] * math.sin(math.radians(self.current[1])))*(dt.nsecs/1000000000.0)*(1.492/20.0)**2
+        self.current[1] += change[1]*(dt.nsecs/1000000000.0)*(1.492/20.0)**2
+
+        a = numpy.array([int(i) for i in self.current], dtype=numpy.int32)
+        self.orientation_pub.publish(a)
+
+    def handle_buttons(self):
+        (code, state) = self.event.get_key()
+        self.button_pub.publish(code)
+
+    def set_rumble(self, msg):
+        try:
+            self.mote.rumble(msg.data)
+        except IOError:
+            # print "Error setting rumble."
+            pass
+
 
     def check_if_close(self):
         """
@@ -128,7 +118,8 @@ class Wii_pointer():
             else:
                 self.mote.rumble(False)
         except IOError:
-            "ioerror in check rumble thingie."
+            # print "Error setting rumble."
+            pass
 
 
     def set_zero(self):
