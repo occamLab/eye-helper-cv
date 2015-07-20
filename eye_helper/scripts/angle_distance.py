@@ -58,27 +58,27 @@ class Angle_and_distance():
             return
         self.last_tone = rospy.Time.now()
 
-        if self.tracker.forward_distance>0.1 or self.tracker.right_distance > 0.1:
-            self.filename= "height4angle5.wav"
-            vol = self.angle_to_volume(self.tracker, self.volume_coefficient)
-            atg = self.tracker.angle_to_go
-            if self.reverse:
-                if atg >= 0:
-                    ratio = [0,1]
-                else:
-                    ratio = [1,0]
-            else:
-                if atg >= 0:
-                    ratio=[1,0]
-                else:
-                    ratio = [0,1]
-            if abs(atg) * self.volume_coefficient < self.minimum_volume:
-                vol = self.minimum_volume
-                ratio = [1,1]
-            elif abs(atg) * self.volume_coefficient > self.max_volume:
-                vol = self.max_volume
 
-        else: 
+        self.filename= "height4angle5.wav"
+        vol = self.angle_to_volume(self.tracker, self.volume_coefficient)
+        atg = self.tracker.angle_to_go
+        if self.reverse:
+            if atg >= 0:
+                ratio = [0,1]
+            else:
+                ratio = [1,0]
+        else:
+            if atg >= 0:
+                ratio=[1,0]
+            else:
+                ratio = [0,1]
+        if abs(atg) * self.volume_coefficient < self.minimum_volume:
+            vol = self.minimum_volume
+            ratio = [1,1]
+        elif abs(atg) * self.volume_coefficient > self.max_volume:
+            vol = self.max_volume
+
+        if self.tracker.forward_distance < 0.5: 
             vol=30
             ratio=[1,1]
             self.filename='You_arrived.wav'
