@@ -40,16 +40,18 @@ class Wii_pointer():
         self.current = [0,0,0]
         self.resting = [0,0,0]
         self.last_reading = rospy.Time.now()
-        self.target = [-70, 0, 10] # just for testing purposes
+        self.target = [-40, 0, 20] # just for testing purposes
         self.index = 0 # ditto
 
         # ----------- ROS Publishers/subscribers.
         self.button_pub = rospy.Publisher("/wii_buttons", Int32, queue_size=10)
-        self.orientation_pub = rospy.Publisher("/wii_orientation", )
+        self.orientation_pub = rospy.Publisher("/wii_orientation", Int32MultiArray, queue_size=10)
         rospy.Subscriber("/wii_rumble", Bool, self.set_rumble)
 
 
     def run(self):
+        self.tracker.refresh_all()
+        self.get_target_from_tracker()
         self.poller.poll()
         try:
             self.mote.dispatch(self.event)
@@ -72,6 +74,15 @@ class Wii_pointer():
             #Keys: 0 = left, 1: right, 2: up, 3 = down, 4 = A, 5 = B, 6 = +, 7 = -, 8 = home, 9 = 1, 10 = 2.
 
 
+    def get_target_from_tracker(self):
+        """
+        sets self.target based on values from self.tracker.
+        """
+        if self.tracker.z_distance == None or self.tracker.xy_distance == None or self.tracker.angle_to_go == None:
+            return
+        pitch = math.atan2(self.tracker.z_distance, self.tracker.xy_distance)
+        yaw = self.tracker.angle_to_go # TODO: incorporate offset.
+        self.target = [yaw, 0, pitch]
 
 
     def handle_motion(self):
@@ -89,8 +100,9 @@ class Wii_pointer():
         self.current[2] += (change[2] * math.cos(math.radians(self.current[1])) + change[0] * math.sin(math.radians(self.current[1])))*(dt.nsecs/1000000000.0)*(1.492/20.0)**2
         self.current[1] += change[1]*(dt.nsecs/1000000000.0)*(1.492/20.0)**2
 
-        a = numpy.array([int(i) for i in self.current], dtype=numpy.int32)
-        self.orientation_pub.publish(a)
+        a = np.array([int(i) for i in self.current], dtype=np.int32)
+        b = Int32MultiArray(data=a)
+        self.orientation_pub.publish(b)
 
     def handle_buttons(self):
         (code, state) = self.event.get_key()
@@ -129,7 +141,7 @@ class Wii_pointer():
         self.index = 0
         drifts = []
 
-        while self.index < 250: #...first handful of signals are always wacky; this gets it to ignore them.
+        while self.index < 400: #...first handful of signals are always wacky; this gets it to ignore them.
             try:
                 self.poller.poll()
                 self.mote.dispatch(self.event)
@@ -137,7 +149,7 @@ class Wii_pointer():
             except IOError:
                 print "ioerror in set_resting waiting period"
 
-        while self.index < 500:
+        while self.index < 800:
             try:
                 self.poller.poll()
                 self.mote.dispatch(self.event)
@@ -153,12 +165,14 @@ class Wii_pointer():
 
 
 if __name__ == "__main__":
-    rospy.init_node("wm")
-    wm = Wii_pointer("tracker goes here")
+    # rospy.init_node('wm')
+    tt = Tango_tracker()
+    # rospy.init_node("tango_tracker")
+    wm = Wii_pointer(tt)
     start_time = rospy.Time.now()
     wm.set_resting()
     while not rospy.is_shutdown():
         wm.run()
-        if rospy.Time.now() - start_time > rospy.Duration(180):
+        if rospy.Time.now() - start_time > rospy.Duration(1200):
             print wm.index, '\t', wm.current
             exit()

@@ -80,7 +80,11 @@ class Tango_tracker():
         self.pose_timestamp = msg.header.stamp
 
         try:
-            self.tf.lookupTransform('odom', 'area_learning', rospy.Time(0))
+#             self.tf.lookupTransform('odom', 'area_learning', rospy.Time(0))
+
+# #            self.tf.lookupTransform('area_learning', 'odom', rospy.Time(0))
+#             print msg
+            self.tf.waitForTransform('odom','area_learning',msg.header.stamp,rospy.Duration(0.5))
             new_pose = self.tf.transformPose('area_learning', msg)
             self.x = new_pose.pose.position.x
             self.y = new_pose.pose.position.y
@@ -90,11 +94,13 @@ class Tango_tracker():
             print "transform failed"
 
         #-------------------------- angles now ----------
-        (translation, rotation) = self.tf.lookupTransform('area_learning', 'odom') #maybe. might be 'depth_camera' or something else; order is uncertain too. Will try out later.
+        (translation, rotation) = self.tf.lookupTransform('area_learning', 'odom', rospy.Time(0))
         rpy = euler_from_quaternion(rotation)
         self.yaw = rpy[2]
         self.pitch = rpy[1]
         self.roll = rpy[0]
+
+        print translation
 
         #---------------------
 # ---- these are solely for use in landmark code. -------------
