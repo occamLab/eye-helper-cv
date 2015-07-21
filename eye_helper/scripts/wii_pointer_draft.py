@@ -42,6 +42,7 @@ class Wii_pointer():
         self.last_reading = rospy.Time.now()
         self.target = [-40, 0, 20] # just for testing purposes
         self.index = 0 # ditto
+        self.autoCheck = False
 
         # ----------- ROS Publishers/subscribers.
         self.button_pub = rospy.Publisher("/wii_buttons", Int32, queue_size=10)
@@ -56,20 +57,19 @@ class Wii_pointer():
         try:
             self.mote.dispatch(self.event)
         except IOError:
-            # print "IOError in run dispatch"
             pass
 
         if self.event.type == xwiimote.EVENT_MOTION_PLUS:
             self.handle_motion()
-            self.check_if_close()
+            if self.autoCheck:
+                self.check_if_close()
 
         elif self.event.type == xwiimote.EVENT_KEY:
             self.handle_buttons()
             (code, state) = self.event.get_key()
             if True: # right now using A and B buttons as a control thingie.
-                if code == 4:
+                if code == 5:
                     self.set_resting()
-                elif code == 5:
                     self.set_zero()
             #Keys: 0 = left, 1: right, 2: up, 3 = down, 4 = A, 5 = B, 6 = +, 7 = -, 8 = home, 9 = 1, 10 = 2.
 
@@ -82,7 +82,7 @@ class Wii_pointer():
             return
         pitch = math.atan2(self.tracker.z_distance, self.tracker.xy_distance)
         yaw = self.tracker.angle_to_go # TODO: incorporate offset.
-        self.target = [yaw, 0, pitch]
+        self.target = [-1*yaw, 0, math.degrees(pitch)]
 
 
     def handle_motion(self):
@@ -112,7 +112,6 @@ class Wii_pointer():
         try:
             self.mote.rumble(msg.data)
         except IOError:
-            # print "Error setting rumble."
             pass
 
 
@@ -120,17 +119,14 @@ class Wii_pointer():
         """
         if within some [pretty much arbitrary right now] distance of the target, rumbles. else, no rumble.
         """    
-        # distance = math.sqrt((self.target[0]-self.current[0])**2 + (self.target[1]-self.current[1])**2 + (self.target[2]-self.current[2])**2)
         distance = math.sqrt((self.target[0]-self.current[0])**2 + (self.target[2]-self.current[2])**2)
-        # print distance
-        # rospy.sleep(.01) # frees up the wm again. can probably be a lot less time.
         try:
+            return
             if distance < 10:
                 self.mote.rumble(True)
             else:
                 self.mote.rumble(False)
         except IOError:
-            # print "Error setting rumble."
             pass
 
 
@@ -147,7 +143,7 @@ class Wii_pointer():
                 self.mote.dispatch(self.event)
                 self.index += 1
             except IOError:
-                print "ioerror in set_resting waiting period"
+                pass
 
         while self.index < 800:
             try:
@@ -158,16 +154,13 @@ class Wii_pointer():
                     drifts.append(reading)
                     self.index += 1
             except IOError:
-                print "ioerror in set_resting drift getting period"
         avg_reading = [(sum(i[j] for i in drifts)/len(drifts)) for j in range(3)]
         self.resting = avg_reading
         print "resting: \t", self.resting
 
 
 if __name__ == "__main__":
-    # rospy.init_node('wm')
     tt = Tango_tracker()
-    # rospy.init_node("tango_tracker")
     wm = Wii_pointer(tt)
     start_time = rospy.Time.now()
     wm.set_resting()

@@ -74,39 +74,39 @@ class Tango_tracker():
         """
         zeroes position data, then writes it to class variables.
         """
-        # x = msg.pose.position.x
-        # y = msg.pose.position.y
-        # z = msg.pose.position.z
+        self.x = msg.pose.position.x
+        self.y = msg.pose.position.y
+        self.z = msg.pose.position.z
         self.pose_timestamp = msg.header.stamp
 
-        try:
-#             self.tf.lookupTransform('odom', 'area_learning', rospy.Time(0))
+#         try:
+# #             self.tf.lookupTransform('odom', 'area_learning', rospy.Time(0))
 
-# #            self.tf.lookupTransform('area_learning', 'odom', rospy.Time(0))
-#             print msg
-            self.tf.waitForTransform('odom','area_learning',msg.header.stamp,rospy.Duration(0.5))
-            new_pose = self.tf.transformPose('area_learning', msg)
-            self.x = new_pose.pose.position.x
-            self.y = new_pose.pose.position.y
-            self.z = new_pose.pose.position.z
+# # #            self.tf.lookupTransform('area_learning', 'odom', rospy.Time(0))
+# #             print msg
+#             self.tf.waitForTransform('odom','area_learning',msg.header.stamp,rospy.Duration(0.5))
+#             new_pose = self.tf.transformPose('area_learning', msg)
+#             self.x = new_pose.pose.position.x
+#             self.y = new_pose.pose.position.y
+#             self.z = new_pose.pose.position.z
 
-        except: #if can't find it yet?
-            print "transform failed"
+#         except: #if can't find it yet?
+#             print "transform failed"
 
-        #-------------------------- angles now ----------
-        (translation, rotation) = self.tf.lookupTransform('area_learning', 'odom', rospy.Time(0))
-        rpy = euler_from_quaternion(rotation)
-        self.yaw = rpy[2]
-        self.pitch = rpy[1]
-        self.roll = rpy[0]
+#         #-------------------------- angles now ----------
+#         (translation, rotation) = self.tf.lookupTransform('area_learning', 'odom', rospy.Time(0))
+#         rpy = euler_from_quaternion(rotation)
+#         self.yaw = rpy[2]
+#         self.pitch = rpy[1]
+#         self.roll = rpy[0]
 
-        print translation
+#         print translation
 
-        #---------------------
-# ---- these are solely for use in landmark code. -------------
-        self.pose_x = msg.pose.position.x
-        self.pose_y = msg.pose.position.y
-        self.pose_z = msg.pose.position.z #should these also be moved to the area_learning frame? My guess would be yes, but I'll check w/ pinar before changing anything -- I'd rather not accidentally break her code :P.
+#         #---------------------
+# # ---- these are solely for use in landmark code. -------------
+#         self.pose_x = msg.pose.position.x
+#         self.pose_y = msg.pose.position.y
+#         self.pose_z = msg.pose.position.z #should these also be moved to the area_learning frame? My guess would be yes, but I'll check w/ pinar before changing anything -- I'd rather not accidentally break her code :P.
 # -------------------------------------------------------------
 
 
