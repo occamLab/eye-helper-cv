@@ -42,7 +42,7 @@ class Wii_pointer():
         self.last_reading = rospy.Time.now()
         self.target = [-40, 0, 20] # just for testing purposes
         self.index = 0 # ditto
-        self.autoCheck = False
+        self.autoCheck = True
 
         # ----------- ROS Publishers/subscribers.
         self.button_pub = rospy.Publisher("/wii_buttons", Int32, queue_size=10)
@@ -120,8 +120,9 @@ class Wii_pointer():
         if within some [pretty much arbitrary right now] distance of the target, rumbles. else, no rumble.
         """    
         distance = math.sqrt((self.target[0]-self.current[0])**2 + (self.target[2]-self.current[2])**2)
+        print self.target
         try:
-            return
+            # return
             if distance < 10:
                 self.mote.rumble(True)
             else:
@@ -154,6 +155,7 @@ class Wii_pointer():
                     drifts.append(reading)
                     self.index += 1
             except IOError:
+                pass
         avg_reading = [(sum(i[j] for i in drifts)/len(drifts)) for j in range(3)]
         self.resting = avg_reading
         print "resting: \t", self.resting
