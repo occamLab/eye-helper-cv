@@ -58,7 +58,6 @@ class Angle_and_distance():
             return
         self.last_tone = rospy.Time.now()
 
-
         self.filename= "height4angle5.wav"
         vol = self.angle_to_volume(self.tracker, self.volume_coefficient)
         atg = self.tracker.angle_to_go
@@ -78,7 +77,8 @@ class Angle_and_distance():
         elif abs(atg) * self.volume_coefficient > self.max_volume:
             vol = self.max_volume
 
-        if self.tracker.forward_distance < 0.5: 
+        print self.tracker.xy_distance
+        if abs(self.tracker.xy_distance)<=0.35: 
             vol=30
             ratio=[1,1]
             self.filename='You_arrived.wav'
@@ -247,9 +247,9 @@ class Offset_angle_and_distance():
 
 if __name__ == "__main__":
     tt = Tango_tracker()
-    offset = Angle_and_distance(tt)
-    offset.turn_on()
+    eh = Angle_and_distance(tt)
+    eh.turn_on()
     while not rospy.is_shutdown():
-        offset.call()
+        eh.call()
 
 #todo: look into hough line transform
