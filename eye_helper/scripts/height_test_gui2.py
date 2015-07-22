@@ -4,7 +4,8 @@ import rospy
 import Tkinter as tk
 import math
 import subprocess
-from tango_tracker import Tango_tracker
+# from tango_tracker import Tango_tracker
+from offset_tracker import Offset_tracker
 from computer_speech import Speak_3d_coords
 from computer_speech2 import Speak_3d_directions
 from angle_distance import Angle_and_distance, Offset_angle_and_distance
@@ -16,7 +17,7 @@ class Body_map_controller(tk.Frame):
     GUI for height testing with: 1) Body mapping integrated with angle computer speech and 2) Body mapping integrated with angle beeps. 
     """
 
-    def __init__(self, module_list=[Reach(Tango_tracker()), Angle_body_mapping(Tango_tracker())], master=None):
+    def __init__(self, module_list, master=None):
         tk.Frame.__init__(self, master)
         self.m = module_list
         self.grid()
@@ -80,12 +81,12 @@ class Body_map_controller(tk.Frame):
         self.after(10, self.call_all)
 
 if __name__ == "__main__":
+    ot= Offset_tracker(nodename='offset_tracker')
+    v1 = Reach(ot)
+    v2 = Angle_body_mapping(ot)
 
-    tt = Tango_tracker()
-    v1 = Reach(tt)
-    v2 = Angle_body_mapping(tt)
-
-    control = Body_map_controller()
+    ot.refresh_all()
+    control = Body_map_controller([v1,v2])
     control.master.title("Testing GUI")
     control.after(100, control.call_all)
     control.mainloop()
