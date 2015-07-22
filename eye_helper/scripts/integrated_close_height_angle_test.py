@@ -123,7 +123,7 @@ class Reach():
         zd = abs(zd_signed)
         height_signed = self.tracker.pitch * 57.2957795
         height= abs(height_signed)
-        atg = self.tracker.angle_to_go
+        atg = self.tracker.angle_to_target
         values_to_play = []
         cmds = []
         
@@ -197,8 +197,8 @@ class Reach():
 
 
 if __name__ == "__main__":
-    tt = Tango_tracker()
-    eh = Reach(tt, tango_height=1.02)
+    ot = Offset_tracker(offset_axes=[0,((0.45/2)-0.049),0], nodename='shoulder_offset', topic_name='shoulder_offset')
+    eh = Reach(ot, tango_height=1.02)
     eh.turn_on()
     control = Body_map_controller(eh)
     control.master.title("body map height setting")
