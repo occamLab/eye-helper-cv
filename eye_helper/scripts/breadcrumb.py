@@ -61,7 +61,7 @@ class Breadcrumb_tracker():
         rospy.init_node(nodename)
         rospy.Subscriber('/tango_pose', PoseStamped, self.process_pose)
         rospy.Subscriber('/tango_angles', Float64MultiArray, self.process_angle)
-        rospy.Subscriber('/wii_buttons', PointStamped, self.procecss_button)
+        rospy.Subscriber('/wii_buttons', PointStamped, self.process_button)
         # rospy.Subscriber('/landmark_point', PointStamped, self.set_target)
         # rospy.Subscriber('/nearby_cloud', PointCloud, self.process_points_near_target)
         self.logger = rospy.Publisher('/log', String, queue_size=10)
@@ -161,9 +161,9 @@ class Breadcrumb_tracker():
             del self.trail[-1]
 
     def process_button(self, msg):
-        if msg.data == 4:
+        if msg.data == 6: # +
             self.drop_breadcrumb()
-        elif msg.data == 6:
+        elif msg.data == 7: # -
             self.pick_up_breadcrumb()
 
 
