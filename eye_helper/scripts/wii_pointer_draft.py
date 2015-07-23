@@ -43,26 +43,33 @@ class Wii_pointer():
         self.target = [-40, 0, 20] # just for testing purposes
         self.index = 0 # ditto
         self.autoCheck = True
+        self.rumble_proportion = 0
 
         # ----------- ROS Publishers/subscribers.
         self.button_pub = rospy.Publisher("/wii_buttons", Int32, queue_size=10)
         self.orientation_pub = rospy.Publisher("/wii_orientation", Int32MultiArray, queue_size=10)
         rospy.Subscriber("/wii_rumble", Bool, self.set_rumble)
 
+        self.tc = 0 # can be deleted at some point, just using it to keep track of something.
 
     def run(self):
-        self.tracker.refresh_all()
-        self.get_target_from_tracker()
+        if self.tracker != None:
+            self.tracker.refresh_all()
+            self.get_target_from_tracker()
         self.poller.poll()
         try:
             self.mote.dispatch(self.event)
         except IOError:
+            self.tc += 1
+            print "ioer in run", self.tc
             pass
 
         if self.event.type == xwiimote.EVENT_MOTION_PLUS:
             self.handle_motion()
             if self.autoCheck:
                 self.check_if_close()
+                # self.rumble_by_proportion() # look into running this in parallel, b/c otherwise it's a bit irregular... :|
+
 
         elif self.event.type == xwiimote.EVENT_KEY:
             self.handle_buttons()
@@ -91,7 +98,8 @@ class Wii_pointer():
         then, publishes to the motion topic.
         still working on the roll thingie, the ros transforms I tried earlier didn't work quite right. probably gonna muck around with cosines &c tomorrow.
         """
-        change = self.event.get_abs(0)
+        non_zeroed_change = self.event.get_abs(0)
+        change = [non_zeroed_change[i] - self.resting[i] for i in range(3)]
         now = rospy.Time.now()
         dt = now - self.last_reading
         self.last_reading = now
@@ -120,14 +128,40 @@ class Wii_pointer():
         if within some [pretty much arbitrary right now] distance of the target, rumbles. else, no rumble.
         """    
         distance = math.sqrt((self.target[0]-self.current[0])**2 + (self.target[2]-self.current[2])**2)
-        print self.target
+        # print self.target
         try:
             # return
-            if distance < 10:
+            if distance < 4:
+                self.rumble_proportion = 1
+                self.rumble_by_proportion()
+            elif distance < 20:
+                self.rumble_proportion = (.60 - distance*2)
+                self.rumble_by_proportion()
+            else:
+                self.rumble_proportion = 0
+        except IOError:
+            print "ioer in check_if_close"
+            pass
+
+    def rumble_by_proportion(self):
+        """
+        rumbles for c seconds - right now, 0.02. self.rumble_proportion determines how much is spent actually rumbling vs. on 'downtime.' Might also need to make this whole thing a try-except on account of the occasional IOError when setting the wii remmote's rumble.
+        """
+        p = self.rumble_proportion
+        c = 0.02 # tradeoff between responsive-ness of buzz and how feel-able it is.
+        try:
+            if p <= 0.3: # including zero. the .3 is based on a personal judgment call for what does v. doesn't actually buzz well.
+                self.mote.rumble(False)
+                rospy.sleep(c)
+            elif p == 1:
                 self.mote.rumble(True)
             else:
+                self.mote.rumble(True)
+                rospy.sleep(c*p)
                 self.mote.rumble(False)
+                rospy.sleep(c*(1-p))
         except IOError:
+            print "ioerror in rumble_by_proportion D:"
             pass
 
 
@@ -144,6 +178,7 @@ class Wii_pointer():
                 self.mote.dispatch(self.event)
                 self.index += 1
             except IOError:
+                print "ioe in set_resting pt1"
                 pass
 
         while self.index < 800:
@@ -155,6 +190,7 @@ class Wii_pointer():
                     drifts.append(reading)
                     self.index += 1
             except IOError:
+                print "ioe in set_resting pt2"
                 pass
         avg_reading = [(sum(i[j] for i in drifts)/len(drifts)) for j in range(3)]
         self.resting = avg_reading
@@ -163,7 +199,7 @@ class Wii_pointer():
 
 if __name__ == "__main__":
     tt = Tango_tracker()
-    wm = Wii_pointer(tt)
+    wm = Wii_pointer(None)
     start_time = rospy.Time.now()
     wm.set_resting()
     while not rospy.is_shutdown():

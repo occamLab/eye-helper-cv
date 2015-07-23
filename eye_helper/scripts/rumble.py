@@ -49,11 +49,11 @@ if __name__ == "__main__":
     rospy.init_node("wm")
     wm = mote()
     props = [0]
-    props.extend([.02*i for i in range(1,50)])
+    props.extend([.02*i for i in range(10,30)])
     props.append(1)
     for p in props:
         print p, "\n--------------"
-        # wm.rumble(p)
+        wm.rumble(p)
     print "full"    
     wm.mote.rumble(True)
     rospy.sleep(3)
