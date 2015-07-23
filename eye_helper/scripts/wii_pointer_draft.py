@@ -5,15 +5,16 @@ trying out the xwiimote pointer thingie.
 """
 
 import rospy
-from sensor_msgs.msg import Joy, JoyFeedback #no idea what this actually is; doesn't seem to get used, but anyways.
-import errno # ditto
+# from sensor_msgs.msg import Joy, JoyFeedback #no idea what this actually is; doesn't seem to get used, but anyways.
+# import errno # ditto
 from select import poll, POLLIN
 import math
 import xwiimote
 import time
-from std_msgs.msg import Int32, Int32MultiArray, Bool, Header #might not use header or the floats actually, we'll see.
+from std_msgs.msg import Int32, Int32MultiArray, Bool #might not use header or the floats actually, we'll see.
 from tango_tracker import Tango_tracker
 import numpy as np
+import threading
 
 
 class Wii_pointer():
@@ -133,10 +134,11 @@ class Wii_pointer():
             # return
             if distance < 4:
                 self.rumble_proportion = 1
-                self.rumble_by_proportion()
-            elif distance < 20:
-                self.rumble_proportion = (.60 - distance*2)
-                self.rumble_by_proportion()
+                # self.rumble_by_proportion()
+            elif distance < 10:
+                # self.rumble_proportion = 0.5
+                self.rumble_proportion = (.50 - distance*.03)
+                # self.rumble_by_proportion()
             else:
                 self.rumble_proportion = 0
         except IOError:
@@ -148,13 +150,14 @@ class Wii_pointer():
         rumbles for c seconds - right now, 0.02. self.rumble_proportion determines how much is spent actually rumbling vs. on 'downtime.' Might also need to make this whole thing a try-except on account of the occasional IOError when setting the wii remmote's rumble.
         """
         p = self.rumble_proportion
-        c = 0.02 # tradeoff between responsive-ness of buzz and how feel-able it is.
+        c = .02 # tradeoff between responsive-ness of buzz and how feel-able it is.
         try:
-            if p <= 0.3: # including zero. the .3 is based on a personal judgment call for what does v. doesn't actually buzz well.
+            if p == 0: # including zero. the .3 is based on a personal judgment call for what does v. doesn't actually buzz well.
                 self.mote.rumble(False)
                 rospy.sleep(c)
             elif p == 1:
                 self.mote.rumble(True)
+                rospy.sleep(c)
             else:
                 self.mote.rumble(True)
                 rospy.sleep(c*p)
@@ -164,6 +167,13 @@ class Wii_pointer():
             print "ioerror in rumble_by_proportion D:"
             pass
 
+    def rumbler_loop(self):
+        while not rospy.is_shutdown():
+            self.rumble_by_proportion()
+
+    def run_loop(self):
+        while not rospy.is_shutdown():
+            self.run()
 
     def set_zero(self):
         self.current = [0,0,0]
@@ -202,8 +212,14 @@ if __name__ == "__main__":
     wm = Wii_pointer(None)
     start_time = rospy.Time.now()
     wm.set_resting()
-    while not rospy.is_shutdown():
-        wm.run()
-        if rospy.Time.now() - start_time > rospy.Duration(1200):
-            print wm.index, '\t', wm.current
-            exit()
+    run_thread = threading.Thread(target=wm.run_loop)
+    rumble_thread = threading.Thread(target=wm.rumbler_loop)
+    run_thread.start()
+    rumble_thread.start()
+
+    # while not rospy.is_shutdown():
+    #     wm.run()
+
+    #     if rospy.Time.now() - start_time > rospy.Duration(1200):
+    #         print wm.index, '\t', wm.current
+    #         exit()
