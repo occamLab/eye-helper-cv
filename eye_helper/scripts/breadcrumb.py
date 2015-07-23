@@ -170,19 +170,6 @@ class Breadcrumb_tracker():
         current_point=(self.x, self.y, self.z)
         self.landmarks[current_point]=[]
 
-
-
-
-landmark={}
-landmark[1,2,3]=[]
-for key in landmark.keys():
-    landmark[key]=[(1,2,3,4),(1,2,2)]
-print landmark
-
-
-
-
-
 #--------------GENERATE-OUTPUTS---------------------
 # Updates output variables, like self.xy_distance.
     def refresh_xy_distance(self):

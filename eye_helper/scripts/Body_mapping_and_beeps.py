@@ -3,7 +3,9 @@
 import rospy
 import rospkg
 import subprocess
-from tango_tracker import Tango_tracker
+# from tango_tracker import Tango_tracker
+from offset_tracker import Offset_tracker
+import Tkinter as tk
 from eye_helper.msg import Sound
 from eye_helper.msg import Speech
 
@@ -24,7 +26,7 @@ class Angle_body_mapping():
         self.reverse = False #thing to change - changes whether sound-in-right-ear means move *to*, or *away from* the right.
         self.volume_coefficient = 2 #thing to change.
         self.minimum_volume = 15 #thing to change.
-        self.max_volume = 80 #thing to change.
+        self.max_volume = 75 #thing to change.
         self.delay_coefficient = 0.5 #thing to change
 #------------------------------------------------------ For playing -------------------------------------
         self.last_played= rospy.Time.now()
@@ -46,11 +48,11 @@ class Angle_body_mapping():
     def call(self):
         if self.isOn:
             self.tracker.refresh_all()
-            if self.tracker.xy_distance != None and self.tracker.angle_to_go != None:
+            if self.tracker.xy_distance != None and self.tracker.angle_to_target!= None:
                 self.run()
         
     def run(self):
-        if self.tracker.forward_distance>0.6 or self.ratio!=[1,1]:
+        if self.tracker.xy_distance>0.5 or self.ratio!=[1,1]:
             self.angle_beeps()
 
         else:
@@ -114,7 +116,7 @@ class Angle_body_mapping():
             return
         self.last_tone = rospy.Time.now()
         vol = self.angle_to_volume(self.tracker, self.volume_coefficient)
-        atg = self.tracker.angle_to_go
+        atg = self.tracker.angle_to_target
         if self.reverse:
             if atg >= 0:
                 self.ratio = [0,1]
@@ -122,9 +124,9 @@ class Angle_body_mapping():
                 self.ratio = [1,0]
         else:
             if atg >= 0:
-                self.ratio=[1,0]
+                self.ratio=[0,1]
             else:
-                self.ratio = [0,1]
+                self.ratio = [1,0]
         if abs(atg) * self.volume_coefficient < self.minimum_volume:
             vol = self.minimum_volume
             self.ratio = [1,1]
@@ -152,15 +154,17 @@ class Angle_body_mapping():
             return (cutoff * coefficient) - (xy_distance * coefficient)
 
     def angle_to_volume(self, tracker, coefficient):
-        atg = tracker.angle_to_go
+        atg = tracker.angle_to_target
         v = abs(atg*coefficient)
         return v
 
 
 
 if __name__ == "__main__":
-    tt = Tango_tracker()
-    feedback= Angle_body_mapping(tt)
+    ot = Offset_tracker(offset_axes=[0,((0.45/2)-0.049),0],nodename="offset_tracker2", topic_name='/shoulder_offset')
+    ot.refresh_all()
+    feedback= Angle_body_mapping(ot)
     feedback.turn_on()
     while not rospy.is_shutdown():
-       feedback.call()
+        tt.refresh_all()
+        feedback.call()
