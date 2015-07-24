@@ -41,7 +41,7 @@ class Wii_pointer():
         self.current = [0,0,0]
         self.resting = [0,0,0]
         self.last_reading = rospy.Time.now()
-        self.target = [-40, 0, 20] # just for testing purposes
+        self.target = [0, 0, 0] # just for testing purposes
         self.index = 0 # ditto
         self.autoCheck = True
         self.rumble_proportion = 0
