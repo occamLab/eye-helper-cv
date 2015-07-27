@@ -15,7 +15,7 @@ from sensor_msgs.msg import PointCloud
 import time
 from tf import TransformListener
 from tf.transformations import euler_from_quaternion
-from std_msgs.msg import Float64, Float64MultiArray, String
+from std_msgs.msg import Float64, Float64MultiArray, String, Int32
 import ransac
 
 
@@ -61,16 +61,12 @@ class Breadcrumb_tracker():
         rospy.init_node(nodename)
         rospy.Subscriber('/tango_pose', PoseStamped, self.process_pose)
         rospy.Subscriber('/tango_angles', Float64MultiArray, self.process_angle)
-        rospy.Subscriber('/wii_buttons', PointStamped, self.process_button)
-        # rospy.Subscriber('/landmark_point', PointStamped, self.set_target)
-        # rospy.Subscriber('/nearby_cloud', PointCloud, self.process_points_near_target)
+        rospy.Subscriber('/wii_buttons', Int32, self.process_button)
         self.logger = rospy.Publisher('/log', String, queue_size=10)
         self.rospack = rospkg.RosPack();
         self.tf = TransformListener()
         self.path = self.rospack.get_path('eye_helper') + '/../GeneratedSoundFiles/'
 
-#---------------PROCESS-INPUTS--------------------
-# Converts tango messages into things like x position, yaw, etc.
     def process_pose(self, msg):
         """
         zeroes position data, then writes it to class variables.
@@ -79,36 +75,6 @@ class Breadcrumb_tracker():
         self.y = msg.pose.position.y
         self.z = msg.pose.position.z
         self.pose_timestamp = msg.header.stamp
-
-#         try:
-# #             self.tf.lookupTransform('odom', 'area_learning', rospy.Time(0))
-
-# # #            self.tf.lookupTransform('area_learning', 'odom', rospy.Time(0))
-# #             print msg
-#             self.tf.waitForTransform('odom','area_learning',msg.header.stamp,rospy.Duration(0.5))
-#             new_pose = self.tf.transformPose('area_learning', msg)
-#             self.x = new_pose.pose.position.x
-#             self.y = new_pose.pose.position.y
-#             self.z = new_pose.pose.position.z
-
-#         except: #if can't find it yet?
-#             print "transform failed"
-
-#         #-------------------------- angles now ----------
-#         (translation, rotation) = self.tf.lookupTransform('area_learning', 'odom', rospy.Time(0))
-#         rpy = euler_from_quaternion(rotation)
-#         self.yaw = rpy[2]
-#         self.pitch = rpy[1]
-#         self.roll = rpy[0]
-
-#         print translation
-
-#         #---------------------
-# # ---- these are solely for use in landmark code. -------------
-#         self.pose_x = msg.pose.position.x
-#         self.pose_y = msg.pose.position.y
-#         self.pose_z = msg.pose.position.z #should these also be moved to the area_learning frame? My guess would be yes, but I'll check w/ pinar before changing anything -- I'd rather not accidentally break her code :P.
-# -------------------------------------------------------------
 
     def process_angle(self, msg):
         """
@@ -150,6 +116,7 @@ class Breadcrumb_tracker():
         self.trail.append(current_point)
         for key in self.landmarks.keys():
             self.landmark[key]=self.trail
+        print "breadcrumb dropped"
 
     def pick_up_breadcrumb(self):
         if len(self.trail) == 0:
@@ -158,6 +125,7 @@ class Breadcrumb_tracker():
         else:
             self.set_target(self.trail[-1])
             del self.trail[-1]
+            print "new target"
 
     def process_button(self, msg):
         if msg.data == 4:
@@ -168,7 +136,7 @@ class Breadcrumb_tracker():
 
     def set_landmark_target(self,msg):
         current_point=(self.x, self.y, self.z)
-        self.landmarks[current_point]=[]
+        self.landmarks[current_point]=[] # what's it mapping to...?
 
 #--------------GENERATE-OUTPUTS---------------------
 # Updates output variables, like self.xy_distance.
