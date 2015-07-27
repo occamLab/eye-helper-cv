@@ -18,7 +18,7 @@ import threading
 
 
 class Wii_pointer():
-    def __init__(self, tracker):
+    def __init__(self, tracker = None, autoCheck = False):
         # ------------ Connecting to wii remote.
         self.mote = None
         self.tracker = tracker
@@ -41,9 +41,10 @@ class Wii_pointer():
         self.current = [0,0,0]
         self.resting = [0,0,0]
         self.last_reading = rospy.Time.now()
+        self.last_button_press = rospy.Time.now()
         self.target = [0, 0, 0] # just for testing purposes
         self.index = 0 # ditto
-        self.autoCheck = True
+        self.autoCheck = autoCheck
         self.rumble_proportion = 0
 
         # ----------- ROS Publishers/subscribers.
@@ -62,7 +63,7 @@ class Wii_pointer():
             self.mote.dispatch(self.event)
         except IOError:
             self.tc += 1
-            print "ioer in run", self.tc
+            # print "ioer in run", self.tc
             pass
 
         if self.event.type == xwiimote.EVENT_MOTION_PLUS:
@@ -114,6 +115,9 @@ class Wii_pointer():
         self.orientation_pub.publish(b)
 
     def handle_buttons(self):
+        if rospy.Time.now() - self.last_button_press < rospy.Duration(0.25):
+            return # keeps it from repeating like fifty times in a quarter-second. Otherwise, one press translates to multiple publishes.
+        self.last_button_press = rospy.Time.now()
         (code, state) = self.event.get_key()
         self.button_pub.publish(code)
 
