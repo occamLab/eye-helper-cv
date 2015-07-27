@@ -130,7 +130,7 @@ class Wii_pointer():
 
     def check_if_close(self):
         """
-        if within some [pretty much arbitrary right now] distance of the target, rumbles. else, no rumble.
+        if within some [pretty much arbitrary right now] angle of the target, rumbles. else, no rumble.
         """    
         distance = math.sqrt((self.target[0]-self.current[0])**2 + (self.target[2]-self.current[2])**2)
         # print self.target

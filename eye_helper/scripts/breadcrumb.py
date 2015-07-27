@@ -25,8 +25,8 @@ class Breadcrumb_tracker():
     """
     def __init__(self, nodename='breadcrumb_tracker'):
 
-#-----------------PARAMETERS-----------------------
-# This section just initializes the parameters to None.
+    #-----------------PARAMETERS-----------------------
+    # This section just initializes the parameters to None.
         self.x = None
         self.y = None
         self.z = None
@@ -46,9 +46,10 @@ class Breadcrumb_tracker():
 
         self.landmarks={}
         self.trail = []
+        self.onTrail = False
         self.threshold = 0.1 # the distance which is "close enough" to a point to switch from.
 
-#---------above is input; below is "output"---------
+    #---------above is input; below is "output"---------
         self.xy_distance = None
         self.z_distance = None
         self.angle_to_go = None
@@ -56,13 +57,14 @@ class Breadcrumb_tracker():
         self.forward_distance = None
         self.right_distance = None
 
-#----------------------ROS------------------------
-# This sets the tango tracker to subscribe to the relevant topics, and process them properly.
+    #----------------------ROS------------------------
+    # This sets the tango tracker to subscribe to the relevant topics, and process them properly.
         rospy.init_node(nodename)
         rospy.Subscriber('/tango_pose', PoseStamped, self.process_pose)
         rospy.Subscriber('/tango_angles', Float64MultiArray, self.process_angle)
         rospy.Subscriber('/wii_buttons', Int32, self.process_button)
         self.logger = rospy.Publisher('/log', String, queue_size=10)
+        self.breadcrumb_trail_pub = rospy.Publisher('/breadcrumbs', PointCloud, queue_size=10)
         self.rospack = rospkg.RosPack();
         self.tf = TransformListener()
         self.path = self.rospack.get_path('eye_helper') + '/../GeneratedSoundFiles/'
@@ -83,12 +85,9 @@ class Breadcrumb_tracker():
         self.yaw = msg.data[2]
         self.pitch = msg.data[1]
         self.roll = msg.data[0]
-        #Wait - this is just a float array/list-thingie. What ought to be done to transform it? Relatedly - is 
 
     def process_points_near_target(self, msg):
         points = msg.points
-        # self.tf.waitForTransform("depth_camera", "odom", self.pose_timestamp, rospy.Duration(1.0))
-        # transformed_points = [self.tf.transformPoint('odom', i) for i in points]
         self.target_surface_points = [(i.x, i.y) for i in points]
 
         xvals = [i.x for i in points]
@@ -108,7 +107,6 @@ class Breadcrumb_tracker():
         self.target_y = point[1]
         self.target_z = point[2]
 
-        # print "target set"
 
     def drop_breadcrumb(self):
 
@@ -117,20 +115,25 @@ class Breadcrumb_tracker():
         for key in self.landmarks.keys():
             self.landmark[key]=self.trail
         print "breadcrumb dropped"
+        self.onTrail = False
 
     def pick_up_breadcrumb(self):
         if len(self.trail) == 0:
             print "trail over"
+            self.onTrail = False
             return
         else:
             self.set_target(self.trail[-1])
             del self.trail[-1]
             print "new target"
+            self.onTrail = True
+        self.publish_trail()
 
     def process_button(self, msg):
-        if msg.data == 4:
+        if msg.data == 6:
             self.drop_breadcrumb()
-        elif msg.data == 6:
+            self.publish_trail()
+        elif msg.data == 7:
             self.pick_up_breadcrumb()
 
 
@@ -138,8 +141,17 @@ class Breadcrumb_tracker():
         current_point=(self.x, self.y, self.z)
         self.landmarks[current_point]=[] # what's it mapping to...?
 
-#--------------GENERATE-OUTPUTS---------------------
-# Updates output variables, like self.xy_distance.
+    def publish_trail(self):
+        pc = PointCloud()
+        pc.header.frame_id = 'odom'
+        for p in self.trail:
+            pc.points.append(Point32(x=p[0], y=p[1], z=p[2]))
+        self.breadcrumb_trail_pub.publish(pc)
+        print "trail published"
+
+
+    #--------------GENERATE-OUTPUTS---------------------
+    # Updates output variables, like self.xy_distance.
     def refresh_xy_distance(self):
         self.xy_distance = math.sqrt((self.target_x - self.x)**2 + (self.target_y - self.y)**2)
 
@@ -175,7 +187,7 @@ class Breadcrumb_tracker():
 
 
     def refresh_all(self):
-        if self.z == None or self.target_z == None or self.yaw == None:
+        if self.z == None or self.target_z == None or self.yaw == None or not self.onTrail:
             return
         self.refresh_xy_distance()
         if self.xy_distance < self.threshold:

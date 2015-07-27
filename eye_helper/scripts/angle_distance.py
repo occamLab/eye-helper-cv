@@ -81,7 +81,7 @@ class Angle_and_distance():
         if abs(self.tracker.xy_distance)<=0.35: 
             vol=30
             ratio=[1,1]
-            self.filename='You_arrived.wav'
+            self.filename='You_arrived.wav' # ...doesn't exist? nts: ask pinar
 
         
         self.play_audio(vol, ratio)
