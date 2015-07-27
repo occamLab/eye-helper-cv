@@ -11,6 +11,7 @@ import errno
 from select import poll, POLLIN
 import math
 import time
+import subprocess
 
 class Landmark():
 	"""
@@ -27,6 +28,9 @@ class Landmark():
 		self.state='START_UP'
 		self.rospack = rospkg.RosPack()
 		self.filepath= self.rospack.get_path('eye_helper') + "/../GeneratedSoundFiles/Landmark_sound_files/"
+		self.filename = None
+		self.path=None
+		self.player= "aplay"
 
 		#Landmarks and trails:
 		self.landmark_options=[]
@@ -60,10 +64,12 @@ class Landmark():
 
 		if self.state == 'INITIALIZING_LANDMARK':
 			self.initiate_landmark()
+			self.audio_play()
 			self.state = 'START_UP'
 
 		if self.state == 'ADDING_TRAILS':
 			self.add_trail()
+			self.audio_play()
 			self.state = 'START_UP'
 
 		if self.state == 'TOGGLING_LANDMARKS':
@@ -72,6 +78,7 @@ class Landmark():
 
 		if self.state == 'PUBLISHING_TRAILS':
 			self.publish_trail()
+			self.audio_play()
 			self.state = 'START_UP'
 
 		if self.state not in self.states:
@@ -81,6 +88,7 @@ class Landmark():
 		self.landmark_name='landmark'+str(len(self.landmarks)+1)
 		self.landmarks[self.landmark_name]=[]
 		print 'Initialized landmark' + str(self.landmark_name) # need to make this into a sound file.
+		self.filename='initialized_landmark'
 		self.data=None
 
 	def add_trail(self):
@@ -89,6 +97,7 @@ class Landmark():
 	 	trail_list.append(current_position)
 	 	print self.landmarks
 	 	print 'added point on trail for landmark'+ str(self.landmark_name) # need to make this into a sound file.
+	 	self.filename='Added_trail'
 	 	self.data=None
 
 	def landmark_menu(self):
@@ -98,26 +107,36 @@ class Landmark():
 		if self.data == 3: #down
 			self.landmark_number += 1
 			self.data=None
+		self.filename='landmark'+str(self.landmark_number)
+		self.audio_play()
 		print 'selected landmark:', 'landmark', self.landmark_number
 		return self.landmark_number
 
 	def publish_trail(self):
 		trails = self.landmarks['landmark'+str(self.landmark_number)]
-		print trails
 		trail_number=0
 		if len(trails) >0:
 			while trail_number>=0 or trail_number <len(trails):
 				point_msg = PointStamped(header=Header(frame_id="odom", stamp=self.tracker.pose_timestamp), point=Point(x=trails[trail_number][0],y=trails[trail_number][1],z=trails[trail_number][2]))
 				self.pub.publish(point_msg)
+				self.data=None
 				print (trails[trail_number][0],trails[trail_number][1],trails[trail_number][2])
 				if self.tracker.xy_distance<=0.15 and trail_number != len(trails)-1:
 					trail_number += 1
 				# if trail_number == len(trails)-1:
+		
 				# 	print "You've arrived" #Turn it into a sound file
 		else:
 			print 'Error: No trail points!'
-		self.data=None
 
+	def audio_play(self):
+		p = subprocess.Popen('amixer -D pulse sset Master 30%', shell=True)
+		p.communicate()
+		self.path = self.filepath + self.filename
+		p = subprocess.Popen('{} {}.wav'.format(self.player, self.path), shell=True)
+		p.communicate()
+
+		
 	# def drop_(self):
 	# 	current_position=(self.tracker.x, self.tracker.y, self.tracker.z)
 	# 	self.landmarks['landmark'+str(len(self.landmarks)+1)]=[]
