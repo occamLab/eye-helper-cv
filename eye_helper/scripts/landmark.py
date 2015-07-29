@@ -38,7 +38,7 @@ class Landmark():
 		self.landmarks={}
 		self.trail=[]
 		self.landmark_name=None
-		self.landmark_number=1
+		self.landmark_number=0
 		self.published_landmark = None
 
 		#Publishing stuff
@@ -61,6 +61,7 @@ class Landmark():
 
 	def run(self):
 		if self.state == 'START_UP':
+			self.tracker.refresh_all()
 			if self.isOnTrail==True and self.tracker.xy_distance<0.3:
 				self.publish_trail()
 			else:
@@ -68,12 +69,10 @@ class Landmark():
 
 		if self.state == 'INITIALIZING_LANDMARK':
 			self.initiate_landmark()
-			self.audio_play()
 			self.state = 'START_UP'
 
 		if self.state == 'ADDING_TRAILS':
 			self.add_trail()
-			self.audio_play()
 			self.state = 'START_UP'
 
 		if self.state == 'TOGGLING_LANDMARKS':
@@ -82,9 +81,10 @@ class Landmark():
 
 		if self.state == 'PUBLISHING_TRAILS':
 			self.publish_trail()
-			self.state='START_UP'
 			if len(self.landmarks['landmark'+str(self.landmark_number)])==0:
 				self.isOnTrail=False
+			self.state='START_UP'
+			
 			
 			# self.audio_play()
 
@@ -95,7 +95,10 @@ class Landmark():
 		self.landmark_name='landmark'+str(len(self.landmarks)+1)
 		self.landmarks[self.landmark_name]=[]
 		print 'Initialized ' + str(self.landmark_name) # need to make this into a sound file.
-		self.filename='initialized_landmark'
+		self.filename=self.landmark_name
+		self.audio_play()
+		self.filename='initialized'
+		self.audio_play()
 		self.data=None
 
 	def add_trail(self):
@@ -104,14 +107,17 @@ class Landmark():
 	 	trail_list.append(current_position)
 	 	print self.landmarks
 	 	print 'added point on trail for landmark'+ str(self.landmark_name) # need to make this into a sound file.
-	 	self.filename='Added_trail'
+	 	self.filename='added_to_trail_of'
+	 	self.audio_play()
+	 	self.filename=self.landmark_name
+	 	self.audio_play()
 	 	self.data=None
 
 	def landmark_menu(self):
-		if self.data == 2: #up
+		if self.data == 3: #down
 			self.landmark_number=self.landmark_number-1
 			self.data=None
-		if self.data == 3: #down
+		if self.data == 2: #up
 			self.landmark_number += 1
 			self.data=None
 		self.filename='landmark'+str(self.landmark_number)
@@ -123,7 +129,10 @@ class Landmark():
 		self.isOnTrail=True
 		trail= self.landmarks['landmark'+str(self.landmark_number)]
 		if len(trail) == 0:
-			print "trail_over"
+			self.filename= "You_arrived"
+			self.audio_play()
+			rospy.sleep(10)
+			return
 		point_msg = PointStamped(header=Header(frame_id="odom", stamp=self.tracker.pose_timestamp), point=Point(x=trail[-1][0],y=trail[-1][1],z=trail[-1][2]))
 		print (trail[-1][0],trail[-1][1],trail[-1][2])
 		self.tracker.target_x=trail[-1][0]
