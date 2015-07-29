@@ -16,7 +16,6 @@ import time
 from tf import TransformListener
 from tf.transformations import euler_from_quaternion
 from std_msgs.msg import Float64, Float64MultiArray, String, Int32
-import ransac
 
 
 class Breadcrumb_tracker():
@@ -40,7 +39,6 @@ class Breadcrumb_tracker():
         self.target_z = None
 
         self.target_surface_points = None
-        self.ransac_points = None
         self.target_surface_slope = None
         self.pose_timestamp = None
 
@@ -86,19 +84,6 @@ class Breadcrumb_tracker():
         self.pitch = msg.data[1]
         self.roll = msg.data[0]
 
-    def process_points_near_target(self, msg):
-        points = msg.points
-        self.target_surface_points = [(i.x, i.y) for i in points]
-
-        xvals = [i.x for i in points]
-        yvals = [i.y for i in points]
-        zvals = [i.z for z in points]
-        slope, intercept, r, p, err = linregress(xvals, yvals)
-        
-        self.target_surface_slope = slope
-
-        self.ransac_points = ransac.ransac_2d(self.target_surface_points, tolerance=0.01, threshold=0.4, verbose=True)
-
     def set_target(self, point):
         """
         writes the message info to the target.
@@ -109,7 +94,6 @@ class Breadcrumb_tracker():
 
 
     def drop_breadcrumb(self):
-
         current_point = (self.x, self.y, self.z)
         self.trail.append(current_point)
         for key in self.landmarks.keys():

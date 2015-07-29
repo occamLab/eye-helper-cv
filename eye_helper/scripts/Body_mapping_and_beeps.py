@@ -41,10 +41,13 @@ class Angle_body_mapping():
 
     def toggle(self):
         self.isOn = not self.isOn
+
     def turn_on(self):
         self.isOn = True
+
     def turn_off(self):
         self.isOn = False
+
     def call(self):
         if self.isOn:
             self.tracker.refresh_all()
@@ -54,7 +57,6 @@ class Angle_body_mapping():
     def run(self):
         if self.tracker.xy_distance>0.5 or self.ratio!=[1,1]:
             self.angle_beeps()
-
         else:
             self.body_mapping()
 
