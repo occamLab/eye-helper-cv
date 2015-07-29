@@ -31,6 +31,7 @@ class Landmark():
 		self.filename = None
 		self.path=None
 		self.player= "aplay"
+		self.isOnTrail = False
 
 		#Landmarks and trails:
 		self.landmark_options=[]
@@ -60,7 +61,10 @@ class Landmark():
 
 	def run(self):
 		if self.state == 'START_UP':
-			pass
+			if self.isOnTrail==True and self.tracker.xy_distance<0.3:
+				self.publish_trail()
+			else:
+				pass
 
 		if self.state == 'INITIALIZING_LANDMARK':
 			self.initiate_landmark()
@@ -78,8 +82,11 @@ class Landmark():
 
 		if self.state == 'PUBLISHING_TRAILS':
 			self.publish_trail()
+			self.state='START_UP'
+			if len(self.landmarks['landmark'+str(self.landmark_number)])==0:
+				self.isOnTrail=False
+			
 			# self.audio_play()
-			self.state = 'START_UP'
 
 		if self.state not in self.states:
 			print 'State Error: self.state value is invalid'
@@ -87,7 +94,7 @@ class Landmark():
 	def initiate_landmark(self):
 		self.landmark_name='landmark'+str(len(self.landmarks)+1)
 		self.landmarks[self.landmark_name]=[]
-		print 'Initialized' + str(self.landmark_name) # need to make this into a sound file.
+		print 'Initialized ' + str(self.landmark_name) # need to make this into a sound file.
 		self.filename='initialized_landmark'
 		self.data=None
 
@@ -113,6 +120,7 @@ class Landmark():
 		return self.landmark_number
 
 	def publish_trail(self):
+		self.isOnTrail=True
 		trail= self.landmarks['landmark'+str(self.landmark_number)]
 		if len(trail) == 0:
 			print "trail_over"
@@ -122,50 +130,11 @@ class Landmark():
 		self.tracker.target_y=trail[-1][1]
 		self.tracker.target_z=trail[-1][2]
 		self.pub.publish(point_msg)
-		trail.remove(trail[-1])
 		self.tracker.refresh_all()
-		if self.tracker.xy_distance<0.3 and len(trail)>0:
-			self.publish_trail()
-		else:
-			pass
-
-
-
-
-	# def pickup_trail_point(self):
-	# 	trail= self.landmarks['landmark'+str(self.landmark_number)]
-	# 	if len(self.trail) == 0:
-	# 		print "trail over"
-	# 		self.state='START_UP'
-	# 		return
-	# 	else:
-	# 		self.tracker.set_target(trail[-1])
-	# 		trail_point=trail[-1]
-	# 		del trail[-1]
-	# 		print "new target"
-	# 		self.state = 'PUBLISHING_TRAILS'
-	# 	self.publish_trail(trail_point)
-
-	# def publish_trail(self,trail_point):
-	# 	point_msg = PointStamped(header=Header(frame_id="odom", stamp=self.tracker.pose_timestamp), point=Point(x=trail_point[0],y=trail_point[1],z=trail_point[2]))
-	# 	self.pub.publish(point_msg)
-
-	# def publish_trail(self, trail_number=-1):
-	# 	trails = self.landmarks['landmark'+str(self.landmark_number)]
-	# 	if len(trails)>0:
-	# 		point_msg = PointStamped(header=Header(frame_id="odom", stamp=self.tracker.pose_timestamp), point=Point(x=trails[trail_number][0],y=trails[trail_number][1],z=trails[trail_number][2]))
-	# 		self.pub.publish(point_msg)
-	# 		self.data=None
-	# 		print (trails[trail_number][0],trails[trail_number][1],trails[trail_number][2])
-	# 		self.tracker.refresh_all()
-	# 		if self.tracker.xy_distance<=0.15:
-	# 				trail_number = trail_number-1
-	# 				self.publish_trail(trail_number)
-	# 			# if trail_number == len(trails)-1:
-		
-	# 			# 	print "You've arrived" #Turn it into a sound file
-	# 	else:
-	# 		print 'Error: No trail points!'
+		trail.remove(trail[-1])
+		print self.tracker.xy_distance
+		# if self.tracker.xy_distance<0.2 and len(trail)>0:
+		# 	self.publish_trail()
 
 	def audio_play(self):
 		p = subprocess.Popen('amixer -D pulse sset Master 30%', shell=True)
@@ -173,75 +142,6 @@ class Landmark():
 		self.path = self.filepath + self.filename
 		p = subprocess.Popen('{} {}.wav'.format(self.player, self.path), shell=True)
 		p.communicate()
-
-		
-	# def drop_(self):
-	# 	current_position=(self.tracker.x, self.tracker.y, self.tracker.z)
-	# 	self.landmarks['landmark'+str(len(self.landmarks)+1)]=[]
-	# 	msg=PointStamped(header=Header(frame_id="odom", stamp=self.tracker.pose_timestamp), point=Point(y=self.tracker.y,z=self.tracker.z,x=self.tracker.x))
-	# 	self.pub.publish(msg)
-	# 	print self.landmarks
-	# 	print self.landmark_number
-
-	# def add_trail(self):
-	# 	current_position=(self.tracker.x, self.tracker.y, self.tracker.z)
-	# 	self.tracker.append(current_position)
-
-	# def landmark_number(self):
-	# 	"""
-	# 	Returns the total number of landmarks and landmark positions
-	# 	"""
-	# 	return len(self.landmarks)
-
-	# def add_trail(self):
-	# # 	self.tracker.trail.append((self.tracker.x, self.tracker.y, self.tracker.z))
-	# def handle_wii_keys(self):
-	# 	(code, ) = self.wiimote.event.get_key()
-	# 	if code == 1:
-	# 		self.tracker.drop_breadcrumb()
-	# 	elif code == 2:
-	# 		self.tracker.pick_up_breadcrumb()
-
-	# 	elif 
-
-	# 	else: pass
-
-		# cv2.namedWindow("set_landmark")
-		# k = cv2.waitKey(5)
-		# if ord(' ') == (k & 255):
-		# 	self.add_landmark()
-		# for i in range(0,10):
-		# 	if ord(str(i)) == (k & 255):
-		# 		print 'landmark published'
-		# 		self.publish_landmark(i)
-
-		# Will get code for 
-		# cv2.namedWindow("set_landmark")
-		# k = cv2.waitKey(5)
-		# if ord(' ') == (k & 255):
-		# 	self.add_landmark()
-		# for i in range(0,10):
-		# 	if ord(str(i)) == (k & 255):
-		# 		print 'landmark published'
-		# 		self.publish_landmark(i)
-
-	# def add_landmark(self):
-	# 	"""
-	# 	Stores Tango's position in landmarks list
-	# 	"""
-	# 	self.landmarks.append((self.tracker.pose_x, self.tracker.pose_y, self.tracker.pose_z))
-	# 	msg=PointStamped(header=Header(frame_id="odom", stamp=self.tracker.pose_timestamp), point=Point(y=self.tracker.pose_y,z=self.tracker.pose_z,x=self.tracker.pose_x))
-	# 	self.last_added.publish(msg)
-	# 	print self.landmarks
-	# 	print self.landmark_number
-
-	# def publish_landmark(self, i):
-	# 	"""
-	# 	Publishes selected landmark position to /clicked_point topic
-	# 	"""
-	# 	point_msg = PointStamped(header=Header(frame_id="odom", stamp=self.tracker.pose_timestamp), point=Point(y=self.landmarks[i-1][1],z=self.landmarks[i-1][2],x=self.landmarks[i-1][0]))
-	# 	self.pub.publish(point_msg)
-
 
 if __name__ == "__main__":
     tt = Tango_tracker('tango_tracker2')
