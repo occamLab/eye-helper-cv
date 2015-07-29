@@ -18,7 +18,7 @@ import threading
 
 
 class Wii_pointer():
-    def __init__(self, tracker = None, autoCheck = False):
+    def __init__(self, tracker = None, probeYaw = False, probePitch = False):
         # ------------ Connecting to wii remote.
         self.mote = None
         self.tracker = tracker
@@ -42,17 +42,18 @@ class Wii_pointer():
         self.resting = [0,0,0]
         self.last_reading = rospy.Time.now()
         self.last_button_press = rospy.Time.now()
-        self.target = [0, 0, 0] # just for testing purposes
+        self.target = [30, 0, -20] # just for testing purposes
         self.index = 0 # ditto
-        self.autoCheck = autoCheck
         self.rumble_proportion = 0
+
+        self.probeYaw = probeYaw
+        self.probePitch = probePitch
 
         # ----------- ROS Publishers/subscribers.
         self.button_pub = rospy.Publisher("/wii_buttons", Int32, queue_size=10)
         self.orientation_pub = rospy.Publisher("/wii_orientation", Int32MultiArray, queue_size=10)
         rospy.Subscriber("/wii_rumble", Bool, self.set_rumble)
 
-        self.tc = 0 # can be deleted at some point, just using it to keep track of something.
 
     def run(self):
         if self.tracker != None:
@@ -62,24 +63,30 @@ class Wii_pointer():
         try:
             self.mote.dispatch(self.event)
         except IOError:
-            self.tc += 1
             # print "ioer in run", self.tc
             pass
 
         if self.event.type == xwiimote.EVENT_MOTION_PLUS:
             self.handle_motion()
-            if self.autoCheck:
-                self.check_if_close()
+            self.check_if_close()
                 # self.rumble_by_proportion() # look into running this in parallel, b/c otherwise it's a bit irregular... :|
 
 
         elif self.event.type == xwiimote.EVENT_KEY:
             self.handle_buttons()
             (code, state) = self.event.get_key()
-            if True: # right now using A and B buttons as a control thingie.
-                if code == 5:
+            if True: # right now using the buttons as a control thingie.
+                if code == 5: # B
                     self.set_resting()
                     self.set_zero()
+                elif code == 2: #up
+                    self.probePitch = True
+                elif code == 3: #down
+                    self.probePitch = False
+                elif code == 1: #right
+                    self.probeYaw = True
+                elif code == 0: #left
+                    self.probeYaw = False
             #Keys: 0 = left, 1: right, 2: up, 3 = down, 4 = A, 5 = B, 6 = +, 7 = -, 8 = home, 9 = 1, 10 = 2.
 
 
@@ -98,7 +105,6 @@ class Wii_pointer():
         """
         handles motion plus events. basically, integrates the angular velocities into a current pose.
         then, publishes to the motion topic.
-        still working on the roll thingie, the ros transforms I tried earlier didn't work quite right. probably gonna muck around with cosines &c tomorrow.
         """
         non_zeroed_change = self.event.get_abs(0)
         change = [non_zeroed_change[i] - self.resting[i] for i in range(3)]
@@ -132,16 +138,25 @@ class Wii_pointer():
         """
         if within some [pretty much arbitrary right now] angle of the target, rumbles. else, no rumble.
         """    
-        distance = math.sqrt((self.target[0]-self.current[0])**2 + (self.target[2]-self.current[2])**2)
+        if self.probeYaw:
+            if self.probePitch:
+                distance = math.sqrt((self.target[0]-self.current[0])**2 + (self.target[2]-self.current[2])**2)
+            else:
+                distance = abs(self.target[0]-self.current[0])
+        elif self.probePitch:
+            distance = abs(self.target[2]-self.current[2])
+        else:
+            self.rumble_proportion = 0
+            return
         # print self.target
         try:
             # return
             if distance < 4:
                 self.rumble_proportion = 1
                 # self.rumble_by_proportion()
-            elif distance < 10:
+            elif distance < 20:
                 # self.rumble_proportion = 0.5
-                self.rumble_proportion = (.50 - distance*.03)
+                self.rumble_proportion = (.75 - distance*.015)
                 # self.rumble_by_proportion()
             else:
                 self.rumble_proportion = 0
@@ -213,17 +228,13 @@ class Wii_pointer():
 
 if __name__ == "__main__":
     tt = Tango_tracker()
-    wm = Wii_pointer(None)
+    wm = Wii_pointer(None, probePitch = False, probeYaw = False)
     start_time = rospy.Time.now()
     wm.set_resting()
     run_thread = threading.Thread(target=wm.run_loop)
     rumble_thread = threading.Thread(target=wm.rumbler_loop)
     run_thread.start()
     rumble_thread.start()
-
-    # while not rospy.is_shutdown():
-    #     wm.run()
-
-    #     if rospy.Time.now() - start_time > rospy.Duration(1200):
-    #         print wm.index, '\t', wm.current
-    #         exit()
+    while not rospy.is_shutdown():
+        rospy.sleep(1)
+    exit()
