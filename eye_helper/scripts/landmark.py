@@ -41,11 +41,11 @@ class Landmark():
 		self.published_landmark = None
 
 		#Publishing stuff
-		self.pub = rospy.Publisher("/landmark_point",PointStamped,queue_size=10)
+		self.pub = rospy.Publisher("/clicked_point",PointStamped,queue_size=10)
 		rospy.Subscriber('/wii_buttons',Int32 , self.handle_button)
 		self.data=None
 		self.threshold = 0.15 #thing to change
-		#self.last_added=rospy.Publisher("/last_landmark", PointStamped, queue_size=10)
+		#self.last_added=rospy.Publisher("/last_landmark", PointStamped, queue_size=10)\
 
 	def handle_button(self,msg):
 		self.data = msg.data
@@ -78,7 +78,7 @@ class Landmark():
 
 		if self.state == 'PUBLISHING_TRAILS':
 			self.publish_trail()
-			self.audio_play()
+			# self.audio_play()
 			self.state = 'START_UP'
 
 		if self.state not in self.states:
@@ -87,7 +87,7 @@ class Landmark():
 	def initiate_landmark(self):
 		self.landmark_name='landmark'+str(len(self.landmarks)+1)
 		self.landmarks[self.landmark_name]=[]
-		print 'Initialized landmark' + str(self.landmark_name) # need to make this into a sound file.
+		print 'Initialized' + str(self.landmark_name) # need to make this into a sound file.
 		self.filename='initialized_landmark'
 		self.data=None
 
@@ -113,21 +113,59 @@ class Landmark():
 		return self.landmark_number
 
 	def publish_trail(self):
-		trails = self.landmarks['landmark'+str(self.landmark_number)]
-		trail_number=0
-		if len(trails) >0:
-			while trail_number>=0 or trail_number <len(trails):
-				point_msg = PointStamped(header=Header(frame_id="odom", stamp=self.tracker.pose_timestamp), point=Point(x=trails[trail_number][0],y=trails[trail_number][1],z=trails[trail_number][2]))
-				self.pub.publish(point_msg)
-				self.data=None
-				print (trails[trail_number][0],trails[trail_number][1],trails[trail_number][2])
-				if self.tracker.xy_distance<=0.15 and trail_number != len(trails)-1:
-					trail_number += 1
-				# if trail_number == len(trails)-1:
-		
-				# 	print "You've arrived" #Turn it into a sound file
+		trail= self.landmarks['landmark'+str(self.landmark_number)]
+		if len(trail) == 0:
+			print "trail_over"
+		point_msg = PointStamped(header=Header(frame_id="odom", stamp=self.tracker.pose_timestamp), point=Point(x=trail[-1][0],y=trail[-1][1],z=trail[-1][2]))
+		print (trail[-1][0],trail[-1][1],trail[-1][2])
+		self.tracker.target_x=trail[-1][0]
+		self.tracker.target_y=trail[-1][1]
+		self.tracker.target_z=trail[-1][2]
+		self.pub.publish(point_msg)
+		trail.remove(trail[-1])
+		self.tracker.refresh_all()
+		if self.tracker.xy_distance<0.3 and len(trail)>0:
+			self.publish_trail()
 		else:
-			print 'Error: No trail points!'
+			pass
+
+
+
+
+	# def pickup_trail_point(self):
+	# 	trail= self.landmarks['landmark'+str(self.landmark_number)]
+	# 	if len(self.trail) == 0:
+	# 		print "trail over"
+	# 		self.state='START_UP'
+	# 		return
+	# 	else:
+	# 		self.tracker.set_target(trail[-1])
+	# 		trail_point=trail[-1]
+	# 		del trail[-1]
+	# 		print "new target"
+	# 		self.state = 'PUBLISHING_TRAILS'
+	# 	self.publish_trail(trail_point)
+
+	# def publish_trail(self,trail_point):
+	# 	point_msg = PointStamped(header=Header(frame_id="odom", stamp=self.tracker.pose_timestamp), point=Point(x=trail_point[0],y=trail_point[1],z=trail_point[2]))
+	# 	self.pub.publish(point_msg)
+
+	# def publish_trail(self, trail_number=-1):
+	# 	trails = self.landmarks['landmark'+str(self.landmark_number)]
+	# 	if len(trails)>0:
+	# 		point_msg = PointStamped(header=Header(frame_id="odom", stamp=self.tracker.pose_timestamp), point=Point(x=trails[trail_number][0],y=trails[trail_number][1],z=trails[trail_number][2]))
+	# 		self.pub.publish(point_msg)
+	# 		self.data=None
+	# 		print (trails[trail_number][0],trails[trail_number][1],trails[trail_number][2])
+	# 		self.tracker.refresh_all()
+	# 		if self.tracker.xy_distance<=0.15:
+	# 				trail_number = trail_number-1
+	# 				self.publish_trail(trail_number)
+	# 			# if trail_number == len(trails)-1:
+		
+	# 			# 	print "You've arrived" #Turn it into a sound file
+	# 	else:
+	# 		print 'Error: No trail points!'
 
 	def audio_play(self):
 		p = subprocess.Popen('amixer -D pulse sset Master 30%', shell=True)
