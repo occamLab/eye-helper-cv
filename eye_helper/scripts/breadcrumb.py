@@ -44,7 +44,6 @@ class Breadcrumb_tracker():
         self.target_surface_slope = None
         self.pose_timestamp = None
 
-        self.landmarks={}
         self.trail = []
         self.onTrail = False
         self.threshold = 0.1 # the distance which is "close enough" to a point to switch from.
@@ -112,8 +111,6 @@ class Breadcrumb_tracker():
 
         current_point = (self.x, self.y, self.z)
         self.trail.append(current_point)
-        for key in self.landmarks.keys():
-            self.landmark[key]=self.trail
         print "breadcrumb dropped"
         self.onTrail = False
 
