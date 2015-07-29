@@ -12,6 +12,7 @@ from select import poll, POLLIN
 import math
 import time
 import subprocess
+from angle_distance import Angle_and_distance
 
 class Landmark():
 	"""
@@ -32,6 +33,7 @@ class Landmark():
 		self.path=None
 		self.player= "aplay"
 		self.isOnTrail = False
+		self.auditory_feedback=Angle_and_distance(self.tracker)
 
 		#Landmarks and trails:
 		self.landmark_options=[]
@@ -56,12 +58,14 @@ class Landmark():
 			self.state='ADDING_TRAILS'
 		if msg.data == 2 or msg.data ==3:
 			self.state='TOGGLING_LANDMARKS'
-		if msg.data == 8: #fix this
+		if msg.data == 8:
 			self.state='PUBLISHING_TRAILS'
 
 	def run(self):
 		if self.state == 'START_UP':
 			self.tracker.refresh_all()
+			if self.isOnTrail==True:
+				self.auditory_feedback.run()
 			if self.isOnTrail==True and self.tracker.xy_distance<0.3:
 				self.publish_trail()
 			else:
@@ -84,10 +88,7 @@ class Landmark():
 			if len(self.landmarks['landmark'+str(self.landmark_number)])==0:
 				self.isOnTrail=False
 			self.state='START_UP'
-			
-			
-			# self.audio_play()
-
+	
 		if self.state not in self.states:
 			print 'State Error: self.state value is invalid'
 
@@ -95,9 +96,7 @@ class Landmark():
 		self.landmark_name='landmark'+str(len(self.landmarks)+1)
 		self.landmarks[self.landmark_name]=[]
 		print 'Initialized ' + str(self.landmark_name) # need to make this into a sound file.
-		self.filename=self.landmark_name
-		self.audio_play()
-		self.filename='initialized'
+		self.filename="initialized_"+self.landmark_name
 		self.audio_play()
 		self.data=None
 
@@ -129,6 +128,7 @@ class Landmark():
 		self.isOnTrail=True
 		trail= self.landmarks['landmark'+str(self.landmark_number)]
 		if len(trail) == 0:
+			self.auditory_feedback.turn_off()
 			self.filename= "You_arrived"
 			self.audio_play()
 			rospy.sleep(10)
@@ -142,8 +142,6 @@ class Landmark():
 		self.tracker.refresh_all()
 		trail.remove(trail[-1])
 		print self.tracker.xy_distance
-		# if self.tracker.xy_distance<0.2 and len(trail)>0:
-		# 	self.publish_trail()
 
 	def audio_play(self):
 		p = subprocess.Popen('amixer -D pulse sset Master 30%', shell=True)
