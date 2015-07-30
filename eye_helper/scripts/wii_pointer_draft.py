@@ -11,7 +11,7 @@ from select import poll, POLLIN
 import math
 import xwiimote
 import time
-from std_msgs.msg import Int32, Int32MultiArray, Bool #might not use header or the floats actually, we'll see.
+from std_msgs.msg import Int32, Int32MultiArray, Bool, Float32 #might not use header or the floats actually, we'll see.
 from tango_tracker import Tango_tracker
 import numpy as np
 import threading
@@ -52,7 +52,7 @@ class Wii_pointer():
         # ----------- ROS Publishers/subscribers.
         self.button_pub = rospy.Publisher("/wii_buttons", Int32, queue_size=10)
         self.orientation_pub = rospy.Publisher("/wii_orientation", Int32MultiArray, queue_size=10)
-        rospy.Subscriber("/wii_rumble", Bool, self.set_rumble)
+        rospy.Subscriber("/wii_rumble", Float32, self.set_rumble)
 
 
     def run(self):
@@ -128,10 +128,11 @@ class Wii_pointer():
         self.button_pub.publish(code)
 
     def set_rumble(self, msg):
-        try:
-            self.mote.rumble(msg.data)
-        except IOError:
-            pass
+        self.rumble_proportion = msg.data
+        # try:
+        #     self.mote.rumble(msg.data)
+        # except IOError:
+        #     pass
 
 
     def check_if_close(self):
@@ -146,7 +147,7 @@ class Wii_pointer():
         elif self.probePitch:
             distance = abs(self.target[2]-self.current[2])
         else:
-            self.rumble_proportion = 0
+            # self.rumble_proportion = 0
             return
         # print self.target
         try:
