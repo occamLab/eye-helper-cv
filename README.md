@@ -94,7 +94,7 @@ Info on scripts:
   - uses computer speech to guide back. 
 
 - point_queue.py
-  - TODO
+  - Enables selecting multiple target points at once and publishes them one by one when space bar is hit. 
 
 - ransac.py
   - A point-cloud-y / tango-y implementation of a RANSAC algorithm ([https://en.wikipedia.org/wiki/RANSAC]).
