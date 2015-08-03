@@ -18,7 +18,7 @@ eye-helper-cv
 ###Stuff the Tango code uses:
 
 - GeneratedSoundFiles
-  - Contents: Computer-generated speech and tone files, for other scripts to play.
+  - Contents: Computer-generated speech and tone files, for other scripts to play. We have tried text-to-speech libraries; they were both slow and unclear.
 - eye_helper
   - msg
     -Contents: Definition for several custom ROS messages, which can broadcast information on what sounds and speech messages have played (or should be played).
@@ -85,7 +85,13 @@ Info on scripts:
   - Needs: ditto.
 
 - **landmark.py**
-  - TODO
+  - uses wii to save landmarks and
+    - A -> initiate landmark 
+    - 1 -> add position to trail 
+    - up/down -> select landmark to be published 
+    - home -> publish the trail of the elected landmark
+  - tracker: Tango_tracker
+  - uses computer speech to guide back. 
 
 - point_queue.py
   - TODO
