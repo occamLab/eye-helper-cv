@@ -13,6 +13,7 @@ import math
 import time
 import subprocess
 from angle_distance import Angle_and_distance
+from computer_speech2 import Speak_3d_directions
 
 class Landmark():
 	"""
@@ -33,7 +34,8 @@ class Landmark():
 		self.path=None
 		self.player= "aplay"
 		self.isOnTrail = False
-		self.auditory_feedback=Angle_and_distance(self.tracker)
+		# self.auditory_feedback=Angle_and_distance(self.tracker)
+		self.auditory_feedback=Speak_3d_directions(self.tracker)
 
 		#Landmarks and trails:
 		self.landmark_options=[]
@@ -49,16 +51,16 @@ class Landmark():
 		self.data=None
 		self.threshold = 0.15 #thing to change
 		#self.last_added=rospy.Publisher("/last_landmark", PointStamped, queue_size=10)\
-
+#Keys: 0 = left, 1: right, 2: up, 3 = down, 4 = A, 5 = B, 6 = +, 7 = -, 8 = home, 9 = 1, 10 = 2.
 	def handle_button(self,msg):
 		self.data = msg.data
 		if msg.data ==4: 
 			self.state='INITIALIZING_LANDMARK'
-		if msg.data == 9:
+		if msg.data == 5:
 			self.state='ADDING_TRAILS'
 		if msg.data == 2 or msg.data ==3:
 			self.state='TOGGLING_LANDMARKS'
-		if msg.data == 8:
+		if msg.data == 1:
 			self.state='PUBLISHING_TRAILS'
 
 	def run(self):
@@ -66,7 +68,9 @@ class Landmark():
 			self.tracker.refresh_all()
 			if self.isOnTrail==True:
 				self.auditory_feedback.run()
-			if self.isOnTrail==True and self.tracker.xy_distance<0.3:
+			if self.isOnTrail==True and self.auditory_feedback.rd<=0.2 and self.auditory_feedback.fd<=0.3:
+				self.filename='dong'
+				self.audio_play()
 				self.publish_trail()
 			else:
 				pass
@@ -91,6 +95,8 @@ class Landmark():
 	
 		if self.state not in self.states:
 			print 'State Error: self.state value is invalid'
+
+		print self.state
 
 	def initiate_landmark(self):
 		self.landmark_name='landmark'+str(len(self.landmarks)+1)
@@ -147,6 +153,7 @@ class Landmark():
 		p = subprocess.Popen('amixer -D pulse sset Master 30%', shell=True)
 		p.communicate()
 		self.path = self.filepath + self.filename
+		print self.path
 		p = subprocess.Popen('{} {}.wav'.format(self.player, self.path), shell=True)
 		p.communicate()
 
