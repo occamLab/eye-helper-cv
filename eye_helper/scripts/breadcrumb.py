@@ -60,6 +60,7 @@ class Breadcrumb_tracker():
         rospy.Subscriber('/tango_pose', PoseStamped, self.process_pose)
         rospy.Subscriber('/tango_angles', Float64MultiArray, self.process_angle)
         rospy.Subscriber('/wii_buttons', Int32, self.process_button)
+        rospy.Subscriber('/android_buttons', String, self.process_button)
         self.logger = rospy.Publisher('/log', String, queue_size=10)
         self.breadcrumb_trail_pub = rospy.Publisher('/breadcrumbs', PointCloud, queue_size=10)
         self.rospack = rospkg.RosPack();
@@ -115,6 +116,16 @@ class Breadcrumb_tracker():
             self.drop_breadcrumb()
             self.publish_trail()
         elif msg.data == 7:
+            self.pick_up_breadcrumb()
+            
+        elif msg.data == "Start":
+            self.trail = []
+            self.drop_breadcrumb()
+            self.publish_trail()
+        elif msg.data == "Drop":
+            self.drop_breadcrumb()
+            self.publish_trail()
+        elif msg.data == "Pickup":
             self.pick_up_breadcrumb()
 
 
