@@ -216,6 +216,10 @@ class DepthImageCreator(object):
                     inv_transform_matrix = self.tf.asMatrix("depth_camera",
                                                             Header(stamp=self.depth_image_timestamp,
                                                                    frame_id="odom"))
+
+                    fisheye_inv_transform_matrix = self.tf.asMatrix("fisheye_camera",
+                                                                    Header(stamp=self.depth_image_timestamp,
+                                                                           frame_id="odom"))
                     # undo the transform that we did right before calling projectPoints
                     odom_points = transform_matrix.dot(np.vstack((self.points_3d[2,:],
                                                                   self.points_3d[0,:],
@@ -231,7 +235,7 @@ class DepthImageCreator(object):
                     #                                  points=[Point32(x=p[0], y=p[1], z=p[2]) for p in depth_camera_points.T])
                     # self.back_transformed_pc_pub.publish(pc_back_transformed)
 
-                    saved_combo = {'timestamp': self.depth_image_timestamp, 'x': x, 'y': y, 'theta': theta, 'combined_img': compressed_img, 'compressed_fisheye_img': compressed_fisheye_img, 'odom_points': odom_points.T, 'odom_to_depth_camera': inv_transform_matrix, 'depth_camera_to_odom': transform_matrix, 'D': self.D, 'K': self.K}
+                    saved_combo = {'timestamp': self.depth_image_timestamp, 'x': x, 'y': y, 'theta': theta, 'combined_img': compressed_img, 'compressed_fisheye_img': compressed_fisheye_img, 'odom_points': odom_points.T, 'odom_to_depth_camera': inv_transform_matrix, 'depth_camera_to_odom': transform_matrix, 'odom_to_fisheye_camera': fisheye_inv_transform_matrix, 'D': self.D, 'K': self.K}
                     self.combined_data.append(saved_combo)
                     print "added a new combo", len(self.combined_data)
                 except Exception as ex:

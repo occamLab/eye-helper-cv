@@ -9,58 +9,6 @@ from tf.transformations import euler_from_matrix, euler_matrix
 import cv2
 import time
 
-# def mywarp(src, rotXdeg, rotYdeg, rotZdeg, dist, fx, fy, cx, cy):
-#     dst = np.ndarray(shape=src.shape,dtype=src.dtype)
-
-#     h , w = src.shape[:2]
-
-#     rotX = (rotXdeg - 90)*np.pi/180
-#     rotY = (rotYdeg - 90)*np.pi/180
-#     rotZ = (rotZdeg - 90)*np.pi/180
-
-#     #Projection 2D -> 3D matrix
-#     A1= np.matrix([[1, 0, -cx],
-#                    [0, 1, -cy],
-#                    [0, 0, 0   ],
-#                    [0, 0, 1   ]])
-
-#     # Rotation matrices around the X,Y,Z axis
-#     RX = np.matrix([[1,           0,            0, 0],
-#                     [0,np.cos(rotX),-np.sin(rotX), 0],
-#                     [0,np.sin(rotX),np.cos(rotX) , 0],
-#                     [0,           0,            0, 1]])
-
-#     RY = np.matrix([[ np.cos(rotY), 0, np.sin(rotY), 0],
-#                     [            0, 1,            0, 0],
-#                     [ -np.sin(rotY), 0, np.cos(rotY), 0],
-#                     [            0, 0,            0, 1]])
-
-#     RZ = np.matrix([[ np.cos(rotZ), -np.sin(rotZ), 0, 0],
-#                     [ np.sin(rotZ), np.cos(rotZ), 0, 0],
-#                     [            0,            0, 1, 0],
-#                     [            0,            0, 0, 1]])
-
-#     #Composed rotation matrix with (RX,RY,RZ)
-#     R = RX * RY * RZ
-
-#     #Translation matrix on the Z axis change dist will change the height
-#     T = np.matrix([[1,0,0,0],
-#                    [0,1,0,0],
-#                    [0,0,1,dist],
-#                    [0,0,0,1]])
-
-#     #Camera Intrisecs matrix 3D -> 2D
-#     A2= np.matrix([[fx, 0, cx,0],
-#                    [0, fy, cy,0],
-#                    [0, 0,   1,0]])
-
-#     # Final and overall transformation matrix
-#     H = A2 * (T * (R * A1))
-
-#     # Apply matrix transformation
-#     cv2.warpPerspective(src, H, (w, h), dst, cv2.INTER_CUBIC)
-#     return dst
-
 class FindCorrespondences(object):
     def __init__(self, pickle_file):
         f = open(pickle_file, 'r')
@@ -93,41 +41,43 @@ class FindCorrespondences(object):
             elif param == 'im2':
                 self.im2_pts.append((x, y))
 
+    def update_images(self):
+        if self.image_name == 'compressed_fisheye_img':
+            self.im1 = cv2.imdecode(self.combined_data[self.curr_im1_idx][self.image_name], flags=cv2.CV_LOAD_IMAGE_UNCHANGED)
+            self.im2 = cv2.imdecode(self.combined_data[self.curr_im2_idx][self.image_name], flags=cv2.CV_LOAD_IMAGE_UNCHANGED)
+        else:
+            self.im1 = cv2.resize(cv2.imdecode(self.combined_data[self.curr_im1_idx][self.image_name], flags=cv2.CV_LOAD_IMAGE_UNCHANGED), (1280/2, 720/2))
+            self.im2 = cv2.resize(cv2.imdecode(self.combined_data[self.curr_im2_idx][self.image_name], flags=cv2.CV_LOAD_IMAGE_UNCHANGED), (1280/2, 720/2))
+        im1_depth_cloud = self.combined_data[self.curr_im1_idx]['odom_to_fisheye_camera'].dot(self.combined_data[self.curr_im1_idx]['odom_points'].T)
+        im2_depth_cloud = self.combined_data[self.curr_im2_idx]['odom_to_fisheye_camera'].dot(self.combined_data[self.curr_im2_idx]['odom_points'].T)
+        im1_projected, _ = cv2.projectPoints(im1_depth_cloud[[1,2,0],:].T,
+                                             (0,0,0),
+                                             (0,0,0),
+                                             self.combined_data[self.curr_im1_idx]['K']['fisheye_undistorted'],
+                                             self.combined_data[self.curr_im1_idx]['D']['fisheye_undistorted'])
+        im2_projected, _ = cv2.projectPoints(im2_depth_cloud[[1,2,0],:].T,
+                                             (0,0,0),
+                                             (0,0,0),
+                                             self.combined_data[self.curr_im2_idx]['K']['fisheye_undistorted'],
+                                             self.combined_data[self.curr_im2_idx]['D']['fisheye_undistorted'])
+
+        for i in range(im1_projected.shape[0]):
+            try:
+                self.im1[int(im1_projected[i,0,1]), int(im1_projected[i,0,0]),:] = 255*0.2*np.ones(3,) + 0.8*self.im1[int(im1_projected[i,0,1]), int(im1_projected[i,0,0]),:]
+            except:
+                pass
+        for i in range(im2_projected.shape[0]):
+            try:
+                self.im2[int(im2_projected[i,0,1]), int(im2_projected[i,0,0]),:] = 255*0.2*np.ones(3,) + 0.8*self.im2[int(im2_projected[i,0,1]), int(im2_projected[i,0,0]),:]
+            except:
+                pass
+
     def handle_click(self, event, x, y, flags, param):
         if event == cv2.EVENT_LBUTTONDOWN:
             self.curr_im1_idx = x
             self.curr_im2_idx = y
-            if self.image_name == 'compressed_fisheye_img':
-                self.im1 = cv2.imdecode(self.combined_data[x][self.image_name], flags=cv2.CV_LOAD_IMAGE_UNCHANGED)
-                self.im2 = cv2.imdecode(self.combined_data[y][self.image_name], flags=cv2.CV_LOAD_IMAGE_UNCHANGED)
-            else:
-                self.im1 = cv2.resize(cv2.imdecode(self.combined_data[x][self.image_name], flags=cv2.CV_LOAD_IMAGE_UNCHANGED), (1280/2, 720/2))
-                self.im2 = cv2.resize(cv2.imdecode(self.combined_data[y][self.image_name], flags=cv2.CV_LOAD_IMAGE_UNCHANGED), (1280/2, 720/2))
-            x_depth_cloud_at_x = self.combined_data[x]['odom_to_depth_camera'].dot(self.combined_data[x]['odom_points'].T)
-            y_depth_cloud_at_y = self.combined_data[y]['odom_to_depth_camera'].dot(self.combined_data[y]['odom_points'].T)
-            x_depth_cloud_at_y = self.combined_data[y]['odom_to_depth_camera'].dot(self.combined_data[x]['odom_points'].T)
-            y_depth_cloud_at_x = self.combined_data[x]['odom_to_depth_camera'].dot(self.combined_data[y]['odom_points'].T)
-            x_projected_at_y, dc = cv2.projectPoints(x_depth_cloud_at_y[[1,2,0],:].T,
-                                                     (0,0,0),
-                                                     (0,0,0),
-                                                     self.combined_data[y]['K']['color_camera'],
-                                                     self.combined_data[y]['D']['color_camera'])
-            y_projected_at_x, dc = cv2.projectPoints(y_depth_cloud_at_x[[1,2,0],:].T,
-                                                     (0,0,0),
-                                                     (0,0,0),
-                                                     self.combined_data[x]['K']['color_camera'],
-                                                     self.combined_data[x]['D']['color_camera'])
+            self.update_images()
 
-            # for i in range(y_projected_at_x.shape[0]):
-            #     try:
-            #         cv2.circle(self.im1, (int(y_projected_at_x[i,0,0]/2), int(y_projected_at_x[i,0,1]/2)), 3, (0, 0, 255), -1)
-            #     except:
-            #         pass
-            # for i in range(x_projected_at_y.shape[0]):
-            #     try:
-            #         cv2.circle(self.im2, (int(x_projected_at_y[i,0,0]/2), int(x_projected_at_y[i,0,1]/2)), 3, (0, 0, 255), -1)
-            #     except:
-            #         pass
 
     def calc_affinity_map(self):
         self.distance_traveled = np.zeros((len(self.combined_data), len(self.combined_data)))
@@ -257,37 +207,25 @@ class FindCorrespondences(object):
                 self.curr_im1_idx -= 1
                 self.curr_im1_idx = max(0, self.curr_im1_idx)
                 self.curr_im1_idx = min(len(self.combined_data) - 1, self.curr_im1_idx)
-                if self.image_name == 'compressed_fisheye_img':
-                    self.im1 = cv2.imdecode(self.combined_data[self.curr_im1_idx][self.image_name], flags=cv2.CV_LOAD_IMAGE_UNCHANGED)
-                else:
-                    self.im1 = cv2.resize(cv2.imdecode(self.combined_data[self.curr_im1_idx][self.image_name], flags=cv2.CV_LOAD_IMAGE_UNCHANGED), (1280/2, 720/2))
+                self.update_images()
             elif k % 256 == 83:
                 # right arrow
                 self.curr_im1_idx += 1
                 self.curr_im1_idx = max(0, self.curr_im1_idx)
                 self.curr_im1_idx = min(len(self.combined_data) - 1, self.curr_im1_idx)
-                if self.image_name == 'compressed_fisheye_img':
-                    self.im1 = cv2.imdecode(self.combined_data[self.curr_im1_idx][self.image_name], flags=cv2.CV_LOAD_IMAGE_UNCHANGED)
-                else:
-                    self.im1 = cv2.resize(cv2.imdecode(self.combined_data[self.curr_im1_idx][self.image_name], flags=cv2.CV_LOAD_IMAGE_UNCHANGED), (1280/2, 720/2))
+                self.update_images()
             elif k % 256 == 84:
                 # up arrow
                 self.curr_im2_idx += 1
                 self.curr_im2_idx = max(0, self.curr_im2_idx)
                 self.curr_im2_idx = min(len(self.combined_data) - 1, self.curr_im2_idx)
-                if self.image_name == 'compressed_fisheye_img':
-                    self.im2 = cv2.imdecode(self.combined_data[self.curr_im2_idx][self.image_name], flags=cv2.CV_LOAD_IMAGE_UNCHANGED)
-                else:
-                    self.im2 = cv2.resize(cv2.imdecode(self.combined_data[self.curr_im2_idx][self.image_name], flags=cv2.CV_LOAD_IMAGE_UNCHANGED), (1280/2, 720/2))
+                self.update_images()
             elif k % 256 == 82:
                 # down arrow
                 self.curr_im2_idx -= 1
                 self.curr_im2_idx = max(0, self.curr_im2_idx)
                 self.curr_im2_idx = min(len(self.combined_data) - 1, self.curr_im2_idx)
-                if self.image_name == 'compressed_fisheye_img':
-                    self.im2 = cv2.imdecode(self.combined_data[self.curr_im2_idx][self.image_name], flags=cv2.CV_LOAD_IMAGE_UNCHANGED)
-                else:
-                    self.im2 = cv2.resize(cv2.imdecode(self.combined_data[self.curr_im2_idx][self.image_name], flags=cv2.CV_LOAD_IMAGE_UNCHANGED), (1280/2, 720/2))
+                self.update_images()
             elif k % 256 == 10:
                 print "pressed enter"
             r.sleep()
