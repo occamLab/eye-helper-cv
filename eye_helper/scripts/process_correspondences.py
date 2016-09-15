@@ -12,6 +12,11 @@ TODO + Takeaways (start with issue of timing and precision... trying to design a
         camera images, which is not ideal.  Further, if we enable low_latency_imu_integration for pose this could
         further increase the accuracy of the pose.
     (4) Check out the pose using Tango API of the fisheye camera (is it possible it is different than depth camera?)
+    (5) Once we have more confidence in the precision of  various components we can try to refine correspondences based on this.
+    (6) When correcting pitch, a cue we are not using is to make the depths consistent across the two views.
+    (7) There are some very interesting new options in the tango config.  For instance there is a drift corrected pose mode that
+        is different than area learning.  The config also indicates 100 Hz pose updates.  Additionally, the java version says 
+        that there is a 3-DoF fall back when 6-dof is not available (the key appears to be "config_experimental_3dof_fallback")
 """
 
 from scipy.stats.mstats import gmean

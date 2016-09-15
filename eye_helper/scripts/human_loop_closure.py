@@ -57,6 +57,7 @@ class DepthImageCreator(object):
         self.clicked_point_pub = rospy.Publisher("/clicked_point", PointStamped, queue_size=10)
         self.color_camera_info = None
         self.depth_image = None
+        self.points_3d = None
         self.image = None
         self.fisheye_image = None
 
@@ -66,9 +67,6 @@ class DepthImageCreator(object):
         self.depth_timestamp = None
         cv2.namedWindow("combined_feed")
         cv2.namedWindow("fisheye_feed")
-
-        cv2.setMouseCallback('combined_feed',self.handle_combined_click)
-
 
     def process_fisheye_image(self,msg):
         # TODO: we are recompressing this later, might as well save the trouble and keep the compressed version around
@@ -101,74 +99,27 @@ class DepthImageCreator(object):
         self.D[camera_name] = np.array([msg.D[0],msg.D[1],0,0,msg.D[2]])
 
     def get_nearest_image_temporally(self,timestamp):
-        self.image_list_lock.acquire()
-        diff_list = []
-        for im_stamp,image in self.image_list:
-            diff_list.append((abs((im_stamp-timestamp).to_sec()),image))
-        closest_temporally = min(diff_list,key=lambda t: t[0])
-        self.image_list_lock.release()
-
         self.fisheye_image_list_lock.acquire()
         diff_list_fisheye = []
         for im_stamp,image in self.fisheye_image_list:
-            diff_list_fisheye.append((abs((im_stamp-timestamp).to_sec()),image))
+            diff_list_fisheye.append((abs((im_stamp-timestamp).to_sec()),image, im_stamp))
         closest_temporally_fisheye = min(diff_list_fisheye, key=lambda t: t[0])
         self.fisheye_image_list_lock.release()
 
-        return closest_temporally[1], closest_temporally_fisheye[1]
-
-    def handle_combined_click(self,event,x,y,flags,param):
-        if event == cv2.EVENT_LBUTTONDOWN:
-            try:
-                self.depth_image_lock.acquire()
-                click_coords = (x*self.downsample_factor,y*self.downsample_factor)
-                distances = []
-                for i in range(self.projected_points.shape[0]):
-                    dist = (self.projected_points[i,0,0] - click_coords[0])**2 + (self.projected_points[i,0,1] - click_coords[1])**2
-                    distances.append(dist)
-                three_d_coord = self.points_3d[:,np.argmin(distances)]
-
-                # again, we have to reshuffle the coordinates due to differences in ROS Tango coordinate systems
-                point_msg = PointStamped(header=Header(stamp=self.depth_image_timestamp,
-                                                       frame_id="depth_camera"),
-                                         point=Point(y=three_d_coord[0],
-                                                     z=three_d_coord[1],
-                                                     x=three_d_coord[2]))
-                transformed_coord = self.tf.transformPoint('odom', point_msg)
-                self.clicked_point_pub.publish(transformed_coord)
-                self.depth_image_lock.release()
-            except Exception as ex:
-                print "Encountered an errror! ", ex
-                self.depth_image_lock.release()
+        return closest_temporally_fisheye[1], closest_temporally_fisheye[2]
 
 
     def process_point_cloud(self, msg):
         self.depth_image_lock.acquire()
         try:
-            if 'color_camera' not in self.P or 'color_camera' not in self.K or 'color_camera' not in self.D:
-                self.depth_image_lock.release()
-                return
             self.depth_image_timestamp = msg.header.stamp
-            self.depth_image = np.zeros((self.color_camera_info.height, self.color_camera_info.width, 3),dtype=np.uint8)
             self.points_3d = np.zeros((3,len(msg.points))).astype(np.float32)
+            self.point_cloud_frame = msg.header.frame_id
 
             for i,p in enumerate(msg.points):
                 # this is weird due to mismatches between OpenCV's camera coordinate system and ROS coordinate system conventions
-                self.points_3d[:,i] = np.array([p.y, p.z, p.x])
-
-            self.projected_points, dc = cv2.projectPoints(self.points_3d.T,
-                                                          (0,0,0),
-                                                          (0,0,0),
-                                                          self.K['color_camera'],
-                                                          self.D['color_camera'])
-
-            for i in range(self.projected_points.shape[0]):
-                if not(np.isnan(self.projected_points[i,0,0])) and not(np.isnan(self.projected_points[i,0,1])):
-                    try:
-                        self.depth_image[int(self.projected_points[i,0,1]),int(self.projected_points[i,0,0]),:] = 255.0
-                    except Exception as ex:
-                        # TODO: I don't quite understand why some of the points fall out of bounds
-                        pass
+                #self.points_3d[:,i] = np.array([-p.y, -p.z, p.x])
+                self.points_3d[:,i] = np.array([p.x, p.y, p.z])
             self.depth_image_lock.release()
         except Exception as ex:
             print "Encountered an errror! ", ex
@@ -188,25 +139,17 @@ class DepthImageCreator(object):
             if self.fisheye_image != None:
                 cv2.imshow("fisheye_feed", self.fisheye_image)
 
-            if self.image != None and self.depth_image != None:
-                kernel = np.ones((3,3),'uint8')
+            if self.fisheye_image != None and self.points_3d != None:
                 self.depth_image_lock.acquire()
-                nearest_image, nearest_fisheye_image = self.get_nearest_image_temporally(self.depth_image_timestamp)
-                ret, depth_threshed = cv2.threshold(self.depth_image,1,255,cv2.THRESH_BINARY)
-                combined_img = (cv2.dilate(depth_threshed,kernel)*0.2 + nearest_image*0.8).astype(dtype=np.uint8)
-                cv2.imshow("combined_feed", cv2.resize(combined_img,
-                                                       (self.image.shape[1]/self.downsample_factor,
-                                                        self.image.shape[0]/self.downsample_factor)))
+                nearest_fisheye_image, nearest_fisheye_image_timestamp = self.get_nearest_image_temporally(self.depth_image_timestamp)
                 try:
-                    self.tf.waitForTransform("device", "odom", self.depth_image_timestamp, rospy.Duration(1.0))
-                    pose_msg = PoseStamped(header=Header(stamp=self.depth_image_timestamp,
+                    self.tf.waitForTransform("device", "odom", nearest_fisheye_image_timestamp, rospy.Duration(1.0))
+                    pose_msg = PoseStamped(header=Header(stamp=nearest_fisheye_image_timestamp,
                                                          frame_id="device"),
                                            pose=Pose())
                     transformed_pose = self.tf.transformPose('odom', pose_msg)
                     (x, y, theta) = DepthImageCreator.convert_pose_to_xy_and_theta(transformed_pose.pose)
-                    retval, compressed_img = cv2.imencode('.jpg', combined_img)
                     retval, compressed_fisheye_img = cv2.imencode('.jpg', nearest_fisheye_image)
-
 
                     # store the point cloud in the odom frame as well
                     self.tf.waitForTransform("depth_camera", "odom", self.depth_image_timestamp, rospy.Duration(1.0))
@@ -216,31 +159,33 @@ class DepthImageCreator(object):
                     inv_transform_matrix = self.tf.asMatrix("depth_camera",
                                                             Header(stamp=self.depth_image_timestamp,
                                                                    frame_id="odom"))
-
+                    # use the fisheye timestamp
+                    fisheye_transform_matrix =  self.tf.asMatrix("odom",
+                                                                 Header(stamp=nearest_fisheye_image_timestamp,
+                                                                        frame_id="fisheye_camera"))
                     fisheye_inv_transform_matrix = self.tf.asMatrix("fisheye_camera",
-                                                                    Header(stamp=self.depth_image_timestamp,
+                                                                    Header(stamp=nearest_fisheye_image_timestamp,
                                                                            frame_id="odom"))
-                    # undo the transform that we did right before calling projectPoints
-                    odom_points = transform_matrix.dot(np.vstack((self.points_3d[2,:],
-                                                                  self.points_3d[0,:],
-                                                                  self.points_3d[1,:],
-                                                                  np.ones((1,self.points_3d.shape[1])))))
-                    # depth_camera_points = inv_transform_matrix.dot(odom_points)
-                    # print depth_camera_points.shape
-                    # pc = PointCloud(header=Header(stamp=self.depth_image_timestamp, frame_id="odom"),
-                    #                 points=[Point32(x=p[0], y=p[1], z=p[2]) for p in odom_points.T])
-                    # self.transformed_pc_pub.publish(pc)
+                    if self.point_cloud_frame == 'depth_camera':
+                        # undo the transform that we did right before calling projectPoints
+                        odom_points = transform_matrix.dot(np.vstack((self.points_3d[0,:],
+                                                                      self.points_3d[1,:],
+                                                                      self.points_3d[2,:],
+                                                                      np.ones((1,self.points_3d.shape[1])))))
+                    else:
+                        # undo transform, but otherwise leave things as before
+                        odom_points = np.eye(4).dot(np.vstack((self.points_3d[0,:],
+                                                               self.points_3d[1,:],
+                                                               self.points_3d[2,:],
+                                                               np.ones((1,self.points_3d.shape[1])))))
+                    fisheye_camera_point_cloud = fisheye_inv_transform_matrix.dot(odom_points)
 
-                    # pc_back_transformed = PointCloud(header=Header(stamp=self.depth_image_timestamp, frame_id="depth_camera"),
-                    #                                  points=[Point32(x=p[0], y=p[1], z=p[2]) for p in depth_camera_points.T])
-                    # self.back_transformed_pc_pub.publish(pc_back_transformed)
-
-                    saved_combo = {'timestamp': self.depth_image_timestamp, 'x': x, 'y': y, 'theta': theta, 'combined_img': compressed_img, 'compressed_fisheye_img': compressed_fisheye_img, 'odom_points': odom_points.T, 'odom_to_depth_camera': inv_transform_matrix, 'depth_camera_to_odom': transform_matrix, 'odom_to_fisheye_camera': fisheye_inv_transform_matrix, 'D': self.D, 'K': self.K}
+                    saved_combo = {'timestamp': self.depth_image_timestamp, 'x': x, 'y': y, 'theta': theta, 'fisheye_undistorted': compressed_fisheye_img, 'odom_points': odom_points.T, 'fisheye_camera_points': fisheye_camera_point_cloud.T, 'odom_to_depth_camera': inv_transform_matrix, 'depth_camera_to_odom': transform_matrix, 'odom_to_fisheye_camera': fisheye_inv_transform_matrix, 'fisheye_camera_to_odom': fisheye_transform_matrix, 'D': self.D, 'K': self.K}
                     self.combined_data.append(saved_combo)
                     print "added a new combo", len(self.combined_data)
                 except Exception as ex:
                     print "Couldn't get the current device pose ", ex
-                self.depth_image = None
+                self.points_3d = None
                 self.image = None
                 self.depth_image_lock.release()
             r.sleep()
